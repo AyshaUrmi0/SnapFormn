@@ -1,0 +1,61 @@
+export const PERMISSIONS = {
+  // Workspace
+  WORKSPACE_MANAGE: 'workspace:manage',
+  WORKSPACE_DELETE: 'workspace:delete',
+
+  // Members
+  MEMBER_INVITE: 'member:invite',
+  MEMBER_REMOVE: 'member:remove',
+  MEMBER_MANAGE_ROLE: 'member:manage_role',
+
+  // Forms
+  FORM_CREATE: 'form:create',
+  FORM_EDIT: 'form:edit',
+  FORM_DELETE: 'form:delete',
+  FORM_PUBLISH: 'form:publish',
+  FORM_VIEW: 'form:view',
+
+  // Submissions
+  SUBMISSION_VIEW: 'submission:view',
+  SUBMISSION_DELETE: 'submission:delete',
+  SUBMISSION_EXPORT: 'submission:export',
+
+  // Billing
+  BILLING_MANAGE: 'billing:manage',
+} as const;
+
+export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+
+export const ROLE_PERMISSIONS: Record<string, Permission[]> = {
+  OWNER: Object.values(PERMISSIONS),
+  ADMIN: [
+    PERMISSIONS.WORKSPACE_MANAGE,
+    PERMISSIONS.MEMBER_INVITE,
+    PERMISSIONS.MEMBER_REMOVE,
+    PERMISSIONS.MEMBER_MANAGE_ROLE,
+    PERMISSIONS.FORM_CREATE,
+    PERMISSIONS.FORM_EDIT,
+    PERMISSIONS.FORM_DELETE,
+    PERMISSIONS.FORM_PUBLISH,
+    PERMISSIONS.FORM_VIEW,
+    PERMISSIONS.SUBMISSION_VIEW,
+    PERMISSIONS.SUBMISSION_DELETE,
+    PERMISSIONS.SUBMISSION_EXPORT,
+    PERMISSIONS.BILLING_MANAGE,
+  ],
+  EDITOR: [
+    PERMISSIONS.FORM_CREATE,
+    PERMISSIONS.FORM_EDIT,
+    PERMISSIONS.FORM_PUBLISH,
+    PERMISSIONS.FORM_VIEW,
+    PERMISSIONS.SUBMISSION_VIEW,
+    PERMISSIONS.SUBMISSION_EXPORT,
+  ],
+  VIEWER: [PERMISSIONS.FORM_VIEW, PERMISSIONS.SUBMISSION_VIEW],
+};
+
+export const PAGINATION_DEFAULTS = {
+  PAGE: 1,
+  LIMIT: 20,
+  MAX_LIMIT: 100,
+} as const;
