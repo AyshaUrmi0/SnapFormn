@@ -5,10 +5,14 @@
   "description": "A Tally.so-inspired form builder platform",
   "workspaces": [
     "apps/api",
+    "apps/web",
     "packages/shared"
   ],
   "scripts": {
     "dev": "npm -w packages/shared run build && npm -w apps/api run dev",
+    "dev:web": "npm -w apps/web run dev",
+    "dev:all": "npm -w packages/shared run build && npm -w apps/api run dev & npm -w apps/web run dev",
+    "build:web": "npm -w apps/web run build",
     "build": "npm -w packages/shared run build && npm -w apps/api run build",
     "build:render": "npm install && npx prisma generate && npm -w packages/shared run build && npm -w apps/api run build",
     "lint": "eslint . --ext .ts,.tsx",
