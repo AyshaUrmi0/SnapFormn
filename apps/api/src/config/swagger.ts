@@ -11,12 +11,10 @@ const options: swaggerJsdoc.Options = {
       version: '1.0.0',
       description: 'API documentation for Snapform - a form builder platform',
     },
-    servers: [
-      {
-        url: `http://localhost:${env.PORT}/api/v1`,
-        description: 'Development server',
-      },
-    ],
+    servers:
+      env.NODE_ENV === 'production'
+        ? [{ url: '/api/v1', description: 'Production server' }]
+        : [{ url: `http://localhost:${env.PORT}/api/v1`, description: 'Development server' }],
     components: {
       securitySchemes: {
         bearerAuth: {
@@ -57,7 +55,10 @@ const options: swaggerJsdoc.Options = {
     },
     security: [{ bearerAuth: [] }],
   },
-  apis: ['./src/modules/**/*.routes.ts', './src/routes/**/*.ts'],
+  apis:
+    env.NODE_ENV === 'production'
+      ? ['./apps/api/dist/modules/**/*.routes.js', './apps/api/dist/routes/**/*.js']
+      : ['./apps/api/src/modules/**/*.routes.ts', './apps/api/src/routes/**/*.ts'],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
