@@ -1,0 +1,31 @@
+export const ROUTES = {
+  // Auth
+  LOGIN: '/login',
+  REGISTER: '/register',
+  VERIFY_OTP: '/verify-otp',
+  FORGOT_PASSWORD: '/forgot-password',
+
+  // Dashboard
+  HOME: '/',
+  WORKSPACES: '/workspaces',
+  NEW_WORKSPACE: '/workspaces/new',
+
+  // Workspace-scoped
+  workspace: (workspaceId: string) => ({
+    ROOT: `/${workspaceId}`,
+    FORMS: `/${workspaceId}/forms`,
+    NEW_FORM: `/${workspaceId}/forms/new`,
+    form: (formId: string) => ({
+      ROOT: `/${workspaceId}/forms/${formId}`,
+      EDIT: `/${workspaceId}/forms/${formId}/edit`,
+      SUBMISSIONS: `/${workspaceId}/forms/${formId}/submissions`,
+    }),
+    MEMBERS: `/${workspaceId}/members`,
+    SETTINGS: `/${workspaceId}/settings`,
+    BILLING: `/${workspaceId}/billing`,
+  }),
+
+  // Public
+  publicForm: (slug: string) => `/f/${slug}`,
+  publicFormSuccess: (slug: string) => `/f/${slug}/success`,
+} as const;
