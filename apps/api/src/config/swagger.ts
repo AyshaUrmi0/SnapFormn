@@ -11,10 +11,7 @@ const options: swaggerJsdoc.Options = {
       version: '1.0.0',
       description: 'API documentation for Snapform - a form builder platform',
     },
-    servers:
-      env.NODE_ENV === 'production'
-        ? [{ url: '/api/v1', description: 'Production server' }]
-        : [{ url: `http://localhost:${env.PORT}/api/v1`, description: 'Development server' }],
+    servers: [{ url: '/api/v1' }],
     components: {
       securitySchemes: {
         bearerAuth: {
