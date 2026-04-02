@@ -4,6 +4,7 @@ import type { JwtPayload } from '@snapform/shared';
 import { verifyAccessToken } from '../utils/token';
 
 declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
     interface Request {
       user?: JwtPayload;

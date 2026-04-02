@@ -4,11 +4,11 @@
   "private": true,
   "description": "A Tally.so-inspired form builder platform",
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/api",
+    "packages/shared"
   ],
   "scripts": {
-    "dev": "npm -w apps/api run dev",
+    "dev": "npm -w packages/shared run build && npm -w apps/api run dev",
     "build": "npm -w packages/shared run build && npm -w apps/api run build",
     "build:render": "npm install && npx prisma generate && npm -w packages/shared run build && npm -w apps/api run build",
     "lint": "eslint . --ext .ts,.tsx",
@@ -26,14 +26,14 @@
     "seed": "tsx prisma/seed.ts"
   },
   "devDependencies": {
-    "typescript": "^5.6.0",
-    "eslint": "^8.57.0",
-    "prettier": "^3.3.0",
     "@typescript-eslint/eslint-plugin": "^7.0.0",
     "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
     "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.3.0",
     "prisma": "^6.0.0",
-    "tsx": "^4.19.0"
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
   },
   "engines": {
     "node": ">=18.0.0"

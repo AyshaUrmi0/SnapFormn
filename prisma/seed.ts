@@ -1,4 +1,4 @@
-import { PrismaClient, WorkspaceRole } from '@prisma/client';
+import { PrismaClient, type WorkspaceRole } from '@prisma/client';
 import { PERMISSIONS, ROLE_PERMISSIONS } from '../packages/shared/src/utils/constants';
 
 const prisma = new PrismaClient();
