@@ -8,10 +8,10 @@ import {
   useState,
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { setAccessToken, getAccessToken } from '@/lib/api-client';
-import { userService } from '@/services/auth.service';
+import { setAccessToken } from '@/lib/api-client';
+import { refresh, getMe } from '@/modules/auth/auth.service';
 import { queryKeys } from '@/constants/query-keys';
-import type { User } from '@/types/auth';
+import type { User } from '@/modules/auth/types';
 
 interface AuthState {
   user: User | null;
@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = useCallback(async () => {
     try {
-      const userData = await userService.getMe();
+      const userData = await getMe();
       setUser(userData);
       queryClient.setQueryData(queryKeys.users.me(), userData);
     } catch {
@@ -59,15 +59,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryClient.clear();
   }, [queryClient]);
 
-  // Try to restore session on mount
+  // Restore session on mount — always attempt refresh via httpOnly cookie
   useEffect(() => {
-    const token = getAccessToken();
-    if (token) {
-      refreshUser().finally(() => setIsLoading(false));
-    } else {
-      setIsLoading(false);
-    }
-  }, [refreshUser]);
+    const restore = async () => {
+      try {
+        const res = await refresh();
+        setAccessToken(res.accessToken);
+        await refreshUser();
+      } catch {
+        // No valid session
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    restore();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({

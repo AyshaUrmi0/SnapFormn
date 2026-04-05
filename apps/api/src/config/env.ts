@@ -20,11 +20,11 @@ const envSchema = z.object({
 
   OTP_EXPIRY_MINUTES: z.coerce.number().default(5),
 
-  SMTP_HOST: z.string().default(''),
-  SMTP_PORT: z.coerce.number().default(587),
-  SMTP_USER: z.string().default(''),
-  SMTP_PASS: z.string().default(''),
-  SMTP_FROM: z.string().default('noreply@snapform.dev'),
+  GOOGLE_CLIENT_ID: z.string().default(''),
+  GOOGLE_CLIENT_SECRET: z.string().default(''),
+
+  RESEND_API_KEY: z.string().default(''),
+  EMAIL_FROM: z.string().default('onboarding@resend.dev'),
 
   STRIPE_SECRET_KEY: z.string().default(''),
   STRIPE_WEBHOOK_SECRET: z.string().default(''),

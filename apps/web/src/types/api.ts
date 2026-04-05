@@ -1,20 +1,8 @@
-export interface ApiResponse<T> {
-  success: boolean;
-  data: T;
-  message: string;
-  meta?: PaginationMeta;
-}
-
-export interface PaginationMeta {
-  page: number;
-  limit: number;
-  total: number;
-  totalPages: number;
-}
+export type { ApiResponse, PaginationMeta } from '@snapform/shared';
 
 export interface PaginatedData<T> {
   items: T[];
-  meta: PaginationMeta;
+  meta: import('@snapform/shared').PaginationMeta;
 }
 
 export interface PaginationParams {

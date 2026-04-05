@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { authController } from './auth.controller';
 import { validate } from '../../middlewares/validate.middleware';
 import { asyncHandler } from '../../utils/asyncHandler';
-import { registerSchema, loginSchema, verifyOtpSchema, requestOtpSchema } from './auth.schema';
+import { registerSchema, loginSchema, verifyOtpSchema, requestOtpSchema, completeProfileSchema } from './auth.schema';
+import { authenticate } from '../../middlewares/auth.middleware';
 
 const router = Router();
 
@@ -97,6 +98,50 @@ router.post('/verify-otp', validate(verifyOtpSchema), asyncHandler(authControlle
  *       200: { description: OTP sent }
  */
 router.post('/request-otp', validate(requestOtpSchema), asyncHandler(authController.requestOtp));
+
+/**
+ * @swagger
+ * /auth/google:
+ *   post:
+ *     summary: Login with Google
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [idToken]
+ *             properties:
+ *               idToken: { type: string }
+ *     responses:
+ *       200: { description: Google login successful }
+ *       401: { description: Invalid Google token }
+ */
+router.post('/google', asyncHandler(authController.google));
+
+/**
+ * @swagger
+ * /auth/complete-profile:
+ *   post:
+ *     summary: Complete user profile after OTP verification
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [firstName, lastName, password]
+ *             properties:
+ *               firstName: { type: string }
+ *               lastName: { type: string }
+ *               password: { type: string, minLength: 8 }
+ *     responses:
+ *       200: { description: Profile completed }
+ */
+router.post('/complete-profile', authenticate, validate(completeProfileSchema), asyncHandler(authController.completeProfile));
 
 /**
  * @swagger

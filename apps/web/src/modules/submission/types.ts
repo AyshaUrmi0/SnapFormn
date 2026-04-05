@@ -1,0 +1,40 @@
+export interface SubmissionField {
+  id: string;
+  submissionId: string;
+  fieldId: string;
+  value: unknown;
+}
+
+export interface Submission {
+  id: string;
+  formId: string;
+  respondentIp: string | null;
+  userAgent: string | null;
+  completedAt: string | null;
+  createdAt: string;
+  fields?: SubmissionField[];
+}
+
+// Service input types (Keys)
+export interface SubmitFormKeys {
+  slug: string;
+  data: { fields: Array<{ fieldId: string; value: unknown }> };
+}
+
+export interface ListSubmissionsKeys {
+  workspaceId: string;
+  formId: string;
+  params?: { page?: number; limit?: number };
+}
+
+export interface GetSubmissionKeys {
+  workspaceId: string;
+  formId: string;
+  submissionId: string;
+}
+
+export interface DeleteSubmissionKeys {
+  workspaceId: string;
+  formId: string;
+  submissionId: string;
+}

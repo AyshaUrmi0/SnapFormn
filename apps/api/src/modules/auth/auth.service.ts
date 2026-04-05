@@ -5,17 +5,14 @@ import type { OtpPurpose } from '@prisma/client';
 import { authRepository } from './auth.repository';
 import { otpService } from './otp.service';
 import { generateAccessToken } from '../../utils/token';
-import { env } from '../../config/env';
-
-const REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+export const REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export const authService = {
-  async register(email: string, password: string, name?: string) {
+  async register(email: string, name?: string) {
     const existing = await authRepository.findUserByEmail(email);
     if (existing) throw AppError.conflict('Email already registered');
 
-    const passwordHash = await bcrypt.hash(password, 12);
-    const user = await authRepository.createUser({ email, passwordHash, name });
+    const user = await authRepository.createUser({ email, name });
 
     // Send verification OTP
     const code = await otpService.generate(user.id, 'EMAIL_VERIFICATION');
@@ -53,7 +50,22 @@ export const authService = {
     }
 
     if (purpose === 'LOGIN') {
-      return this.issueTokenPair(user.id);
+      // Mark email as verified since they proved ownership via OTP
+      if (!user.emailVerified) {
+        await authRepository.updateUser(user.id, { emailVerified: true });
+      }
+
+      // Check if profile is complete (has name and password)
+      const profileComplete = !!(user.name && user.passwordHash);
+
+      if (profileComplete) {
+        const tokens = await this.issueTokenPair(user.id);
+        return { ...tokens, profileComplete: true };
+      }
+
+      // Issue a short-lived token for profile completion
+      const accessToken = generateAccessToken({ sub: user.id });
+      return { accessToken, profileComplete: false };
     }
 
     // For PASSWORD_RESET, return a short-lived token the client uses to call reset endpoint
@@ -62,13 +74,31 @@ export const authService = {
   },
 
   async requestOtp(email: string, purpose: OtpPurpose) {
-    const user = await authRepository.findUserByEmail(email);
+    let user = await authRepository.findUserByEmail(email);
+
+    // For LOGIN purpose, auto-create user if they don't exist
+    if (!user && purpose === 'LOGIN') {
+      user = await authRepository.createUser({ email });
+    }
+
     if (!user) throw AppError.notFound('User not found');
 
     const code = await otpService.generate(user.id, purpose);
     await otpService.sendViaEmail(user.email, code, purpose);
 
     return { sent: true };
+  },
+
+  async completeProfile(userId: string, firstName: string, lastName: string, password: string) {
+    const user = await authRepository.findById(userId);
+    if (!user) throw AppError.notFound('User not found');
+
+    const name = `${firstName} ${lastName}`.trim();
+    const passwordHash = await bcrypt.hash(password, 12);
+
+    await authRepository.updateUser(user.id, { name, passwordHash });
+
+    return this.issueTokenPair(user.id);
   },
 
   async refresh(refreshTokenValue: string) {
@@ -97,6 +127,50 @@ export const authService = {
     if (stored) {
       await authRepository.revokeTokenFamily(stored.family);
     }
+  },
+
+  async googleLogin(accessToken: string) {
+    // Verify the Google access token via userinfo endpoint
+    const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!res.ok) {
+      throw AppError.unauthorized('Invalid Google token');
+    }
+
+    const profile = await res.json() as {
+      email?: string;
+      name?: string;
+      picture?: string;
+      email_verified?: boolean;
+    };
+
+    if (!profile.email) {
+      throw AppError.unauthorized('Could not get email from Google');
+    }
+
+    const { email, name, picture, email_verified } = profile;
+
+    let user = await authRepository.findUserByEmail(email);
+
+    if (!user) {
+      user = await authRepository.createUser({
+        email,
+        name: name || null,
+        avatarUrl: picture || null,
+        emailVerified: email_verified ?? true,
+        provider: 'GOOGLE',
+      });
+    } else if (user.provider === 'EMAIL') {
+      await authRepository.updateUser(user.id, {
+        provider: 'GOOGLE',
+        avatarUrl: user.avatarUrl || picture || null,
+        emailVerified: true,
+      });
+    }
+
+    return this.issueTokenPair(user.id);
   },
 
   async issueTokenPair(userId: string, family?: string) {

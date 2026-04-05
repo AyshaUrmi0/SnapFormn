@@ -3,6 +3,7 @@ export const ROUTES = {
   LOGIN: '/login',
   REGISTER: '/register',
   VERIFY_OTP: '/verify-otp',
+  COMPLETE_PROFILE: '/complete-profile',
   FORGOT_PASSWORD: '/forgot-password',
 
   // Dashboard

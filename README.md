@@ -6,7 +6,8 @@ A Tally.so-inspired form builder platform built with a modern TypeScript stack.
 
 - **Monorepo**: npm workspaces
 - **Backend**: Node.js, Express, TypeScript, Prisma, PostgreSQL, Redis, Zod, JWT
-- **Frontend** (planned): Next.js App Router, TanStack Query
+- **Frontend**: Next.js (App Router), React, TanStack Query, Tailwind CSS, shadcn/ui
+- **Shared**: Common types, schemas, utilities, RBAC constants
 - **Payments**: Stripe (scaffold)
 
 ## Project Structure
@@ -15,18 +16,17 @@ A Tally.so-inspired form builder platform built with a modern TypeScript stack.
 snapform/
 ├── apps/
 │   ├── api/          # Express backend
-│   └── web/          # Next.js frontend (placeholder)
+│   └── web/          # Next.js frontend
 ├── packages/
-│   ├── shared/       # Shared types, schemas, utilities
-│   └── config/       # Shared ESLint, Prettier, TS configs
-├── prisma/           # Prisma schema & migrations
-└── docker-compose.yml
+│   └── shared/       # Shared types, schemas, utilities
+└── prisma/           # Prisma schema & migrations
 ```
 
 ## Prerequisites
 
 - Node.js >= 18
-- Docker & Docker Compose (for PostgreSQL and Redis)
+- PostgreSQL
+- Redis
 - npm
 
 ## Getting Started
@@ -38,23 +38,15 @@ cd snapform
 npm install
 ```
 
-### 2. Start infrastructure
-
-```bash
-docker compose up -d
-```
-
-This starts PostgreSQL (port 5432) and Redis (port 6379).
-
-### 3. Configure environment
+### 2. Configure environment
 
 ```bash
 cp apps/api/.env.example apps/api/.env
 ```
 
-Edit `apps/api/.env` with your settings. The defaults work with the Docker setup.
+Edit `apps/api/.env` with your database, Redis, JWT, and OAuth settings.
 
-### 4. Set up database
+### 3. Set up database
 
 ```bash
 # Generate Prisma client
@@ -67,20 +59,31 @@ npm run db:migrate -- --name init
 npm run db:seed
 ```
 
-### 5. Start development server
+### 4. Start development
 
 ```bash
+# Backend only
 npm run dev
+
+# Frontend only
+npm run dev:web
+
+# Both (parallel)
+npm run dev:all
 ```
 
-The API starts at `http://localhost:4000`.
+- API: `http://localhost:4000`
+- Web: `http://localhost:3000`
 
 ## Available Scripts
 
 | Command | Description |
 |---------|-------------|
 | `npm run dev` | Start API dev server with hot reload |
-| `npm run build` | Build the API |
+| `npm run dev:web` | Start Next.js frontend dev server |
+| `npm run dev:all` | Start both API and frontend |
+| `npm run build` | Build shared package and API |
+| `npm run build:web` | Build the frontend |
 | `npm run lint` | Run ESLint |
 | `npm run format` | Run Prettier |
 | `npm run typecheck` | TypeScript type checking |
@@ -100,6 +103,8 @@ The API starts at `http://localhost:4000`.
 - `POST /api/v1/auth/login` - Login
 - `POST /api/v1/auth/verify-otp` - Verify OTP
 - `POST /api/v1/auth/request-otp` - Request OTP
+- `POST /api/v1/auth/google` - Google OAuth login
+- `POST /api/v1/auth/complete-profile` - Complete profile after OAuth
 - `POST /api/v1/auth/refresh` - Refresh access token
 - `POST /api/v1/auth/logout` - Logout
 
@@ -151,13 +156,24 @@ Swagger UI is available at `http://localhost:4000/api/docs` when the server is r
 - **Schema** - Zod validation schemas per route
 - **Middleware** - Auth (JWT), RBAC (workspace permissions), validation, error handling
 
+## Shared Package (`@snapform/shared`)
+
+Both `apps/api` and `apps/web` depend on `@snapform/shared` which provides:
+
+- **Types**: `ApiResponse`, `PaginationMeta`, `JwtPayload`, `TokenPair`, `OtpPurpose`
+- **Constants**: `PERMISSIONS`, `ROLE_PERMISSIONS`, `PAGINATION_DEFAULTS`
+- **Errors**: `AppError` class with `ErrorCode` enum
+- **Helpers**: `slugify`, `generateOtp`, `paginate`, `buildPaginationMeta`
+- **Schemas**: Common Zod schemas for pagination, ID params, slugs
+
 ## Auth Flow
 
-1. Register with email/password -> receives verification OTP
+1. Register with email -> receives verification OTP
 2. Verify OTP -> email confirmed
-3. Login -> receives JWT access token + httpOnly refresh token cookie
-4. Access protected routes with `Authorization: Bearer <token>`
-5. Refresh token rotation with reuse detection
+3. Login with email/password -> receives JWT access token + httpOnly refresh token cookie
+4. Google OAuth login supported as alternative
+5. Access protected routes with `Authorization: Bearer <token>`
+6. Refresh token rotation with reuse detection
 
 ## RBAC
 

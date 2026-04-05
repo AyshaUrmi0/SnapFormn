@@ -2,6 +2,10 @@ import { prisma } from '../../lib/prisma';
 import type { OtpPurpose, Prisma } from '@prisma/client';
 
 export const authRepository = {
+  findById(id: string) {
+    return prisma.user.findUnique({ where: { id } });
+  },
+
   findUserByEmail(email: string) {
     return prisma.user.findUnique({ where: { email } });
   },
@@ -63,13 +67,6 @@ export const authRepository = {
   revokeTokenFamily(family: string) {
     return prisma.refreshToken.updateMany({
       where: { family },
-      data: { revoked: true },
-    });
-  },
-
-  revokeUserTokens(userId: string) {
-    return prisma.refreshToken.updateMany({
-      where: { userId },
       data: { revoked: true },
     });
   },

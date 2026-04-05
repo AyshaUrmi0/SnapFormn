@@ -1,4 +1,4 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { env } from '../config/env';
 import { logger } from './logger';
 
@@ -9,47 +9,36 @@ interface EmailOptions {
   html?: string;
 }
 
-let transporter: nodemailer.Transporter | null = null;
+let resend: Resend | null = null;
 
-function getTransporter(): nodemailer.Transporter {
-  if (!transporter) {
-    if (env.SMTP_HOST) {
-      transporter = nodemailer.createTransport({
-        host: env.SMTP_HOST,
-        port: env.SMTP_PORT,
-        secure: env.SMTP_PORT === 465,
-        auth: {
-          user: env.SMTP_USER,
-          pass: env.SMTP_PASS,
-        },
-      });
-    } else {
-      // In development without SMTP config, log emails instead
-      transporter = nodemailer.createTransport({
-        jsonTransport: true,
-      });
-    }
+function getResend(): Resend {
+  if (!resend) {
+    resend = new Resend(env.RESEND_API_KEY);
   }
-  return transporter;
+  return resend;
 }
 
 export async function sendEmail(options: EmailOptions): Promise<void> {
-  const transport = getTransporter();
+  if (!env.RESEND_API_KEY) {
+    logger.info(
+      { to: options.to, subject: options.subject, text: options.text },
+      'Email (dev mode - not sent)',
+    );
+    return;
+  }
 
-  const mailOptions = {
-    from: env.SMTP_FROM,
+  const { error } = await getResend().emails.send({
+    from: env.EMAIL_FROM,
     to: options.to,
     subject: options.subject,
     text: options.text,
     html: options.html,
-  };
+  });
 
-  if (!env.SMTP_HOST) {
-    // Log email in development
-    logger.info({ to: options.to, subject: options.subject, text: options.text }, 'Email (dev mode - not sent)');
-    return;
+  if (error) {
+    logger.error({ error, to: options.to }, 'Failed to send email via Resend');
+    throw new Error(`Failed to send email: ${error.message}`);
   }
 
-  await transport.sendMail(mailOptions);
-  logger.info({ to: options.to, subject: options.subject }, 'Email sent');
+  logger.info({ to: options.to, subject: options.subject }, 'Email sent via Resend');
 }
