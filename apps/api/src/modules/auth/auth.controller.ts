@@ -59,6 +59,12 @@ export const authController = {
     sendSuccess(res, result, 'OTP sent successfully');
   },
 
+  async resetPassword(req: Request, res: Response) {
+    const { resetToken, newPassword } = req.body;
+    const result = await authService.resetPassword(resetToken, newPassword);
+    sendSuccess(res, result, 'Password reset successfully');
+  },
+
   async refresh(req: Request, res: Response) {
     const refreshToken = req.cookies?.refreshToken;
     if (!refreshToken) throw AppError.unauthorized('No refresh token provided');

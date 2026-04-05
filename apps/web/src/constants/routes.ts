@@ -5,6 +5,7 @@ export const ROUTES = {
   VERIFY_OTP: '/verify-otp',
   COMPLETE_PROFILE: '/complete-profile',
   FORGOT_PASSWORD: '/forgot-password',
+  RESET_PASSWORD: '/reset-password',
 
   // Dashboard
   HOME: '/',

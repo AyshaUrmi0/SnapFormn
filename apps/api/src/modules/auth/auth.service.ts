@@ -4,7 +4,8 @@ import { AppError, ErrorCode } from '@snapform/shared';
 import type { OtpPurpose } from '@prisma/client';
 import { authRepository } from './auth.repository';
 import { otpService } from './otp.service';
-import { generateAccessToken } from '../../utils/token';
+import { generateAccessToken, verifyAccessToken } from '../../utils/token';
+
 export const REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 export const authService = {
@@ -87,6 +88,26 @@ export const authService = {
     await otpService.sendViaEmail(user.email, code, purpose);
 
     return { sent: true };
+  },
+
+  async resetPassword(resetToken: string, newPassword: string) {
+    let payload;
+    try {
+      payload = verifyAccessToken(resetToken);
+    } catch {
+      throw AppError.unauthorized('Invalid or expired reset token');
+    }
+
+    const user = await authRepository.findById(payload.sub);
+    if (!user) throw AppError.notFound('User not found');
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await authRepository.updateUser(user.id, { passwordHash });
+
+    // Revoke all existing sessions for security
+    await authRepository.revokeUserTokens(user.id);
+
+    return { success: true };
   },
 
   async completeProfile(userId: string, firstName: string, lastName: string, password: string) {

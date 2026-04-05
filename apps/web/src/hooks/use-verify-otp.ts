@@ -37,8 +37,11 @@ export function useVerifyOtp() {
           }
           break;
         case 'PASSWORD_RESET':
-          toast.success('Code verified. You can now reset your password.');
-          router.push(ROUTES.LOGIN);
+          if (res.resetToken) {
+            router.push(
+              `${ROUTES.RESET_PASSWORD}?token=${encodeURIComponent(res.resetToken)}`,
+            );
+          }
           break;
       }
     },

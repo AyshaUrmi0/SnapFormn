@@ -128,12 +128,19 @@ export default function LoginPage() {
           </form>
         </Form>
 
-        <p className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
-          <Link href={ROUTES.REGISTER} className="text-primary hover:underline">
-            Sign up
-          </Link>
-        </p>
+        <div className="text-center text-sm text-muted-foreground space-y-1">
+          <p>
+            Don&apos;t have an account?{' '}
+            <Link href={ROUTES.REGISTER} className="text-primary hover:underline">
+              Sign up
+            </Link>
+          </p>
+          <p>
+            <Link href={ROUTES.FORGOT_PASSWORD} className="text-primary hover:underline">
+              Forgot password?
+            </Link>
+          </p>
+        </div>
       </CardContent>
     </Card>
   );

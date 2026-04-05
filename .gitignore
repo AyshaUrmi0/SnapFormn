@@ -39,3 +39,6 @@ out/
 
 # Misc
 *.tsbuildinfo
+
+.vercel
+.env*.local

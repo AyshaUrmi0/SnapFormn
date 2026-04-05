@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authController } from './auth.controller';
 import { validate } from '../../middlewares/validate.middleware';
 import { asyncHandler } from '../../utils/asyncHandler';
-import { registerSchema, loginSchema, verifyOtpSchema, requestOtpSchema, completeProfileSchema } from './auth.schema';
+import { registerSchema, loginSchema, verifyOtpSchema, requestOtpSchema, resetPasswordSchema, completeProfileSchema } from './auth.schema';
 import { authenticate } from '../../middlewares/auth.middleware';
 
 const router = Router();
@@ -120,6 +120,29 @@ router.post('/request-otp', validate(requestOtpSchema), asyncHandler(authControl
  *       401: { description: Invalid Google token }
  */
 router.post('/google', asyncHandler(authController.google));
+
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Reset password using reset token
+ *     tags: [Auth]
+ *     security: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [resetToken, newPassword]
+ *             properties:
+ *               resetToken: { type: string }
+ *               newPassword: { type: string, minLength: 8 }
+ *     responses:
+ *       200: { description: Password reset successful }
+ *       401: { description: Invalid or expired reset token }
+ */
+router.post('/reset-password', validate(resetPasswordSchema), asyncHandler(authController.resetPassword));
 
 /**
  * @swagger

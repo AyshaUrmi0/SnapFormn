@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "cd ../.. && npm -w packages/shared run build && cd apps/web && next build",
     "start": "next start",
     "lint": "eslint"
   },
