@@ -8,13 +8,11 @@ import { ErrorState } from '@/components/shared/error-state';
 import { Button } from '@/components/ui/button';
 import { useWorkspaces } from '@/modules/workspace/workspace.queries';
 import { WorkspaceCard } from '@/features/workspaces/workspace-card';
-import { useLogout } from '@/hooks/use-logout';
 import { useAuth } from '@/hooks/use-auth';
 import { ROUTES } from '@/constants/routes';
-import { Briefcase, LogOut, Plus } from 'lucide-react';
+import { Briefcase, Plus } from 'lucide-react';
 
 export default function WorkspacesPage() {
-  const logout = useLogout();
   const { user } = useAuth();
   const { data: workspaces, isLoading, isError, error, refetch } = useWorkspaces();
 
@@ -24,23 +22,12 @@ export default function WorkspacesPage() {
         title="Workspaces"
         description={user ? `Welcome, ${user.name || user.email}` : 'Manage your workspaces'}
         action={
-          <div className="flex items-center gap-2">
-            <Link href={ROUTES.NEW_WORKSPACE}>
-              <Button size="sm">
-                <Plus className="mr-2 h-4 w-4" />
-                Create workspace
-              </Button>
-            </Link>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => logout.mutate()}
-              disabled={logout.isPending}
-            >
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign out
+          <Link href={ROUTES.NEW_WORKSPACE}>
+            <Button size="sm">
+              <Plus className="mr-2 h-4 w-4" />
+              Create workspace
             </Button>
-          </div>
+          </Link>
         }
       />
 

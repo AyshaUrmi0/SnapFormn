@@ -12,6 +12,7 @@ import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
@@ -192,28 +193,30 @@ export default function WorkspaceMembersPage() {
                       userPermissions={currentUserPermissions}
                     >
                       <DropdownMenu>
-                        <DropdownMenuTrigger>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
+                        <DropdownMenuTrigger className="inline-flex h-8 w-8 items-center justify-center rounded-md hover:bg-accent hover:text-accent-foreground">
+                          <MoreHorizontal className="h-4 w-4" />
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          {ASSIGNABLE_ROLES.map((role) => (
-                            <DropdownMenuItem
-                              key={role}
-                              disabled={member.role === role}
-                              onClick={() => handleRoleChange(member, role)}
-                            >
-                              Set as {role}
-                            </DropdownMenuItem>
-                          ))}
+                          <DropdownMenuGroup>
+                            {ASSIGNABLE_ROLES.map((role) => (
+                              <DropdownMenuItem
+                                key={role}
+                                disabled={member.role === role}
+                                onClick={() => handleRoleChange(member, role)}
+                              >
+                                Set as {role}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuGroup>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => setMemberToRemove(member)}
-                          >
-                            Remove member
-                          </DropdownMenuItem>
+                          <DropdownMenuGroup>
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => setMemberToRemove(member)}
+                            >
+                              Remove member
+                            </DropdownMenuItem>
+                          </DropdownMenuGroup>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </PermissionGate>
