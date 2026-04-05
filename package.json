@@ -14,7 +14,7 @@
     "dev:all": "npm -w packages/shared run build && npm -w apps/api run dev & npm -w apps/web run dev",
     "build:web": "npm -w apps/web run build",
     "build": "npm -w packages/shared run build && npm -w apps/api run build",
-    "build:render": "npm install && npx prisma generate && npm -w packages/shared run build && npm -w apps/api run build",
+    "build:render": "npm install --include=dev && npx prisma generate && npm -w packages/shared run build && npm -w apps/api run build",
     "build:vercel": "npm -w packages/shared run build && npm -w apps/web run build",
     "lint": "eslint . --ext .ts,.tsx",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
