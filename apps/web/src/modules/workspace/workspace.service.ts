@@ -1,6 +1,8 @@
 import { createApi, methodsEnums } from '@/lib/createApi';
 import type {
   Workspace,
+  WorkspaceWithRole,
+  WorkspaceWithMembers,
   WorkspaceMember,
   CreateWorkspaceKeys,
   UpdateWorkspaceKeys,
@@ -18,7 +20,7 @@ function listWorkspacesRequest() {
   return { url: '/workspaces', method: GET };
 }
 
-export const listWorkspaces = createApi<void, Workspace[]>({
+export const listWorkspaces = createApi<void, WorkspaceWithRole[]>({
   request: listWorkspacesRequest,
 });
 
@@ -26,7 +28,7 @@ function getWorkspaceRequest(id: string) {
   return { url: `/workspaces/${id}`, method: GET };
 }
 
-export const getWorkspace = createApi<string, Workspace>({
+export const getWorkspace = createApi<string, WorkspaceWithMembers>({
   request: getWorkspaceRequest,
 });
 

@@ -8,8 +8,8 @@ import {
   useState,
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { setAccessToken } from '@/lib/api-client';
-import { refresh, getMe } from '@/modules/auth/auth.service';
+import { setAccessToken, refreshAccessToken } from '@/lib/api-client';
+import { getMe } from '@/modules/auth/auth.service';
 import { queryKeys } from '@/constants/query-keys';
 import type { User } from '@/modules/auth/types';
 
@@ -63,9 +63,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const restore = async () => {
       try {
-        const res = await refresh();
-        setAccessToken(res.accessToken);
-        await refreshUser();
+        const token = await refreshAccessToken();
+        if (token) {
+          await refreshUser();
+        }
       } catch {
         // No valid session
       } finally {
