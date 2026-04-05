@@ -70,4 +70,11 @@ export const authRepository = {
       data: { revoked: true },
     });
   },
+
+  revokeUserTokens(userId: string) {
+    return prisma.refreshToken.updateMany({
+      where: { userId },
+      data: { revoked: true },
+    });
+  },
 };
