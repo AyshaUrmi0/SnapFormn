@@ -33,6 +33,10 @@ export interface CompleteProfileResponse {
   accessToken: string;
 }
 
+export interface ResetPasswordResponse {
+  success: boolean;
+}
+
 export type { OtpPurpose } from '@snapform/shared';
 
 // Service input types (Keys)
@@ -61,6 +65,11 @@ export interface CompleteProfileKeys {
   firstName: string;
   lastName: string;
   password: string;
+}
+
+export interface ResetPasswordKeys {
+  resetToken: string;
+  newPassword: string;
 }
 
 export interface GoogleLoginKeys {

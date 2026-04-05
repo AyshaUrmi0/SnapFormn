@@ -11,6 +11,8 @@ import type {
   RequestOtpResponse,
   CompleteProfileKeys,
   CompleteProfileResponse,
+  ResetPasswordKeys,
+  ResetPasswordResponse,
   GoogleLoginKeys,
   UpdateUserKeys,
 } from './types';
@@ -57,6 +59,14 @@ function completeProfileRequest(data: CompleteProfileKeys) {
 
 export const completeProfile = createApi<CompleteProfileKeys, CompleteProfileResponse>({
   request: completeProfileRequest,
+});
+
+function resetPasswordRequest(data: ResetPasswordKeys) {
+  return { url: '/auth/reset-password', method: POST, data };
+}
+
+export const resetPassword = createApi<ResetPasswordKeys, ResetPasswordResponse>({
+  request: resetPasswordRequest,
 });
 
 function refreshRequest() {
