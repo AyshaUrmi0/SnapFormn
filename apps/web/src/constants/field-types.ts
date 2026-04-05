@@ -1,4 +1,4 @@
-import type { FieldType } from '@/types/form';
+import type { FieldType } from '@/modules/form/types';
 
 interface FieldTypeConfig {
   label: string;

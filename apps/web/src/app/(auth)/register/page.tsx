@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useGoogleLogin as useGoogleOAuth } from '@react-oauth/google';
@@ -19,14 +18,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useRequestOtp } from '@/hooks/use-request-otp';
+import { useRegister } from '@/hooks/use-register';
 import { useGoogleLogin } from '@/hooks/use-google-login';
-import { forgotPasswordSchema, type ForgotPasswordValues } from '@/modules/auth/schemas';
+import { registerSchema, type RegisterValues } from '@/modules/auth/schemas';
 import { ROUTES } from '@/constants/routes';
 
-export default function LoginPage() {
-  const router = useRouter();
-  const requestOtp = useRequestOtp();
+export default function RegisterPage() {
+  const register = useRegister();
   const googleLogin = useGoogleLogin();
 
   const googleOAuth = useGoogleOAuth({
@@ -34,35 +32,27 @@ export default function LoginPage() {
       googleLogin.mutate(response.access_token);
     },
     onError: () => {
-      toast.error('Google sign-in failed. Please try again.');
+      toast.error('Google sign-up failed. Please try again.');
     },
   });
 
-  const form = useForm<ForgotPasswordValues>({
-    resolver: zodResolver(forgotPasswordSchema),
+  const form = useForm<RegisterValues>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
+      name: '',
       email: '',
     },
   });
 
-  function onSubmit(values: ForgotPasswordValues) {
-    requestOtp.mutate(
-      { email: values.email, purpose: 'LOGIN' },
-      {
-        onSuccess: () => {
-          router.push(
-            `${ROUTES.VERIFY_OTP}?email=${encodeURIComponent(values.email)}&purpose=LOGIN`,
-          );
-        },
-      },
-    );
+  function onSubmit(values: RegisterValues) {
+    register.mutate(values);
   }
 
   return (
     <Card>
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl">Welcome back</CardTitle>
-        <CardDescription>Sign in to your Snapform account</CardDescription>
+        <CardTitle className="text-2xl">Create account</CardTitle>
+        <CardDescription>Get started with Snapform</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <Button
@@ -89,7 +79,7 @@ export default function LoginPage() {
               fill="#EA4335"
             />
           </svg>
-          {googleLogin.isPending ? 'Signing in...' : 'Continue with Google'}
+          {googleLogin.isPending ? 'Signing up...' : 'Continue with Google'}
         </Button>
 
         <div className="relative">
@@ -103,6 +93,24 @@ export default function LoginPage() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="text"
+                      placeholder="Your name (optional)"
+                      autoComplete="name"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <FormField
               control={form.control}
               name="email"
@@ -121,17 +129,17 @@ export default function LoginPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={requestOtp.isPending}>
+            <Button type="submit" className="w-full" disabled={register.isPending}>
               <Mail className="mr-2 h-4 w-4" />
-              {requestOtp.isPending ? 'Sending code...' : 'Continue with email'}
+              {register.isPending ? 'Creating account...' : 'Continue with email'}
             </Button>
           </form>
         </Form>
 
         <p className="text-center text-sm text-muted-foreground">
-          Don&apos;t have an account?{' '}
-          <Link href={ROUTES.REGISTER} className="text-primary hover:underline">
-            Sign up
+          Already have an account?{' '}
+          <Link href={ROUTES.LOGIN} className="text-primary hover:underline">
+            Sign in
           </Link>
         </p>
       </CardContent>
