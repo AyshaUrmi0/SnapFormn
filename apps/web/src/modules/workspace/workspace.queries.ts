@@ -16,6 +16,8 @@ import {
 } from './workspace.service';
 import type {
   Workspace,
+  WorkspaceWithRole,
+  WorkspaceWithMembers,
   WorkspaceMember,
   CreateWorkspaceKeys,
   UpdateWorkspaceKeys,
@@ -28,14 +30,14 @@ import type {
 // ─── Queries ─────────────────────────────────────────────────
 
 export const useWorkspaces = () => {
-  return useQuery<Workspace[], Error>({
+  return useQuery<WorkspaceWithRole[], Error>({
     queryKey: queryKeys.workspaces.all(),
     queryFn: () => listWorkspaces(),
   });
 };
 
 export const useWorkspace = (id: string) => {
-  return useQuery<Workspace, Error>({
+  return useQuery<WorkspaceWithMembers, Error>({
     queryKey: queryKeys.workspaces.detail(id),
     queryFn: () => getWorkspace(id),
     enabled: !!id,
@@ -99,6 +101,9 @@ export const useInviteMember = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.workspaces.members(variables.workspaceId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.detail(variables.workspaceId),
+      });
       toast.success('Member invited!');
     },
     onError: (error) => {
@@ -116,6 +121,9 @@ export const useUpdateMemberRole = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.workspaces.members(variables.workspaceId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.detail(variables.workspaceId),
+      });
       toast.success('Member role updated!');
     },
     onError: (error) => {
@@ -132,6 +140,9 @@ export const useRemoveMember = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.workspaces.members(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.detail(variables.workspaceId),
       });
       toast.success('Member removed.');
     },

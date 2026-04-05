@@ -3,12 +3,14 @@ import { AppError } from '@snapform/shared';
 import { authService, REFRESH_TOKEN_EXPIRY_MS } from './auth.service';
 import { sendSuccess, sendCreated } from '../../utils/response';
 
+const isProduction = process.env.NODE_ENV === 'production';
+
 const REFRESH_COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production',
-  sameSite: 'strict' as const,
+  secure: isProduction,
+  sameSite: isProduction ? ('none' as const) : ('lax' as const),
   maxAge: REFRESH_TOKEN_EXPIRY_MS,
-  path: '/api/v1/auth',
+  path: '/',
 };
 
 export const authController = {
@@ -89,7 +91,12 @@ export const authController = {
     if (refreshToken) {
       await authService.logout(refreshToken);
     }
-    res.clearCookie('refreshToken', { path: '/api/v1/auth' });
+    res.clearCookie('refreshToken', {
+      httpOnly: true,
+      secure: isProduction,
+      sameSite: isProduction ? ('none' as const) : ('lax' as const),
+      path: '/',
+    });
     sendSuccess(res, null, 'Logged out successfully');
   },
 };
