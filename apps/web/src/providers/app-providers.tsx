@@ -1,5 +1,6 @@
 'use client';
 
+import { ThemeProvider } from 'next-themes';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { Toaster } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -12,10 +13,17 @@ export function AppProviders({ children }: { children: React.ReactNode }) {
     <GoogleOAuthProvider clientId={env.GOOGLE_CLIENT_ID}>
       <QueryProvider>
         <AuthProvider>
-          <TooltipProvider delay={300}>
-            {children}
-            <Toaster position="bottom-right" richColors closeButton />
-          </TooltipProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <TooltipProvider delay={300}>
+              {children}
+              <Toaster position="bottom-right" richColors closeButton />
+            </TooltipProvider>
+          </ThemeProvider>
         </AuthProvider>
       </QueryProvider>
     </GoogleOAuthProvider>
