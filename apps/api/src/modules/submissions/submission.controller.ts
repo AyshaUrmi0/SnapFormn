@@ -21,6 +21,12 @@ export const submissionController = {
     sendSuccess(res, submission);
   },
 
+  async analytics(req: Request, res: Response) {
+    const days = Number(req.query.days) || 30;
+    const data = await submissionService.getAnalytics(req.params.formId as string, days);
+    sendSuccess(res, data);
+  },
+
   async delete(req: Request, res: Response) {
     await submissionService.delete(req.params.submissionId as string);
     sendNoContent(res);

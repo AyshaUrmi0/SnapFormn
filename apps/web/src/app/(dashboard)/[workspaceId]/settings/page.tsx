@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -16,8 +15,8 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { PermissionGate } from '@/components/shared/permission-gate';
+import { useModal } from '@/providers/modal-provider';
 import { PageHeader } from '@/components/layout/page-header';
 import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useUpdateWorkspace, useDeleteWorkspace } from '@/modules/workspace/workspace.queries';
@@ -30,7 +29,7 @@ export default function WorkspaceSettingsPage() {
   const { workspace, currentUserPermissions } = useWorkspaceContext();
   const updateWorkspace = useUpdateWorkspace();
   const deleteWorkspace = useDeleteWorkspace();
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { confirm } = useModal();
 
   const form = useForm<UpdateWorkspaceValues>({
     resolver: zodResolver(updateWorkspaceSchema),
@@ -47,11 +46,19 @@ export default function WorkspaceSettingsPage() {
     });
   }
 
-  function handleDelete() {
-    deleteWorkspace.mutate(
-      { id: workspace.id },
-      { onSuccess: () => router.push(ROUTES.WORKSPACES) },
-    );
+  async function handleDelete() {
+    const confirmed = await confirm({
+      title: 'Delete workspace',
+      description: `Are you sure you want to delete "${workspace.name}"? This will permanently remove all forms, submissions, and members. This action cannot be undone.`,
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (confirmed) {
+      deleteWorkspace.mutate(
+        { id: workspace.id },
+        { onSuccess: () => router.push(ROUTES.WORKSPACES) },
+      );
+    }
   }
 
   return (
@@ -116,23 +123,12 @@ export default function WorkspaceSettingsPage() {
           <CardContent>
             <Button
               variant="destructive"
-              onClick={() => setShowDeleteDialog(true)}
+              onClick={handleDelete}
             >
               Delete workspace
             </Button>
           </CardContent>
         </Card>
-
-        <ConfirmDialog
-          open={showDeleteDialog}
-          onOpenChange={setShowDeleteDialog}
-          title="Delete workspace"
-          description={`Are you sure you want to delete "${workspace.name}"? This action cannot be undone.`}
-          confirmLabel="Delete"
-          onConfirm={handleDelete}
-          loading={deleteWorkspace.isPending}
-          variant="destructive"
-        />
       </PermissionGate>
     </div>
   );

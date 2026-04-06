@@ -21,6 +21,7 @@ export const ROUTES = {
       ROOT: `/${workspaceId}/forms/${formId}`,
       EDIT: `/${workspaceId}/forms/${formId}/edit`,
       SUBMISSIONS: `/${workspaceId}/forms/${formId}/submissions`,
+      ANALYTICS: `/${workspaceId}/forms/${formId}/analytics`,
     }),
     MEMBERS: `/${workspaceId}/members`,
     SETTINGS: `/${workspaceId}/settings`,

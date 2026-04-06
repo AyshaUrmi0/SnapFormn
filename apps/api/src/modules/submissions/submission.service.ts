@@ -1,7 +1,7 @@
 import { AppError, paginate, buildPaginationMeta } from '@snapform/shared';
 import { submissionRepository } from './submission.repository';
 import { formRepository } from '../forms/form.repository';
-import type { SubmitFormInput } from './submission.types';
+import type { SubmitFormInput, FormAnalytics } from './submission.types';
 
 export const submissionService = {
   async submit(slug: string, input: SubmitFormInput, ip?: string, userAgent?: string) {
@@ -52,5 +52,30 @@ export const submissionService = {
     const submission = await submissionRepository.findById(submissionId);
     if (!submission) throw AppError.notFound('Submission not found');
     await submissionRepository.delete(submissionId);
+  },
+
+  async getAnalytics(formId: string, days: number): Promise<FormAnalytics> {
+    const [overview, timeline, fieldData] = await Promise.all([
+      submissionRepository.getAnalyticsOverview(formId),
+      submissionRepository.getSubmissionTimeline(formId, days),
+      submissionRepository.getFieldStats(formId),
+    ]);
+
+    const completionRate =
+      overview.totalSubmissions > 0
+        ? Math.round((overview.completedSubmissions / overview.totalSubmissions) * 100)
+        : 0;
+
+    return {
+      overview: {
+        totalSubmissions: overview.totalSubmissions,
+        completedSubmissions: overview.completedSubmissions,
+        completionRate,
+        firstSubmissionAt: overview.firstSubmissionAt?.toISOString() ?? null,
+        lastSubmissionAt: overview.lastSubmissionAt?.toISOString() ?? null,
+      },
+      timeline,
+      fieldStats: fieldData.stats,
+    };
   },
 };

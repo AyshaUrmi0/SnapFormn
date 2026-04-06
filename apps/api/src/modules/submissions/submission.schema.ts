@@ -25,6 +25,16 @@ export const listSubmissionsSchema = z.object({
   }),
 });
 
+export const analyticsSchema = z.object({
+  params: z.object({
+    workspaceId: z.string().min(1),
+    formId: z.string().min(1),
+  }),
+  query: z.object({
+    days: z.coerce.number().int().min(1).max(365).default(30),
+  }),
+});
+
 export const submissionParamsSchema = z.object({
   params: z.object({
     workspaceId: z.string().min(1),

@@ -9,9 +9,11 @@ import {
   listSubmissions,
   getSubmission,
   deleteSubmission,
+  getAnalytics,
 } from './submission.service';
 import type {
   Submission,
+  FormAnalytics,
   SubmitFormKeys,
   ListSubmissionsKeys,
   GetSubmissionKeys,
@@ -33,6 +35,14 @@ export const useSubmission = (workspaceId: string, formId: string, submissionId:
     queryKey: queryKeys.submissions.detail(workspaceId, formId, submissionId),
     queryFn: () => getSubmission({ workspaceId, formId, submissionId }),
     enabled: !!workspaceId && !!formId && !!submissionId,
+  });
+};
+
+export const useFormAnalytics = (workspaceId: string, formId: string, days = 30) => {
+  return useQuery<FormAnalytics, Error>({
+    queryKey: queryKeys.submissions.analytics(workspaceId, formId),
+    queryFn: () => getAnalytics({ workspaceId, formId, days }),
+    enabled: !!workspaceId && !!formId,
   });
 };
 

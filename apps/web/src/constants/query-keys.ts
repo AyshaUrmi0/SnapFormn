@@ -20,5 +20,7 @@ export const queryKeys = {
       ['submissions', workspaceId, formId] as const,
     detail: (workspaceId: string, formId: string, submissionId: string) =>
       ['submissions', workspaceId, formId, submissionId] as const,
+    analytics: (workspaceId: string, formId: string) =>
+      ['submissions', workspaceId, formId, 'analytics'] as const,
   },
 } as const;

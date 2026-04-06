@@ -1,14 +1,12 @@
 'use client';
 
-import { useState } from 'react';
-import { use } from 'react';
+import { useState, use } from 'react';
 import Link from 'next/link';
 import { ArrowLeft, Eye, Trash2, Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { LoadingState } from '@/components/shared/loading-state';
 import { ErrorState } from '@/components/shared/error-state';
-import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { useModal } from '@/providers/modal-provider';
 import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useForm as useFormQuery } from '@/modules/form/form.queries';
 import { useSubmissions, useDeleteSubmission } from '@/modules/submission/submission.queries';
@@ -47,8 +45,8 @@ export default function SubmissionsPage({
   });
   const deleteSubmission = useDeleteSubmission();
 
+  const { confirm } = useModal();
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
-  const [deleteTarget, setDeleteTarget] = useState<Submission | null>(null);
 
   if (isLoading || formLoading) {
     return (
@@ -89,6 +87,11 @@ export default function SubmissionsPage({
             {submissionList.length} response{submissionList.length !== 1 ? 's' : ''}
           </p>
         </div>
+        <Link href={ROUTES.workspace(workspaceId).form(formId).ANALYTICS}>
+          <Button variant="outline" size="sm">
+            Analytics
+          </Button>
+        </Link>
         <Link href={ROUTES.workspace(workspaceId).form(formId).EDIT}>
           <Button variant="outline" size="sm">
             Edit form
@@ -141,7 +144,17 @@ export default function SubmissionsPage({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setDeleteTarget(submission)}
+                  onClick={async () => {
+                    const confirmed = await confirm({
+                      title: 'Delete submission',
+                      description: 'Are you sure you want to delete this submission? This action cannot be undone.',
+                      confirmLabel: 'Delete',
+                      variant: 'destructive',
+                    });
+                    if (confirmed) {
+                      deleteSubmission.mutate({ workspaceId, formId, submissionId: submission.id });
+                    }
+                  }}
                   className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
                   title="Delete"
                 >
@@ -160,23 +173,6 @@ export default function SubmissionsPage({
         submission={selectedSubmission}
       />
 
-      {/* Delete confirm */}
-      <ConfirmDialog
-        open={!!deleteTarget}
-        onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-        title="Delete submission"
-        description="Are you sure you want to delete this submission? This action cannot be undone."
-        onConfirm={() => {
-          if (deleteTarget) {
-            deleteSubmission.mutate(
-              { workspaceId, formId, submissionId: deleteTarget.id },
-              { onSuccess: () => setDeleteTarget(null) },
-            );
-          }
-        }}
-        loading={deleteSubmission.isPending}
-        variant="destructive"
-      />
     </div>
   );
 }
