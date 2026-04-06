@@ -231,6 +231,7 @@ export default function FormEditorPage() {
     <div className="flex flex-col h-[calc(100vh-3.5rem)]">
       <EditorTopbar
         workspaceId={workspaceId}
+        formId={formId}
         workspaceName={workspace.name}
         title={title}
         status={form.status}

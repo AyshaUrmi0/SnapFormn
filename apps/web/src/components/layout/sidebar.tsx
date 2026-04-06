@@ -57,7 +57,7 @@ function getNavSections(workspaceId: string | null): NavSectionDef[] {
     { label: 'Search', href: '#', icon: Search },
     { label: 'Members', href: ws?.MEMBERS ?? '#', icon: Users },
     { label: 'Domains', href: '#', icon: Globe },
-    { label: 'Settings', href: ws?.SETTINGS ?? '#', icon: Settings },
+    { label: 'Settings', href: ROUTES.SETTINGS, icon: Settings },
     { label: 'Upgrade plan', href: '#', icon: Sparkles, className: 'text-primary' },
   ];
 
