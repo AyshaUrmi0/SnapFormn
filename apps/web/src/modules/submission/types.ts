@@ -3,6 +3,10 @@ export interface SubmissionField {
   submissionId: string;
   fieldId: string;
   value: unknown;
+  field?: {
+    label: string;
+    type: string;
+  };
 }
 
 export interface Submission {

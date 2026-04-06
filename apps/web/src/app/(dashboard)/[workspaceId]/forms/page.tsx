@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { FileText, Plus } from 'lucide-react';
 import { PageHeader } from '@/components/layout/page-header';
 import { EmptyState } from '@/components/shared/empty-state';
@@ -10,11 +11,15 @@ import { ErrorState } from '@/components/shared/error-state';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { PermissionGate } from '@/components/shared/permission-gate';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { useWorkspaceContext } from '@/providers/workspace-provider';
-import { useForms, useDeleteForm, useUpdateFormStatus } from '@/modules/form/form.queries';
-import { FormCard } from '@/features/forms/form-card';
+import { useForms, useDeleteForm, useUpdateForm, useDuplicateForm } from '@/modules/form/form.queries';
+import { FormActionsMenu } from '@/features/forms/form-actions-menu';
+import { RenameFormDialog } from '@/features/forms/rename-form-dialog';
+import { FormStatusBadge } from '@/features/forms/form-status-badge';
 import { PERMISSIONS } from '@/lib/permissions';
 import { ROUTES } from '@/constants/routes';
+import { formatRelativeTime } from '@/lib/date-utils';
 import type { Form, FormStatus } from '@/modules/form/types';
 
 const STATUS_FILTERS: { label: string; value: FormStatus | 'ALL' }[] = [
@@ -25,9 +30,11 @@ const STATUS_FILTERS: { label: string; value: FormStatus | 'ALL' }[] = [
 ];
 
 export default function WorkspaceFormsPage() {
+  const router = useRouter();
   const { workspace, currentUserPermissions } = useWorkspaceContext();
   const [statusFilter, setStatusFilter] = useState<FormStatus | 'ALL'>('ALL');
   const [formToDelete, setFormToDelete] = useState<Form | null>(null);
+  const [formToRename, setFormToRename] = useState<Form | null>(null);
 
   const { data, isLoading, isError, error, refetch } = useForms({
     workspaceId: workspace.id,
@@ -35,13 +42,10 @@ export default function WorkspaceFormsPage() {
   });
 
   const deleteForm = useDeleteForm();
-  const updateFormStatus = useUpdateFormStatus();
+  const updateForm = useUpdateForm();
+  const duplicateForm = useDuplicateForm();
 
   const forms = data ?? [];
-
-  function handleStatusChange(form: Form, status: FormStatus) {
-    updateFormStatus.mutate({ workspaceId: workspace.id, formId: form.id, data: { status } });
-  }
 
   function handleDelete() {
     if (!formToDelete) return;
@@ -49,6 +53,18 @@ export default function WorkspaceFormsPage() {
       { workspaceId: workspace.id, formId: formToDelete.id },
       { onSuccess: () => setFormToDelete(null) },
     );
+  }
+
+  function handleRename(newTitle: string) {
+    if (!formToRename) return;
+    updateForm.mutate(
+      { workspaceId: workspace.id, formId: formToRename.id, data: { title: newTitle } },
+      { onSuccess: () => setFormToRename(null) },
+    );
+  }
+
+  function handleDuplicate(form: Form) {
+    duplicateForm.mutate({ workspaceId: workspace.id, formId: form.id });
   }
 
   return (
@@ -111,17 +127,39 @@ export default function WorkspaceFormsPage() {
       )}
 
       {forms.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {forms.map((form: Form) => (
-            <FormCard
-              key={form.id}
-              form={form}
-              workspaceId={workspace.id}
-              onDelete={setFormToDelete}
-              onStatusChange={handleStatusChange}
-              userPermissions={currentUserPermissions}
-            />
-          ))}
+        <div className="rounded-lg border">
+          {forms.map((form: Form, idx: number) => {
+            const submissions = form._count?.submissions ?? 0;
+            return (
+              <Link
+                key={form.id}
+                href={ROUTES.workspace(workspace.id).form(form.id).EDIT}
+                className={`flex items-center gap-3 px-4 py-3 hover:bg-muted/50 transition-colors${idx < forms.length - 1 ? ' border-b' : ''}`}
+              >
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium truncate">{form.title}</span>
+                    <FormStatusBadge status={form.status} />
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {submissions} submission{submissions !== 1 ? 's' : ''}
+                    {' · '}Edited {formatRelativeTime(form.updatedAt)}
+                  </p>
+                </div>
+                <div onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
+                  <FormActionsMenu
+                    form={form}
+                    workspaceId={workspace.id}
+                    userPermissions={currentUserPermissions}
+                    onEdit={() => router.push(ROUTES.workspace(workspace.id).form(form.id).EDIT)}
+                    onRename={() => setFormToRename(form)}
+                    onDuplicate={() => handleDuplicate(form)}
+                    onDelete={() => setFormToDelete(form)}
+                  />
+                </div>
+              </Link>
+            );
+          })}
         </div>
       )}
 
@@ -134,6 +172,14 @@ export default function WorkspaceFormsPage() {
         onConfirm={handleDelete}
         loading={deleteForm.isPending}
         variant="destructive"
+      />
+
+      <RenameFormDialog
+        open={!!formToRename}
+        onOpenChange={(open) => !open && setFormToRename(null)}
+        currentTitle={formToRename?.title ?? ''}
+        onRename={handleRename}
+        loading={updateForm.isPending}
       />
     </div>
   );

@@ -2,22 +2,14 @@
 
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import {
-  Type, AlignLeft, Mail, Hash, Phone, Link, Calendar,
-  ChevronDown, ListChecks, CheckSquare, Circle,
-  Upload, Star, SlidersHorizontal, MessageSquare, Minus,
+  Type, Calendar, ChevronDown, Upload, Star,
   GripVertical, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FIELD_TYPE_CONFIG } from '@/constants/field-types';
+import { FIELD_ICON_MAP } from '@/constants/icon-map';
 import { useEditorSelection } from '../editor-selection-context';
 import type { FieldType } from '@/modules/form/types';
-import type { LucideIcon } from 'lucide-react';
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  Type, AlignLeft, Mail, Hash, Phone, Link, Calendar,
-  ChevronDown, ListChecks, CheckSquare, Circle,
-  Upload, Star, SlidersHorizontal, MessageSquare, Minus,
-};
 
 function FieldPreview({ fieldType, label, placeholder, required }: {
   fieldType: FieldType;
@@ -190,7 +182,7 @@ export function FormBlockRenderer({ node, deleteNode }: NodeViewProps) {
   const fieldId = attrs.fieldId as string;
   const fieldType = attrs.fieldType as FieldType;
   const config = FIELD_TYPE_CONFIG[fieldType];
-  const Icon = ICON_MAP[config?.icon] ?? Type;
+  const Icon = FIELD_ICON_MAP[config?.icon] ?? Type;
 
   const isSelected = selectedFieldId === fieldId;
   const hasError = validationErrorIds.has(fieldId);

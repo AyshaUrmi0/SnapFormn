@@ -90,6 +90,11 @@ export interface UpdateFormFieldsKeys {
   fields: Omit<FormField, 'formId' | 'createdAt' | 'updatedAt'>[];
 }
 
+export interface DuplicateFormKeys {
+  workspaceId: string;
+  formId: string;
+}
+
 export interface DeleteFormKeys {
   workspaceId: string;
   formId: string;

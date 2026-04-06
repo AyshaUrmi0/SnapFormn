@@ -45,6 +45,16 @@ export const formController = {
     sendSuccess(res, fields, 'Form fields updated');
   },
 
+  async duplicate(req: Request, res: Response) {
+    const userId = req.user!.sub;
+    const form = await formService.duplicate(
+      req.params.formId as string,
+      req.params.workspaceId as string,
+      userId,
+    );
+    sendCreated(res, form, 'Form duplicated');
+  },
+
   async delete(req: Request, res: Response) {
     await formService.delete(req.params.formId as string);
     sendNoContent(res);
