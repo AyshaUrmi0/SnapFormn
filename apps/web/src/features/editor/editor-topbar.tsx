@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft, Save, Eye, ChevronRight, Globe, RotateCcw, X } from 'lucide-react';
+import { ArrowLeft, Save, Eye, ChevronRight, Globe, RotateCcw, X, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -10,6 +10,7 @@ import type { FormStatus } from '@/modules/form/types';
 
 interface EditorTopbarProps {
   workspaceId: string;
+  formId: string;
   workspaceName: string;
   title: string;
   status: FormStatus;
@@ -35,6 +36,7 @@ const STATUS_VARIANTS: Record<FormStatus, 'secondary' | 'default' | 'outline'> =
 
 export function EditorTopbar({
   workspaceId,
+  formId,
   workspaceName,
   title,
   status,
@@ -92,6 +94,13 @@ export function EditorTopbar({
         )}
 
         <Separator orientation="vertical" className="h-5 mx-0.5" />
+
+        <Link href={ROUTES.workspace(workspaceId).form(formId).SETTINGS}>
+          <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5">
+            <Settings className="h-3.5 w-3.5" />
+            Settings
+          </Button>
+        </Link>
 
         <Button
           variant={isPreview ? 'default' : 'ghost'}

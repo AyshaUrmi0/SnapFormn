@@ -9,6 +9,7 @@ export const ROUTES = {
 
   // Dashboard
   HOME: '/',
+  SETTINGS: '/settings',
   WORKSPACES: '/workspaces',
   NEW_WORKSPACE: '/workspaces/new',
 
@@ -22,6 +23,7 @@ export const ROUTES = {
       EDIT: `/${workspaceId}/forms/${formId}/edit`,
       SUBMISSIONS: `/${workspaceId}/forms/${formId}/submissions`,
       ANALYTICS: `/${workspaceId}/forms/${formId}/analytics`,
+      SETTINGS: `/${workspaceId}/forms/${formId}/settings`,
     }),
     MEMBERS: `/${workspaceId}/members`,
     SETTINGS: `/${workspaceId}/settings`,

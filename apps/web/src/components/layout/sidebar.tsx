@@ -29,9 +29,11 @@ import { UserMenu } from './user-menu';
 import { WorkspaceSwitcher } from './workspace-switcher';
 import { ROUTES } from '@/constants/routes';
 
+const NON_WORKSPACE_ROUTES = ['workspaces', 'settings', 'login', 'register', 'verify-otp', 'complete-profile', 'forgot-password', 'reset-password', 'f'];
+
 function getWorkspaceIdFromPath(pathname: string): string | null {
   const segments = pathname.split('/').filter(Boolean);
-  if (!segments[0] || segments[0] === 'workspaces') return null;
+  if (!segments[0] || NON_WORKSPACE_ROUTES.includes(segments[0])) return null;
   return segments[0];
 }
 
@@ -57,7 +59,7 @@ function getNavSections(workspaceId: string | null): NavSectionDef[] {
     { label: 'Search', href: '#', icon: Search },
     { label: 'Members', href: ws?.MEMBERS ?? '#', icon: Users },
     { label: 'Domains', href: '#', icon: Globe },
-    { label: 'Settings', href: ws?.SETTINGS ?? '#', icon: Settings },
+    { label: 'Settings', href: ROUTES.SETTINGS, icon: Settings },
     { label: 'Upgrade plan', href: '#', icon: Sparkles, className: 'text-primary' },
   ];
 
