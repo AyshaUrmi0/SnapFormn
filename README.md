@@ -146,7 +146,7 @@ npm run dev:all
 
 ## API Documentation
 
-Swagger UI is available at `http://localhost:4000/api/docs` when the server is running.
+Swagger UI is available at [https://snapformn.onrender.com/api/docs](https://snapformn.onrender.com/api/docs).
 
 ## Architecture
 
