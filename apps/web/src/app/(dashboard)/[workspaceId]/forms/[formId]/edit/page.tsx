@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import { toast } from 'sonner';
 import { LoadingState } from '@/components/shared/loading-state';
 import { ErrorState } from '@/components/shared/error-state';
+import { useModal } from '@/providers/modal-provider';
 import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useForm as useFormQuery } from '@/modules/form/form.queries';
 import { useUpdateForm, useUpdateFormFields, useUpdateFormStatus } from '@/modules/form/form.queries';
@@ -22,6 +23,7 @@ import type { FormStatus } from '@/modules/form/types';
 export default function FormEditorPage() {
   const params = useParams<{ workspaceId: string; formId: string }>();
   const { workspace } = useWorkspaceContext();
+  const { confirm } = useModal();
   const workspaceId = workspace.id;
   const formId = params.formId;
 
@@ -179,6 +181,17 @@ export default function FormEditorPage() {
         if (isDirty) {
           await handleSave();
         }
+      }
+
+      // Confirm before closing
+      if (status === 'CLOSED') {
+        const confirmed = await confirm({
+          title: 'Close form',
+          description: 'Closing this form will stop accepting new submissions. You can reopen it later.',
+          confirmLabel: 'Close form',
+          variant: 'destructive',
+        });
+        if (!confirmed) return;
       }
 
       await updateFormStatus.mutateAsync({ workspaceId, formId, data: { status } });

@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MoreHorizontal, UserPlus } from 'lucide-react';
@@ -25,9 +24,9 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { ConfirmDialog } from '@/components/shared/confirm-dialog';
 import { PermissionGate } from '@/components/shared/permission-gate';
 import { PageHeader } from '@/components/layout/page-header';
+import { useModal } from '@/providers/modal-provider';
 import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useAuth } from '@/hooks/use-auth';
 import {
@@ -59,7 +58,7 @@ export default function WorkspaceMembersPage() {
   const inviteMember = useInviteMember();
   const updateMemberRole = useUpdateMemberRole();
   const removeMember = useRemoveMember();
-  const [memberToRemove, setMemberToRemove] = useState<WorkspaceMember | null>(null);
+  const { confirm } = useModal();
 
   const form = useForm<InviteMemberValues>({
     resolver: zodResolver(inviteMemberSchema),
@@ -76,20 +75,31 @@ export default function WorkspaceMembersPage() {
     );
   }
 
-  function handleRoleChange(member: WorkspaceMember, role: WorkspaceRole) {
-    updateMemberRole.mutate({
-      workspaceId: workspace.id,
-      memberId: member.id,
-      data: { role },
+  async function handleRoleChange(member: WorkspaceMember, role: WorkspaceRole) {
+    const confirmed = await confirm({
+      title: 'Change member role',
+      description: `Are you sure you want to change ${member.user?.name || member.user?.email}'s role to ${role}?`,
+      confirmLabel: 'Change role',
     });
+    if (confirmed) {
+      updateMemberRole.mutate({
+        workspaceId: workspace.id,
+        memberId: member.id,
+        data: { role },
+      });
+    }
   }
 
-  function handleRemove() {
-    if (!memberToRemove) return;
-    removeMember.mutate(
-      { workspaceId: workspace.id, memberId: memberToRemove.id },
-      { onSuccess: () => setMemberToRemove(null) },
-    );
+  async function handleRemove(member: WorkspaceMember) {
+    const confirmed = await confirm({
+      title: 'Remove member',
+      description: `Are you sure you want to remove ${member.user?.name || member.user?.email} from this workspace?`,
+      confirmLabel: 'Remove',
+      variant: 'destructive',
+    });
+    if (confirmed) {
+      removeMember.mutate({ workspaceId: workspace.id, memberId: member.id });
+    }
   }
 
   return (
@@ -212,7 +222,7 @@ export default function WorkspaceMembersPage() {
                           <DropdownMenuGroup>
                             <DropdownMenuItem
                               className="text-destructive"
-                              onClick={() => setMemberToRemove(member)}
+                              onClick={() => handleRemove(member)}
                             >
                               Remove member
                             </DropdownMenuItem>
@@ -228,16 +238,6 @@ export default function WorkspaceMembersPage() {
         </CardContent>
       </Card>
 
-      <ConfirmDialog
-        open={!!memberToRemove}
-        onOpenChange={(open) => !open && setMemberToRemove(null)}
-        title="Remove member"
-        description={`Are you sure you want to remove ${memberToRemove?.user?.name || memberToRemove?.user?.email} from this workspace?`}
-        confirmLabel="Remove"
-        onConfirm={handleRemove}
-        loading={removeMember.isPending}
-        variant="destructive"
-      />
     </div>
   );
 }

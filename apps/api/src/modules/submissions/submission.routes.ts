@@ -5,7 +5,7 @@ import { authenticate } from '../../middlewares/auth.middleware';
 import { requirePermission } from '../../middlewares/rbac.middleware';
 import { asyncHandler } from '../../utils/asyncHandler';
 import { PERMISSIONS } from '@snapform/shared';
-import { submitFormSchema, listSubmissionsSchema, submissionParamsSchema } from './submission.schema';
+import { submitFormSchema, listSubmissionsSchema, analyticsSchema, submissionParamsSchema } from './submission.schema';
 
 const router = Router();
 
@@ -53,6 +53,14 @@ router.get(
   validate(listSubmissionsSchema),
   requirePermission(PERMISSIONS.SUBMISSION_VIEW),
   asyncHandler(submissionController.list),
+);
+
+router.get(
+  '/workspace/:workspaceId/forms/:formId/analytics',
+  authenticate,
+  validate(analyticsSchema),
+  requirePermission(PERMISSIONS.SUBMISSION_VIEW),
+  asyncHandler(submissionController.analytics),
 );
 
 router.get(

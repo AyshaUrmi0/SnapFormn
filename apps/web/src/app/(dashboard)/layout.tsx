@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { AuthGuard } from '@/components/shared/auth-guard';
+import { ModalProvider } from '@/providers/modal-provider';
 import { Sidebar } from '@/components/layout/sidebar';
 import { MobileSidebar } from '@/components/layout/mobile-sidebar';
 import { Topbar } from '@/components/layout/topbar';
@@ -11,6 +12,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <AuthGuard>
+      <ModalProvider>
       <div className="flex min-h-screen">
         {/* Desktop sidebar - hidden on mobile */}
         <div className="hidden md:flex">
@@ -26,6 +28,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <main className="flex-1 p-6">{children}</main>
         </div>
       </div>
+      </ModalProvider>
     </AuthGuard>
   );
 }

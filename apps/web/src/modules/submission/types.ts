@@ -42,3 +42,27 @@ export interface DeleteSubmissionKeys {
   formId: string;
   submissionId: string;
 }
+
+export interface FormAnalytics {
+  overview: {
+    totalSubmissions: number;
+    completedSubmissions: number;
+    completionRate: number;
+    firstSubmissionAt: string | null;
+    lastSubmissionAt: string | null;
+  };
+  timeline: Array<{ date: string; count: number }>;
+  fieldStats: Array<{
+    fieldId: string;
+    label: string;
+    type: string;
+    responseCount: number;
+    responseRate: number;
+  }>;
+}
+
+export interface GetAnalyticsKeys {
+  workspaceId: string;
+  formId: string;
+  days?: number;
+}

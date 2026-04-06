@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { buttonVariants } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ConfirmDialog } from '@/components/shared/confirm-dialog';
+import { useModal } from '@/providers/modal-provider';
 import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useForms, useDeleteForm, useUpdateForm, useDuplicateForm } from '@/modules/form/form.queries';
 import { FormActionsMenu } from '@/features/forms/form-actions-menu';
@@ -19,6 +19,7 @@ import type { Form } from '@/modules/form/types';
 
 export default function WorkspaceHomePage() {
   const router = useRouter();
+  const { confirm } = useModal();
   const { workspace, currentUserPermissions } = useWorkspaceContext();
   const workspaceId = workspace.id;
   const { data: forms, isLoading, isError, error, refetch } = useForms({ workspaceId });
@@ -27,15 +28,18 @@ export default function WorkspaceHomePage() {
   const updateForm = useUpdateForm();
   const duplicateForm = useDuplicateForm();
 
-  const [formToDelete, setFormToDelete] = useState<Form | null>(null);
   const [formToRename, setFormToRename] = useState<Form | null>(null);
 
-  function handleDelete() {
-    if (!formToDelete) return;
-    deleteForm.mutate(
-      { workspaceId, formId: formToDelete.id },
-      { onSuccess: () => setFormToDelete(null) },
-    );
+  async function handleDelete(form: Form) {
+    const confirmed = await confirm({
+      title: 'Delete form',
+      description: `Are you sure you want to delete "${form.title}"? All submissions will be permanently lost.`,
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (confirmed) {
+      deleteForm.mutate({ workspaceId, formId: form.id });
+    }
   }
 
   function handleRename(newTitle: string) {
@@ -135,7 +139,8 @@ export default function WorkspaceHomePage() {
                     onEdit={() => router.push(ROUTES.workspace(workspaceId).form(form.id).EDIT)}
                     onRename={() => setFormToRename(form)}
                     onDuplicate={() => handleDuplicate(form)}
-                    onDelete={() => setFormToDelete(form)}
+                    onDelete={() => handleDelete(form)}
+                    onAnalytics={() => router.push(ROUTES.workspace(workspaceId).form(form.id).ANALYTICS)}
                   />
                 </div>
               </Link>
@@ -143,17 +148,6 @@ export default function WorkspaceHomePage() {
           })}
         </div>
       )}
-
-      <ConfirmDialog
-        open={!!formToDelete}
-        onOpenChange={(open) => !open && setFormToDelete(null)}
-        title="Delete form"
-        description={`Are you sure you want to delete "${formToDelete?.title}"? All submissions will be permanently lost.`}
-        confirmLabel="Delete"
-        onConfirm={handleDelete}
-        loading={deleteForm.isPending}
-        variant="destructive"
-      />
 
       <RenameFormDialog
         open={!!formToRename}

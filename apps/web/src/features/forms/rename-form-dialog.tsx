@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -30,6 +30,11 @@ export function RenameFormDialog({
 }: RenameFormDialogProps) {
   const [title, setTitle] = useState(currentTitle);
 
+  // Sync when dialog opens with a different form
+  useEffect(() => {
+    if (open) setTitle(currentTitle);
+  }, [open, currentTitle]);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const trimmed = title.trim();
@@ -58,7 +63,7 @@ export function RenameFormDialog({
               id="rename-title"
               value={title}
               onChange={(e) => setTitle((e.target as HTMLInputElement).value)}
-              placeholder="Form title"
+              placeholder={currentTitle}
               autoFocus
             />
           </div>

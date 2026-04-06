@@ -1,10 +1,12 @@
 import { createApi, methodsEnums } from '@/lib/createApi';
 import type {
   Submission,
+  FormAnalytics,
   SubmitFormKeys,
   ListSubmissionsKeys,
   GetSubmissionKeys,
   DeleteSubmissionKeys,
+  GetAnalyticsKeys,
 } from './types';
 
 const { GET, POST, DELETE } = methodsEnums;
@@ -53,4 +55,18 @@ function deleteSubmissionRequest({ workspaceId, formId, submissionId }: DeleteSu
 
 export const deleteSubmission = createApi<DeleteSubmissionKeys, void>({
   request: deleteSubmissionRequest,
+});
+
+// ─── Analytics ──────────────────────────────────────────────
+
+function getAnalyticsRequest({ workspaceId, formId, days }: GetAnalyticsKeys) {
+  return {
+    url: `/submissions/workspace/${workspaceId}/forms/${formId}/analytics`,
+    method: GET,
+    params: { days } as Record<string, string | number | undefined>,
+  };
+}
+
+export const getAnalytics = createApi<GetAnalyticsKeys, FormAnalytics>({
+  request: getAnalyticsRequest,
 });
