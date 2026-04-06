@@ -2,16 +2,124 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ChevronRight, Plus, MoreHorizontal, FileText } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { ChevronRight, Plus, MoreHorizontal, FileText, Pencil, Type, Link2, CopyPlus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useModal } from '@/providers/modal-provider';
 import { useWorkspaces } from '@/modules/workspace/workspace.queries';
-import { useForms } from '@/modules/form/form.queries';
+import { useForms, useDeleteForm, useUpdateForm, useDuplicateForm } from '@/modules/form/form.queries';
+import { RenameFormDialog } from '@/features/forms/rename-form-dialog';
 import { ROUTES } from '@/constants/routes';
 import type { Workspace } from '@/modules/workspace/types';
+import type { Form } from '@/modules/form/types';
 
 interface WorkspaceSwitcherProps {
   onNavigate?: () => void;
+}
+
+function FormItemMenu({
+  form,
+  workspaceId,
+  onNavigate,
+}: {
+  form: Form;
+  workspaceId: string;
+  onNavigate?: () => void;
+}) {
+  const router = useRouter();
+  const { confirm } = useModal();
+  const deleteForm = useDeleteForm();
+  const duplicateForm = useDuplicateForm();
+  const updateForm = useUpdateForm();
+  const [showRename, setShowRename] = useState(false);
+
+  async function handleDelete() {
+    const confirmed = await confirm({
+      title: 'Delete form',
+      description: `Are you sure you want to delete "${form.title}"? All submissions will be permanently lost.`,
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (confirmed) {
+      deleteForm.mutate({ workspaceId, formId: form.id });
+    }
+  }
+
+  function handleCopyLink() {
+    const url = `${window.location.origin}/f/${form.slug}`;
+    navigator.clipboard.writeText(url).then(() => {
+      toast.success('Link copied to clipboard');
+    });
+  }
+
+  function handleRename(newTitle: string) {
+    updateForm.mutate(
+      { workspaceId, formId: form.id, data: { title: newTitle } },
+      { onSuccess: () => setShowRename(false) },
+    );
+  }
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          className="p-0.5 rounded hover:bg-sidebar-accent opacity-0 group-hover/form:opacity-100 transition-opacity shrink-0"
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+        >
+          <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start" side="right" onClick={(e) => e.stopPropagation()}>
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => { router.push(ROUTES.workspace(workspaceId).form(form.id).EDIT); onNavigate?.(); }}>
+              <Pencil className="mr-2 h-3.5 w-3.5" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setShowRename(true)}>
+              <Type className="mr-2 h-3.5 w-3.5" />
+              Rename
+            </DropdownMenuItem>
+            {form.status === 'PUBLISHED' && (
+              <DropdownMenuItem onClick={handleCopyLink}>
+                <Link2 className="mr-2 h-3.5 w-3.5" />
+                Copy link
+              </DropdownMenuItem>
+            )}
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => duplicateForm.mutate({ workspaceId, formId: form.id })}>
+              <CopyPlus className="mr-2 h-3.5 w-3.5" />
+              Duplicate
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuGroup>
+            <DropdownMenuItem className="text-destructive" onClick={handleDelete}>
+              <Trash2 className="mr-2 h-3.5 w-3.5" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuGroup>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      <RenameFormDialog
+        open={showRename}
+        onOpenChange={setShowRename}
+        currentTitle={form.title}
+        onRename={handleRename}
+        loading={updateForm.isPending}
+      />
+    </>
+  );
 }
 
 function WorkspaceItem({
@@ -57,7 +165,7 @@ function WorkspaceItem({
           {workspace.name}
         </Link>
 
-        {/* Actions: ... menu and + for new form */}
+        {/* Actions: + for new form */}
         <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
           <Link
             href={wsRoutes.NEW_FORM}
@@ -78,20 +186,29 @@ function WorkspaceItem({
               const formHref = wsRoutes.form(form.id).EDIT;
               const isFormActive = pathname === formHref;
               return (
-                <Link
+                <div
                   key={form.id}
-                  href={formHref}
-                  onClick={onNavigate}
-                  className={cn(
-                    'flex items-center gap-2 rounded-md px-2 py-1 text-[13px] transition-colors',
-                    isFormActive
-                      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                      : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
-                  )}
+                  className="group/form flex items-center gap-1 rounded-md pr-1 transition-colors hover:bg-sidebar-accent/50"
                 >
-                  <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="truncate">{form.title}</span>
-                </Link>
+                  <Link
+                    href={formHref}
+                    onClick={onNavigate}
+                    className={cn(
+                      'flex-1 flex items-center gap-2 rounded-md px-2 py-1 text-[13px] min-w-0 transition-colors',
+                      isFormActive
+                        ? 'text-sidebar-accent-foreground font-medium'
+                        : 'text-sidebar-foreground',
+                    )}
+                  >
+                    <FileText className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                    <span className="truncate">{form.title}</span>
+                  </Link>
+                  <FormItemMenu
+                    form={form}
+                    workspaceId={workspace.id}
+                    onNavigate={onNavigate}
+                  />
+                </div>
               );
             })
           ) : (
