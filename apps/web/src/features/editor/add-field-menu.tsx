@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  Type, AlignLeft, Mail, Hash, Phone, Link, Calendar,
-  ChevronDown, ListChecks, CheckSquare, Circle,
-  Upload, Star, SlidersHorizontal, MessageSquare, Minus,
-  Plus,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Plus, Type } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,14 +11,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { FIELD_TYPE_CONFIG, FIELD_TYPE_CATEGORIES } from '@/constants/field-types';
+import { FIELD_ICON_MAP } from '@/constants/icon-map';
 import type { FieldType } from '@/modules/form/types';
-import type { LucideIcon } from 'lucide-react';
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  Type, AlignLeft, Mail, Hash, Phone, Link, Calendar,
-  ChevronDown, ListChecks, CheckSquare, Circle,
-  Upload, Star, SlidersHorizontal, MessageSquare, Minus,
-};
 
 interface AddFieldMenuProps {
   onAdd: (type: FieldType) => void;
@@ -51,7 +39,7 @@ export function AddFieldMenu({ onAdd }: AddFieldMenuProps) {
               <DropdownMenuGroup>
                 <DropdownMenuLabel>{label}</DropdownMenuLabel>
                 {fields.map(([type, config]) => {
-                  const Icon = ICON_MAP[config.icon] ?? Type;
+                  const Icon = FIELD_ICON_MAP[config.icon] ?? Type;
                   return (
                     <DropdownMenuItem
                       key={type}

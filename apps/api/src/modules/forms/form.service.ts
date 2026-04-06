@@ -73,6 +73,50 @@ export const formService = {
     );
   },
 
+  async duplicate(formId: string, workspaceId: string, userId: string) {
+    const form = await formRepository.findById(formId);
+    if (!form) throw AppError.notFound('Form not found');
+
+    const baseTitle = `${form.title} (Copy)`;
+    const baseSlug = slugify(baseTitle);
+
+    // Ensure unique slug
+    let slug = baseSlug;
+    let counter = 1;
+    while (await formRepository.findBySlug(workspaceId, slug)) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
+    const newForm = await formRepository.create({
+      workspace: { connect: { id: workspaceId } },
+      createdBy: { connect: { id: userId } },
+      title: baseTitle,
+      slug,
+      description: form.description,
+    });
+
+    // Duplicate fields
+    if (form.fields && form.fields.length > 0) {
+      await formRepository.replaceFields(
+        newForm.id,
+        form.fields.map((f) => ({
+          type: f.type as string,
+          label: f.label,
+          description: f.description ?? undefined,
+          placeholder: f.placeholder ?? undefined,
+          required: f.required,
+          order: f.order,
+          options: f.options ?? undefined,
+          validations: f.validations ?? undefined,
+          conditionals: f.conditionals ?? undefined,
+        })),
+      );
+    }
+
+    return formRepository.findById(newForm.id);
+  },
+
   async delete(formId: string) {
     const form = await formRepository.findById(formId);
     if (!form) throw AppError.notFound('Form not found');

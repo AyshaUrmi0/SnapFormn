@@ -103,6 +103,14 @@ router.put(
   asyncHandler(formController.replaceFields),
 );
 
+router.post(
+  '/workspace/:workspaceId/:formId/duplicate',
+  authenticate,
+  validate(formParamsSchema),
+  requirePermission(PERMISSIONS.FORM_CREATE),
+  asyncHandler(formController.duplicate),
+);
+
 router.delete(
   '/workspace/:workspaceId/:formId',
   authenticate,

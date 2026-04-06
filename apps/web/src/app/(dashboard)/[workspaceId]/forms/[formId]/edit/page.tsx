@@ -40,10 +40,12 @@ export default function FormEditorPage() {
   const [showPublishDialog, setShowPublishDialog] = useState(false);
   const initialized = useRef(false);
   const editorRef = useRef<DocumentEditorRef>(null);
+  const serverFieldIds = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (form && !initialized.current) {
       setTitle(form.title);
+      serverFieldIds.current = new Set((form.fields ?? []).map((f) => f.id));
       setFields(
         (form.fields ?? [])
           .sort((a, b) => a.order - b.order)
@@ -131,7 +133,7 @@ export default function FormEditorPage() {
           workspaceId,
           formId,
           fields: fields.map((f) => ({
-            id: f.id,
+            id: serverFieldIds.current.has(f.id) ? f.id : undefined as unknown as string,
             type: f.type,
             label: f.label,
             description: f.description,
@@ -147,6 +149,15 @@ export default function FormEditorPage() {
 
       await Promise.all(promises);
       setIsDirty(false);
+      // Refetch to get server-generated IDs for new fields
+      const updated = await refetch();
+      if (updated.data) {
+        const serverFields = (updated.data.fields ?? [])
+          .sort((a, b) => a.order - b.order)
+          .map(toEditorField);
+        setFields(serverFields);
+        serverFieldIds.current = new Set(serverFields.map((f) => f.id));
+      }
     } finally {
       setIsSaving(false);
     }

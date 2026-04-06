@@ -3,12 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  ChevronRight,
-  Plus,
-  MoreHorizontal,
-  FileText,
-} from 'lucide-react';
+import { ChevronRight, Plus, MoreHorizontal, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useWorkspaces } from '@/modules/workspace/workspace.queries';
 import { useForms } from '@/modules/form/form.queries';
@@ -41,9 +36,7 @@ function WorkspaceItem({
       <div
         className={cn(
           'group flex items-center gap-1 rounded-md px-2 py-1.5 text-[13px] transition-colors',
-          isActive
-            ? 'text-sidebar-accent-foreground font-medium'
-            : 'text-sidebar-foreground',
+          isActive ? 'text-sidebar-accent-foreground font-medium' : 'text-sidebar-foreground',
           'hover:bg-sidebar-accent/50',
         )}
       >
@@ -60,24 +53,12 @@ function WorkspaceItem({
           />
         </button>
 
-        <Link
-          href={wsRoutes.FORMS}
-          onClick={onNavigate}
-          className="flex-1 truncate"
-        >
+        <Link href={wsRoutes.FORMS} onClick={onNavigate} className="flex-1 truncate">
           {workspace.name}
         </Link>
 
         {/* Actions: ... menu and + for new form */}
         <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
-          <Link
-            href={wsRoutes.FORMS}
-            onClick={onNavigate}
-            className="p-0.5 rounded hover:bg-sidebar-accent"
-            title="Workspace options"
-          >
-            <MoreHorizontal className="h-3.5 w-3.5 text-muted-foreground" />
-          </Link>
           <Link
             href={wsRoutes.NEW_FORM}
             onClick={onNavigate}
@@ -114,9 +95,7 @@ function WorkspaceItem({
               );
             })
           ) : (
-            <p className="px-2 py-1 text-[12px] text-muted-foreground italic">
-              No forms yet
-            </p>
+            <p className="px-2 py-1 text-[12px] text-muted-foreground italic">No forms yet</p>
           )}
         </div>
       )}
@@ -130,8 +109,7 @@ export function WorkspaceSwitcher({ onNavigate }: WorkspaceSwitcherProps) {
 
   // Extract current workspaceId from pathname
   const segments = pathname.split('/').filter(Boolean);
-  const currentWorkspaceId =
-    segments[0] !== 'workspaces' ? segments[0] : null;
+  const currentWorkspaceId = segments[0] !== 'workspaces' ? segments[0] : null;
 
   if (!workspaces || workspaces.length === 0) return null;
 

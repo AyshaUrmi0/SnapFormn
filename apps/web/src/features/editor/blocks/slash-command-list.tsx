@@ -3,21 +3,11 @@
 import {
   forwardRef, useEffect, useImperativeHandle, useState, useCallback,
 } from 'react';
-import {
-  Type, AlignLeft, Mail, Hash, Phone, Link, Calendar,
-  ChevronDown, ListChecks, CheckSquare, Circle,
-  Upload, Star, SlidersHorizontal, MessageSquare, Minus,
-} from 'lucide-react';
+import { Type } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FIELD_TYPE_CONFIG, FIELD_TYPE_CATEGORIES } from '@/constants/field-types';
+import { FIELD_ICON_MAP } from '@/constants/icon-map';
 import type { FieldType } from '@/modules/form/types';
-import type { LucideIcon } from 'lucide-react';
-
-const ICON_MAP: Record<string, LucideIcon> = {
-  Type, AlignLeft, Mail, Hash, Phone, Link, Calendar,
-  ChevronDown, ListChecks, CheckSquare, Circle,
-  Upload, Star, SlidersHorizontal, MessageSquare, Minus,
-};
 
 interface CommandItem {
   type: FieldType;
@@ -44,7 +34,7 @@ function buildCommandItems(): CommandItem[] {
             attrs: {
               fieldId: crypto.randomUUID(),
               fieldType: type,
-              label: '',
+              label: config.label,
               description: null,
               placeholder: null,
               required: false,
@@ -129,7 +119,7 @@ export const SlashCommandList = forwardRef<SlashCommandListRef, SlashCommandList
               </p>
               {catItems.map((item) => {
                 const itemIndex = flatIndex++;
-                const Icon = ICON_MAP[item.icon] ?? Type;
+                const Icon = FIELD_ICON_MAP[item.icon] ?? Type;
                 return (
                   <button
                     key={item.type}

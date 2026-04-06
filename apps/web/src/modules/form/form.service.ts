@@ -9,6 +9,7 @@ import type {
   UpdateFormKeys,
   UpdateFormStatusKeys,
   UpdateFormFieldsKeys,
+  DuplicateFormKeys,
   DeleteFormKeys,
 } from './types';
 
@@ -70,16 +71,34 @@ export const updateFormStatus = createApi<UpdateFormStatusKeys, Form>({
   request: updateFormStatusRequest,
 });
 
+function stripNulls(obj: Record<string, unknown>): Record<string, unknown> {
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value !== null) result[key] = value;
+  }
+  return result;
+}
+
 function updateFormFieldsRequest({ workspaceId, formId, fields }: UpdateFormFieldsKeys) {
   return {
     url: `/forms/workspace/${workspaceId}/${formId}/fields`,
     method: PUT,
-    data: { fields },
+    data: {
+      fields: fields.map((f) => stripNulls(f as unknown as Record<string, unknown>)),
+    },
   };
 }
 
 export const updateFormFields = createApi<UpdateFormFieldsKeys, FormField[]>({
   request: updateFormFieldsRequest,
+});
+
+function duplicateFormRequest({ workspaceId, formId }: DuplicateFormKeys) {
+  return { url: `/forms/workspace/${workspaceId}/${formId}/duplicate`, method: POST };
+}
+
+export const duplicateForm = createApi<DuplicateFormKeys, Form>({
+  request: duplicateFormRequest,
 });
 
 function deleteFormRequest({ workspaceId, formId }: DeleteFormKeys) {

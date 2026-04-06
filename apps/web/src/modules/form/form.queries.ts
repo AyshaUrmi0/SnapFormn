@@ -12,6 +12,7 @@ import {
   updateForm,
   updateFormStatus,
   updateFormFields,
+  duplicateForm,
   deleteForm,
 } from './form.service';
 import type {
@@ -24,6 +25,7 @@ import type {
   UpdateFormKeys,
   UpdateFormStatusKeys,
   UpdateFormFieldsKeys,
+  DuplicateFormKeys,
   DeleteFormKeys,
 } from './types';
 
@@ -122,6 +124,23 @@ export const useUpdateFormFields = () => {
         queryKey: queryKeys.forms.detail(variables.workspaceId, variables.formId),
       });
       toast.success('Fields updated!');
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+};
+
+export const useDuplicateForm = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<Form, Error, DuplicateFormKeys>({
+    mutationFn: (params: DuplicateFormKeys) => duplicateForm(params),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.forms.list(variables.workspaceId),
+      });
+      toast.success('Form duplicated!');
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
