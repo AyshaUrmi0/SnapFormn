@@ -41,7 +41,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
               return (
                 <div key="workspaces" className="mt-1">
                   <div className="flex items-center justify-between px-3 py-2">
-                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+                    <p className="text-[12px] uppercase tracking-wider text-muted-foreground font-medium">
                       Workspaces
                     </p>
                     <Link
@@ -63,7 +63,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
             return (
               <div key={sIdx} className={sIdx > 0 ? 'mt-1' : ''}>
                 {section.label && (
-                  <p className="px-3 py-2 text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+                  <p className="px-3 py-2 text-[12px] uppercase tracking-wider text-muted-foreground font-medium">
                     {section.label}
                   </p>
                 )}

@@ -36,7 +36,7 @@ export function FieldOptionsEditor({ options, onChange }: FieldOptionsEditorProp
       <Label>Options</Label>
       {options.map((opt, i) => (
         <div key={i} className="flex items-center gap-1.5 group">
-          <GripVertical className="h-3.5 w-3.5 text-muted-foreground/40 shrink-0" />
+          <GripVertical className="h-3.5 w-3.5 text-muted-foreground/60 shrink-0 cursor-grab" />
           <Input
             placeholder={`Option ${i + 1}`}
             value={opt.label}

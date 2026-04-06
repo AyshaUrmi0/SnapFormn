@@ -29,7 +29,12 @@ import { UserMenu } from './user-menu';
 import { WorkspaceSwitcher } from './workspace-switcher';
 import { ROUTES } from '@/constants/routes';
 
-const NON_WORKSPACE_ROUTES = ['workspaces', 'settings', 'login', 'register', 'verify-otp', 'complete-profile', 'forgot-password', 'reset-password', 'f'];
+const NON_WORKSPACE_ROUTES = [
+  'workspaces', 'settings', 'search', 'domains', 'upgrade', 'members',
+  'templates', 'whats-new', 'roadmap', 'feature-requests', 'rewards', 'trash',
+  'get-started', 'guides', 'help-center', 'contact-support',
+  'login', 'register', 'verify-otp', 'complete-profile', 'forgot-password', 'reset-password', 'f',
+];
 
 function getWorkspaceIdFromPath(pathname: string): string | null {
   const segments = pathname.split('/').filter(Boolean);
@@ -44,6 +49,7 @@ interface NavItemDef {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   className?: string;
+  exact?: boolean;
 }
 
 interface NavSectionDef {
@@ -55,28 +61,28 @@ function getNavSections(workspaceId: string | null): NavSectionDef[] {
   const ws = workspaceId ? ROUTES.workspace(workspaceId) : null;
 
   const mainNav: NavItemDef[] = [
-    { label: 'Home', href: ws?.ROOT ?? ROUTES.WORKSPACES, icon: Home },
-    { label: 'Search', href: '#', icon: Search },
-    { label: 'Members', href: ws?.MEMBERS ?? '#', icon: Users },
-    { label: 'Domains', href: '#', icon: Globe },
+    { label: 'Home', href: ws?.ROOT ?? ROUTES.WORKSPACES, icon: Home, exact: true },
+    { label: 'Search', href: ROUTES.SEARCH, icon: Search },
+    { label: 'Members', href: ws?.MEMBERS ?? ROUTES.MEMBERS, icon: Users },
+    { label: 'Domains', href: ROUTES.DOMAINS, icon: Globe },
     { label: 'Settings', href: ROUTES.SETTINGS, icon: Settings },
-    { label: 'Upgrade plan', href: '#', icon: Sparkles, className: 'text-primary' },
+    { label: 'Upgrade plan', href: ROUTES.UPGRADE, icon: Sparkles, className: 'text-primary' },
   ];
 
   const productNav: NavItemDef[] = [
-    { label: 'Templates', href: '#', icon: LayoutTemplate },
-    { label: "What's new", href: '#', icon: Newspaper },
-    { label: 'Roadmap', href: '#', icon: Map },
-    { label: 'Feature requests', href: '#', icon: MessageSquare },
-    { label: 'Rewards', href: '#', icon: Gift },
-    { label: 'Trash', href: '#', icon: Trash2 },
+    { label: 'Templates', href: ROUTES.TEMPLATES, icon: LayoutTemplate },
+    { label: "What's new", href: ROUTES.WHATS_NEW, icon: Newspaper },
+    { label: 'Roadmap', href: ROUTES.ROADMAP, icon: Map },
+    { label: 'Feature requests', href: ROUTES.FEATURE_REQUESTS, icon: MessageSquare },
+    { label: 'Rewards', href: ROUTES.REWARDS, icon: Gift },
+    { label: 'Trash', href: ROUTES.TRASH, icon: Trash2 },
   ];
 
   const helpNav: NavItemDef[] = [
-    { label: 'Get started', href: '#', icon: Rocket },
-    { label: 'How-to guides', href: '#', icon: BookOpen },
-    { label: 'Help center', href: '#', icon: HelpCircle },
-    { label: 'Contact support', href: '#', icon: MessageCircle },
+    { label: 'Get started', href: ROUTES.GET_STARTED, icon: Rocket },
+    { label: 'How-to guides', href: ROUTES.GUIDES, icon: BookOpen },
+    { label: 'Help center', href: ROUTES.HELP_CENTER, icon: HelpCircle },
+    { label: 'Contact support', href: ROUTES.CONTACT_SUPPORT, icon: MessageCircle },
   ];
 
   return [
@@ -119,7 +125,7 @@ function NavItem({
 function SectionLabel({ label, action }: { label: string; action?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between px-3 py-2">
-      <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+      <p className="text-[12px] uppercase tracking-wider text-muted-foreground font-medium">
         {label}
       </p>
       {action}
@@ -172,7 +178,10 @@ export function Sidebar() {
               <div className="space-y-0.5 px-1">
                 {section.items.map((item) => {
                   const isActive =
-                    item.href !== '#' && pathname === item.href;
+                    item.href !== '#' &&
+                    (item.exact
+                      ? pathname === item.href
+                      : pathname === item.href || pathname.startsWith(item.href + '/'));
                   return (
                     <NavItem key={item.label} item={item} isActive={isActive} />
                   );

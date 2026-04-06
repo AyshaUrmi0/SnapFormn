@@ -137,10 +137,11 @@ export default function SubmissionsPage({
                 <button
                   type="button"
                   onClick={() => setSelectedSubmission(submission)}
-                  className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
+                  className="p-2 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
                   title="View details"
+                  aria-label="View submission details"
                 >
-                  <Eye className="h-3.5 w-3.5" />
+                  <Eye className="h-4 w-4" />
                 </button>
                 <button
                   type="button"
@@ -155,10 +156,11 @@ export default function SubmissionsPage({
                       deleteSubmission.mutate({ workspaceId, formId, submissionId: submission.id });
                     }
                   }}
-                  className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                  className="p-2 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                   title="Delete"
+                  aria-label="Delete submission"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Trash2 className="h-4 w-4" />
                 </button>
               </div>
             </div>

@@ -69,12 +69,12 @@ export function EditorTopbar({
           <span className="font-medium truncate max-w-[200px]">{title || 'Untitled'}</span>
         </nav>
 
-        <Badge variant={STATUS_VARIANTS[status]} className="text-[10px] ml-2 shrink-0">
+        <Badge variant={STATUS_VARIANTS[status]} className="text-[11px] ml-2 shrink-0">
           {STATUS_LABELS[status]}
         </Badge>
 
         {isDirty && (
-          <span className="text-[10px] text-muted-foreground ml-1.5 shrink-0">Unsaved</span>
+          <span className="text-[11px] text-muted-foreground ml-1.5 shrink-0">Unsaved</span>
         )}
       </div>
 

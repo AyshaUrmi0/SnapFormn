@@ -116,7 +116,7 @@ export default function WorkspaceHomePage() {
                   <div className="flex items-center gap-2">
                     <span className="text-sm font-medium truncate">{form.title}</span>
                     {form.status === 'DRAFT' && (
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 shrink-0">
+                      <Badge variant="secondary" className="text-[11px] px-1.5 py-0.5 shrink-0">
                         Draft
                       </Badge>
                     )}

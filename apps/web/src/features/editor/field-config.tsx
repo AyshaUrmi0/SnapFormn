@@ -58,7 +58,7 @@ export function FieldConfig({ field, onChange, onClose, errors }: FieldConfigPro
             className={hasLabelError ? 'border-destructive' : ''}
           />
           {hasLabelError && (
-            <p className="text-xs text-destructive">Label is required</p>
+            <p className="text-sm text-destructive">Label is required</p>
           )}
         </div>
 
@@ -105,7 +105,7 @@ export function FieldConfig({ field, onChange, onClose, errors }: FieldConfigPro
               onChange={(options: FieldOption[]) => onChange({ options })}
             />
             {hasOptionsError && (
-              <p className="text-xs text-destructive mt-1">At least one option is required</p>
+              <p className="text-sm text-destructive mt-1">At least one option is required</p>
             )}
           </div>
         </>

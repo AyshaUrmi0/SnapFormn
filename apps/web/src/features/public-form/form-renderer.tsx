@@ -46,7 +46,7 @@ function FormFieldRenderer({ field, value, onChange, error }: FormFieldRendererP
   ) : null;
 
   const errorEl = error ? (
-    <p className="text-xs text-destructive">{error}</p>
+    <p className="text-sm text-destructive">{error}</p>
   ) : null;
 
   switch (field.type) {
