@@ -6,7 +6,7 @@ import { authRepository } from './auth.repository';
 import { otpService } from './otp.service';
 import { generateAccessToken, verifyAccessToken } from '../../utils/token';
 
-export const REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+export const REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const authService = {
   async register(email: string, name?: string) {
@@ -15,7 +15,6 @@ export const authService = {
 
     const user = await authRepository.createUser({ email, name });
 
-    // Send verification OTP
     const code = await otpService.generate(user.id, 'EMAIL_VERIFICATION');
     await otpService.sendViaEmail(user.email, code, 'EMAIL_VERIFICATION');
 
@@ -51,25 +50,21 @@ export const authService = {
     }
 
     if (purpose === 'LOGIN') {
-      // Mark email as verified since they proved ownership via OTP
       if (!user.emailVerified) {
         await authRepository.updateUser(user.id, { emailVerified: true });
       }
 
-      // Check if profile is complete (has name and password)
-      const profileComplete = !!(user.name && user.passwordHash);
+      const profileComplete = !!(user.name && (user.passwordHash || user.provider === 'GOOGLE'));
 
       if (profileComplete) {
         const tokens = await this.issueTokenPair(user.id);
         return { ...tokens, profileComplete: true };
       }
 
-      // Issue a short-lived token for profile completion
       const accessToken = generateAccessToken({ sub: user.id });
       return { accessToken, profileComplete: false };
     }
 
-    // For PASSWORD_RESET, return a short-lived token the client uses to call reset endpoint
     const resetToken = generateAccessToken({ sub: user.id });
     return { resetToken };
   },
@@ -77,7 +72,6 @@ export const authService = {
   async requestOtp(email: string, purpose: OtpPurpose) {
     let user = await authRepository.findUserByEmail(email);
 
-    // For LOGIN purpose, auto-create user if they don't exist
     if (!user && purpose === 'LOGIN') {
       user = await authRepository.createUser({ email });
     }
@@ -103,8 +97,6 @@ export const authService = {
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await authRepository.updateUser(user.id, { passwordHash });
-
-    // Revoke all existing sessions for security
     await authRepository.revokeUserTokens(user.id);
 
     return { success: true };
@@ -128,7 +120,6 @@ export const authService = {
       throw new AppError(401, ErrorCode.TOKEN_INVALID, 'Invalid refresh token');
     }
 
-    // Reuse detection: if revoked, revoke entire family
     if (stored.revoked) {
       await authRepository.revokeTokenFamily(stored.family);
       throw new AppError(401, ErrorCode.TOKEN_INVALID, 'Token reuse detected. All sessions revoked.');
@@ -138,7 +129,6 @@ export const authService = {
       throw new AppError(401, ErrorCode.TOKEN_EXPIRED, 'Refresh token expired');
     }
 
-    // Rotate: revoke old, issue new in same family
     await authRepository.revokeTokenFamily(stored.family);
     return this.issueTokenPair(stored.userId, stored.family);
   },
@@ -151,7 +141,6 @@ export const authService = {
   },
 
   async googleLogin(accessToken: string) {
-    // Verify the Google access token via userinfo endpoint
     const res = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
       headers: { Authorization: `Bearer ${accessToken}` },
     });

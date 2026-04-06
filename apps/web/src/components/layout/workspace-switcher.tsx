@@ -144,8 +144,9 @@ function WorkspaceItem({
       <div
         className={cn(
           'group flex items-center gap-1 rounded-md px-2 py-1.5 text-[13px] transition-colors',
-          isActive ? 'text-sidebar-accent-foreground font-medium' : 'text-sidebar-foreground',
-          'hover:bg-sidebar-accent/50',
+          isActive
+            ? 'bg-sidebar-accent/70 text-sidebar-accent-foreground font-medium'
+            : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
         )}
       >
         <button
@@ -184,11 +185,15 @@ function WorkspaceItem({
           {forms && forms.length > 0 ? (
             forms.map((form) => {
               const formHref = wsRoutes.form(form.id).EDIT;
-              const isFormActive = pathname === formHref;
+              const formBase = `/${workspace.id}/forms/${form.id}`;
+              const isFormActive = pathname.startsWith(formBase);
               return (
                 <div
                   key={form.id}
-                  className="group/form flex items-center gap-1 rounded-md pr-1 transition-colors hover:bg-sidebar-accent/50"
+                  className={cn(
+                    'group/form flex items-center gap-1 rounded-md pr-1 transition-colors',
+                    isFormActive ? 'bg-sidebar-accent' : 'hover:bg-sidebar-accent/50',
+                  )}
                 >
                   <Link
                     href={formHref}

@@ -15,6 +15,7 @@ export function Topbar({ onMobileMenuToggle }: TopbarProps) {
         size="sm"
         className="h-8 w-8 p-0"
         onClick={onMobileMenuToggle}
+        aria-label="Open menu"
       >
         <Menu className="h-5 w-5" />
       </Button>

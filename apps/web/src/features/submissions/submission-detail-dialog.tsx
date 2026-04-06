@@ -52,8 +52,8 @@ export function SubmissionDetailDialog({ open, onOpenChange, submission }: Submi
               <div className="flex items-center gap-2">
                 <p className="text-sm font-medium">{sf.field?.label ?? 'Unknown field'}</p>
                 {sf.field?.type && (
-                  <Badge variant="outline" className="text-[10px] px-1.5">
-                    {sf.field.type.replace(/_/g, ' ')}
+                  <Badge variant="outline" className="text-[11px] px-1.5 capitalize">
+                    {sf.field.type.replace(/_/g, ' ').toLowerCase()}
                   </Badge>
                 )}
               </div>

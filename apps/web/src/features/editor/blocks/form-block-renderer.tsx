@@ -200,34 +200,27 @@ export function FormBlockRenderer({ node, deleteNode }: NodeViewProps) {
               : 'border-transparent hover:border-border',
         )}
       >
-        {/* Drag handle (visible on hover) */}
-        <div className="absolute -left-8 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Field type badge + actions */}
+        <div className="flex items-center gap-1.5 mb-3">
           <div
-            className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted"
+            className="cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted opacity-0 group-hover:opacity-60 transition-opacity"
             data-drag-handle
           >
-            <GripVertical className="h-4 w-4 text-muted-foreground" />
+            <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
           </div>
-        </div>
-
-        {/* Delete button (visible on hover) */}
-        <div className="absolute -right-10 top-2 opacity-0 group-hover:opacity-100 transition-opacity">
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); deleteNode(); }}
-            className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
-        </div>
-
-        {/* Field type badge */}
-        <div className="flex items-center gap-1.5 mb-3">
           <Icon className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-xs text-muted-foreground font-medium">{config?.label}</span>
           {hasError && (
-            <span className="text-xs text-destructive font-medium ml-auto">Needs attention</span>
+            <span className="text-sm text-destructive font-medium ml-auto">Needs attention</span>
           )}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); deleteNode(); }}
+            className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity ml-auto"
+            aria-label="Delete field"
+          >
+            <Trash2 className="h-3.5 w-3.5" />
+          </button>
         </div>
 
         {/* Field preview */}
