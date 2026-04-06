@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut } from 'lucide-react';
+import { LogOut, ChevronDown } from 'lucide-react';
 
 function getInitials(name: string | null | undefined, email: string): string {
   if (name) {
@@ -27,9 +27,10 @@ function getInitials(name: string | null | undefined, email: string): string {
 
 interface UserMenuProps {
   showName?: boolean;
+  sidebar?: boolean;
 }
 
-export function UserMenu({ showName = false }: UserMenuProps) {
+export function UserMenu({ showName = false, sidebar = false }: UserMenuProps) {
   const { user } = useAuth();
   const logout = useLogout();
 
@@ -37,17 +38,28 @@ export function UserMenu({ showName = false }: UserMenuProps) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 rounded-md p-1 hover:bg-sidebar-accent outline-none">
-        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium">
+      <DropdownMenuTrigger
+        className={
+          sidebar
+            ? 'flex items-center gap-2 rounded-md p-1.5 hover:bg-sidebar-accent outline-none w-full text-left'
+            : 'flex items-center gap-2 rounded-md p-1 hover:bg-sidebar-accent outline-none'
+        }
+      >
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-muted text-xs font-medium shrink-0">
           {getInitials(user.name, user.email)}
         </span>
         {showName && (
-          <span className="text-sm font-medium truncate max-w-[140px]">
-            {user.name || user.email}
-          </span>
+          <>
+            <span className="text-[13px] font-medium truncate flex-1">
+              {user.name || user.email}
+            </span>
+            {sidebar && (
+              <ChevronDown className="h-3 w-3 shrink-0 text-muted-foreground" />
+            )}
+          </>
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align={sidebar ? 'start' : 'end'} className="w-56">
         <DropdownMenuGroup>
           <DropdownMenuLabel>
             <p className="text-sm font-medium">{user.name || 'User'}</p>
