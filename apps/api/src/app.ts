@@ -18,7 +18,18 @@ const app = express();
 // Global middleware (order matters)
 app.use(requestIdMiddleware as RequestHandler);
 app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/v1/health' } }) as RequestHandler);
-app.use(helmet() as RequestHandler);
+app.use(
+  helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'", "'unsafe-inline'"],
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", 'data:'],
+      },
+    },
+  }) as RequestHandler,
+);
 app.use(cors(corsConfig) as RequestHandler);
 app.use(compression() as RequestHandler);
 app.use(express.json({ limit: '5mb' }));
