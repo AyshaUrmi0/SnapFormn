@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authController } from './auth.controller';
 import { validate } from '../../middlewares/validate.middleware';
 import { asyncHandler } from '../../utils/asyncHandler';
-import { registerSchema, loginSchema, verifyOtpSchema, requestOtpSchema, resetPasswordSchema, changePasswordSchema, completeProfileSchema } from './auth.schema';
+import { registerSchema, loginSchema, verifyOtpSchema, requestOtpSchema, resetPasswordSchema, requestEmailChangeSchema, verifyEmailChangeSchema, changePasswordSchema, completeProfileSchema } from './auth.schema';
 import { authenticate } from '../../middlewares/auth.middleware';
 
 const router = Router();
@@ -165,6 +165,51 @@ router.post('/reset-password', validate(resetPasswordSchema), asyncHandler(authC
  *       401: { description: Current password incorrect }
  */
 router.post('/change-password', authenticate, validate(changePasswordSchema), asyncHandler(authController.changePassword));
+
+/**
+ * @swagger
+ * /auth/request-email-change:
+ *   post:
+ *     summary: Request email change (sends OTP to new email)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [newEmail, password]
+ *             properties:
+ *               newEmail: { type: string, format: email }
+ *               password: { type: string }
+ *     responses:
+ *       200: { description: OTP sent to new email }
+ *       401: { description: Incorrect password }
+ *       409: { description: Email already in use }
+ */
+router.post('/request-email-change', authenticate, validate(requestEmailChangeSchema), asyncHandler(authController.requestEmailChange));
+
+/**
+ * @swagger
+ * /auth/verify-email-change:
+ *   post:
+ *     summary: Verify email change with OTP
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [changeToken, code]
+ *             properties:
+ *               changeToken: { type: string }
+ *               code: { type: string }
+ *     responses:
+ *       200: { description: Email changed successfully }
+ *       401: { description: Invalid or expired token }
+ */
+router.post('/verify-email-change', authenticate, validate(verifyEmailChangeSchema), asyncHandler(authController.verifyEmailChange));
 
 /**
  * @swagger

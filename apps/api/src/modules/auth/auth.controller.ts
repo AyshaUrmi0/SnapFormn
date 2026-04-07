@@ -46,6 +46,19 @@ export const authController = {
     sendSuccess(res, result, 'OTP verified');
   },
 
+  async requestEmailChange(req: Request, res: Response) {
+    const userId = req.user!.sub;
+    const { newEmail, password } = req.body;
+    const result = await authService.requestEmailChange(userId, newEmail, password);
+    sendSuccess(res, result, 'Verification code sent to new email');
+  },
+
+  async verifyEmailChange(req: Request, res: Response) {
+    const { changeToken, code } = req.body;
+    const result = await authService.verifyEmailChange(changeToken, code);
+    sendSuccess(res, result, 'Email changed successfully');
+  },
+
   async changePassword(req: Request, res: Response) {
     const userId = req.user!.sub;
     const { currentPassword, newPassword } = req.body;

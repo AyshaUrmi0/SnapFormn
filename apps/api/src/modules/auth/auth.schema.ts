@@ -39,6 +39,20 @@ export const resetPasswordSchema = z.object({
   }),
 });
 
+export const requestEmailChangeSchema = z.object({
+  body: z.object({
+    newEmail: z.string().email('Invalid email address'),
+    password: z.string().min(1, 'Password is required'),
+  }),
+});
+
+export const verifyEmailChangeSchema = z.object({
+  body: z.object({
+    changeToken: z.string().min(1, 'Change token is required'),
+    code: z.string().length(6, 'Code must be 6 digits'),
+  }),
+});
+
 export const changePasswordSchema = z.object({
   body: z.object({
     currentPassword: z.string().min(1, 'Current password is required'),

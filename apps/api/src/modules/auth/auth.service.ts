@@ -1,10 +1,12 @@
 import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { randomBytes } from 'crypto';
 import { AppError, ErrorCode } from '@snapform/shared';
 import type { OtpPurpose } from '@prisma/client';
 import { authRepository } from './auth.repository';
 import { otpService } from './otp.service';
 import { generateAccessToken, verifyAccessToken } from '../../utils/token';
+import { env } from '../../config/env';
 
 export const REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -101,6 +103,61 @@ export const authService = {
     await authRepository.revokeUserTokens(user.id);
 
     return { success: true };
+  },
+
+  async requestEmailChange(userId: string, newEmail: string, password: string) {
+    const user = await authRepository.findById(userId);
+    if (!user) throw AppError.notFound('User not found');
+
+    if (!user.passwordHash) {
+      throw AppError.badRequest('No password set. Set a password first.');
+    }
+
+    const valid = await bcrypt.compare(password, user.passwordHash);
+    if (!valid) throw AppError.unauthorized('Incorrect password');
+
+    const existing = await authRepository.findUserByEmail(newEmail);
+    if (existing) throw AppError.conflict('Email already in use');
+
+    // Send OTP to the new email for verification
+    const code = await otpService.generate(user.id, 'EMAIL_VERIFICATION');
+    await otpService.sendViaEmail(newEmail, code, 'EMAIL_VERIFICATION');
+
+    // Create a short-lived token encoding the new email
+    const changeToken = jwt.sign(
+      { sub: user.id, newEmail },
+      env.JWT_ACCESS_SECRET,
+      { expiresIn: '10m' },
+    );
+
+    return { changeToken, sent: true };
+  },
+
+  async verifyEmailChange(changeToken: string, code: string) {
+    let payload: { sub: string; newEmail: string };
+    try {
+      payload = jwt.verify(changeToken, env.JWT_ACCESS_SECRET) as { sub: string; newEmail: string };
+    } catch {
+      throw AppError.unauthorized('Invalid or expired change token');
+    }
+
+    if (!payload.newEmail) {
+      throw AppError.badRequest('Invalid change token');
+    }
+
+    const user = await authRepository.findById(payload.sub);
+    if (!user) throw AppError.notFound('User not found');
+
+    const validOtp = await otpService.verify(user.id, code, 'EMAIL_VERIFICATION');
+    if (!validOtp) throw new AppError(400, ErrorCode.OTP_INVALID, 'Invalid or expired code');
+
+    // Check again that new email isn't taken
+    const existing = await authRepository.findUserByEmail(payload.newEmail);
+    if (existing) throw AppError.conflict('Email already in use');
+
+    await authRepository.updateUser(user.id, { email: payload.newEmail });
+
+    return { success: true, email: payload.newEmail };
   },
 
   async changePassword(userId: string, currentPassword: string, newPassword: string) {
