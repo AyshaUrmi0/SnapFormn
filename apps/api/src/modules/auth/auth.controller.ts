@@ -15,8 +15,8 @@ const REFRESH_COOKIE_OPTIONS = {
 
 export const authController = {
   async register(req: Request, res: Response) {
-    const { email, name } = req.body;
-    const result = await authService.register(email, name);
+    const { email, name, password } = req.body;
+    const result = await authService.register(email, name, password);
     sendCreated(res, result, 'Registration successful. Check your email for a verification code.');
   },
 
@@ -44,6 +44,13 @@ export const authController = {
     }
 
     sendSuccess(res, result, 'OTP verified');
+  },
+
+  async changePassword(req: Request, res: Response) {
+    const userId = req.user!.sub;
+    const { currentPassword, newPassword } = req.body;
+    const result = await authService.changePassword(userId, currentPassword, newPassword);
+    sendSuccess(res, result, 'Password changed successfully');
   },
 
   async completeProfile(req: Request, res: Response) {

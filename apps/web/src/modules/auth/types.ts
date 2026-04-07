@@ -48,6 +48,7 @@ export interface LoginKeys {
 export interface RegisterKeys {
   email: string;
   name?: string;
+  password?: string;
 }
 
 export interface VerifyOtpKeys {

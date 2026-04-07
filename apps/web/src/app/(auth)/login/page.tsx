@@ -1,11 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useGoogleLogin as useGoogleOAuth } from '@react-oauth/google';
-import { Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -19,14 +17,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
-import { useRequestOtp } from '@/hooks/use-request-otp';
+import { useLogin } from '@/hooks/use-login';
 import { useGoogleLogin } from '@/hooks/use-google-login';
-import { forgotPasswordSchema, type ForgotPasswordValues } from '@/modules/auth/schemas';
+import { loginSchema, type LoginValues } from '@/modules/auth/schemas';
 import { ROUTES } from '@/constants/routes';
 
 export default function LoginPage() {
-  const router = useRouter();
-  const requestOtp = useRequestOtp();
+  const login = useLogin();
   const googleLogin = useGoogleLogin();
 
   const googleOAuth = useGoogleOAuth({
@@ -38,24 +35,16 @@ export default function LoginPage() {
     },
   });
 
-  const form = useForm<ForgotPasswordValues>({
-    resolver: zodResolver(forgotPasswordSchema),
+  const form = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
     defaultValues: {
       email: '',
+      password: '',
     },
   });
 
-  function onSubmit(values: ForgotPasswordValues) {
-    requestOtp.mutate(
-      { email: values.email, purpose: 'LOGIN' },
-      {
-        onSuccess: () => {
-          router.push(
-            `${ROUTES.VERIFY_OTP}?email=${encodeURIComponent(values.email)}&purpose=LOGIN`,
-          );
-        },
-      },
-    );
+  function onSubmit(values: LoginValues) {
+    login.mutate(values);
   }
 
   return (
@@ -121,26 +110,44 @@ export default function LoginPage() {
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={requestOtp.isPending}>
-              <Mail className="mr-2 h-4 w-4" />
-              {requestOtp.isPending ? 'Sending code...' : 'Continue with email'}
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <div className="flex items-center justify-between">
+                    <FormLabel>Password</FormLabel>
+                    <Link
+                      href={ROUTES.FORGOT_PASSWORD}
+                      className="text-sm text-primary hover:underline"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="Enter your password"
+                      autoComplete="current-password"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={login.isPending}>
+              {login.isPending ? 'Signing in...' : 'Sign in'}
             </Button>
           </form>
         </Form>
 
-        <div className="text-center text-sm text-muted-foreground space-y-1">
-          <p>
-            Don&apos;t have an account?{' '}
-            <Link href={ROUTES.REGISTER} className="text-primary hover:underline">
-              Sign up
-            </Link>
-          </p>
-          <p>
-            <Link href={ROUTES.FORGOT_PASSWORD} className="text-primary hover:underline">
-              Forgot password?
-            </Link>
-          </p>
-        </div>
+        <p className="text-center text-sm text-muted-foreground">
+          Don&apos;t have an account?{' '}
+          <Link href={ROUTES.REGISTER} className="text-primary hover:underline">
+            Sign up
+          </Link>
+        </p>
       </CardContent>
     </Card>
   );

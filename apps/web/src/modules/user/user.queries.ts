@@ -22,6 +22,19 @@ export function useUpdateProfile() {
   });
 }
 
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: (data: { currentPassword: string; newPassword: string }) =>
+      api.post('/auth/change-password', data),
+    onSuccess: () => {
+      toast.success('Password changed successfully');
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
 export function useDeleteAccount() {
   return useMutation({
     mutationFn: () => api.del('/users/me'),

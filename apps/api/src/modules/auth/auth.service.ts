@@ -9,11 +9,12 @@ import { generateAccessToken, verifyAccessToken } from '../../utils/token';
 export const REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const authService = {
-  async register(email: string, name?: string) {
+  async register(email: string, name?: string, password?: string) {
     const existing = await authRepository.findUserByEmail(email);
     if (existing) throw AppError.conflict('Email already registered');
 
-    const user = await authRepository.createUser({ email, name });
+    const passwordHash = password ? await bcrypt.hash(password, 12) : undefined;
+    const user = await authRepository.createUser({ email, name, ...(passwordHash && { passwordHash }) });
 
     const code = await otpService.generate(user.id, 'EMAIL_VERIFICATION');
     await otpService.sendViaEmail(user.email, code, 'EMAIL_VERIFICATION');
@@ -98,6 +99,23 @@ export const authService = {
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await authRepository.updateUser(user.id, { passwordHash });
     await authRepository.revokeUserTokens(user.id);
+
+    return { success: true };
+  },
+
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await authRepository.findById(userId);
+    if (!user) throw AppError.notFound('User not found');
+
+    if (!user.passwordHash) {
+      throw AppError.badRequest('No password set. Use forgot password to set one.');
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) throw AppError.unauthorized('Current password is incorrect');
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await authRepository.updateUser(user.id, { passwordHash });
 
     return { success: true };
   },
