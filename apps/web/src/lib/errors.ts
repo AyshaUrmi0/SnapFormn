@@ -47,7 +47,12 @@ export function normalizeError(error: unknown): ApiError {
 }
 
 export function getErrorMessage(error: unknown): string {
-  if (error instanceof ApiError) return error.message;
+  if (error instanceof ApiError) {
+    if (error.isValidation && error.errors?.length) {
+      return error.errors.map((e) => e.message).join('. ');
+    }
+    return error.message;
+  }
   if (error instanceof Error) return error.message;
   return 'An unexpected error occurred';
 }
