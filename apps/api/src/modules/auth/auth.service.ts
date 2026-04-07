@@ -103,6 +103,23 @@ export const authService = {
     return { success: true };
   },
 
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await authRepository.findById(userId);
+    if (!user) throw AppError.notFound('User not found');
+
+    if (!user.passwordHash) {
+      throw AppError.badRequest('No password set. Use forgot password to set one.');
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) throw AppError.unauthorized('Current password is incorrect');
+
+    const passwordHash = await bcrypt.hash(newPassword, 12);
+    await authRepository.updateUser(user.id, { passwordHash });
+
+    return { success: true };
+  },
+
   async completeProfile(userId: string, firstName: string, lastName: string, password: string) {
     const user = await authRepository.findById(userId);
     if (!user) throw AppError.notFound('User not found');

@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authController } from './auth.controller';
 import { validate } from '../../middlewares/validate.middleware';
 import { asyncHandler } from '../../utils/asyncHandler';
-import { registerSchema, loginSchema, verifyOtpSchema, requestOtpSchema, resetPasswordSchema, completeProfileSchema } from './auth.schema';
+import { registerSchema, loginSchema, verifyOtpSchema, requestOtpSchema, resetPasswordSchema, changePasswordSchema, completeProfileSchema } from './auth.schema';
 import { authenticate } from '../../middlewares/auth.middleware';
 
 const router = Router();
@@ -143,6 +143,28 @@ router.post('/google', asyncHandler(authController.google));
  *       401: { description: Invalid or expired reset token }
  */
 router.post('/reset-password', validate(resetPasswordSchema), asyncHandler(authController.resetPassword));
+
+/**
+ * @swagger
+ * /auth/change-password:
+ *   post:
+ *     summary: Change password (authenticated)
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [currentPassword, newPassword]
+ *             properties:
+ *               currentPassword: { type: string }
+ *               newPassword: { type: string, minLength: 8 }
+ *     responses:
+ *       200: { description: Password changed }
+ *       401: { description: Current password incorrect }
+ */
+router.post('/change-password', authenticate, validate(changePasswordSchema), asyncHandler(authController.changePassword));
 
 /**
  * @swagger

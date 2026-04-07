@@ -46,6 +46,13 @@ export const authController = {
     sendSuccess(res, result, 'OTP verified');
   },
 
+  async changePassword(req: Request, res: Response) {
+    const userId = req.user!.sub;
+    const { currentPassword, newPassword } = req.body;
+    const result = await authService.changePassword(userId, currentPassword, newPassword);
+    sendSuccess(res, result, 'Password changed successfully');
+  },
+
   async completeProfile(req: Request, res: Response) {
     const userId = req.user!.sub;
     const { firstName, lastName, password } = req.body;

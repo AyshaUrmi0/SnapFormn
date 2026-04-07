@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Lock, Shield, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import { useModal } from '@/providers/modal-provider';
-import { useUpdateProfile, useDeleteAccount } from '@/modules/user/user.queries';
+import { useUpdateProfile, useDeleteAccount, useChangePassword } from '@/modules/user/user.queries';
+import { changePasswordSchema, type ChangePasswordValues } from '@/modules/auth/schemas';
 import { ROUTES } from '@/constants/routes';
 
 function getInitials(name: string | null | undefined, email: string): string {
@@ -35,6 +37,25 @@ export function MyAccountTab() {
   const { confirm } = useModal();
   const updateProfile = useUpdateProfile();
   const deleteAccount = useDeleteAccount();
+  const changePassword = useChangePassword();
+  const [showPasswordForm, setShowPasswordForm] = useState(false);
+
+  const passwordForm = useForm<ChangePasswordValues>({
+    resolver: zodResolver(changePasswordSchema),
+    defaultValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+  });
+
+  function onPasswordSubmit(values: ChangePasswordValues) {
+    changePassword.mutate(
+      { currentPassword: values.currentPassword, newPassword: values.newPassword },
+      {
+        onSuccess: () => {
+          setShowPasswordForm(false);
+          passwordForm.reset();
+        },
+      },
+    );
+  }
 
   const nameParts = (user?.name ?? '').split(' ');
   const defaultFirst = nameParts[0] ?? '';
@@ -128,23 +149,107 @@ export function MyAccountTab() {
           <Input id="email" value={user.email} readOnly className="bg-muted/50" />
         </div>
 
-        <Separator />
-
-        {/* Password */}
-        <div className="space-y-1.5">
-          <div className="flex items-center justify-between">
-            <Label>Password</Label>
-            <button type="button" onClick={comingSoon} className="text-xs text-primary hover:underline">
-              Set password
-            </button>
-          </div>
-          <Input value="••••••••" readOnly className="bg-muted/50" />
-        </div>
-
         <Button type="submit" disabled={updateProfile.isPending}>
           {updateProfile.isPending ? 'Updating...' : 'Update'}
         </Button>
       </form>
+
+      <Separator />
+
+      {/* Password */}
+      <div className="space-y-3">
+        <Label>Password</Label>
+        <Card>
+          <CardContent className="py-4">
+            {showPasswordForm ? (
+              <div className="space-y-4">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium">Change your password</p>
+                  <p className="text-xs text-muted-foreground">
+                    Enter your current password and choose a new one.
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="currentPassword">Current password</Label>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      placeholder="Enter current password"
+                      autoComplete="current-password"
+                      {...passwordForm.register('currentPassword')}
+                    />
+                    {passwordForm.formState.errors.currentPassword && (
+                      <p className="text-xs text-destructive">{passwordForm.formState.errors.currentPassword.message}</p>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="newPassword">New password</Label>
+                      <Input
+                        id="newPassword"
+                        type="password"
+                        placeholder="At least 8 characters"
+                        autoComplete="new-password"
+                        {...passwordForm.register('newPassword')}
+                      />
+                      {passwordForm.formState.errors.newPassword && (
+                        <p className="text-xs text-destructive">{passwordForm.formState.errors.newPassword.message}</p>
+                      )}
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="confirmPassword">Confirm password</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="Confirm new password"
+                        autoComplete="new-password"
+                        {...passwordForm.register('confirmPassword')}
+                      />
+                      {passwordForm.formState.errors.confirmPassword && (
+                        <p className="text-xs text-destructive">{passwordForm.formState.errors.confirmPassword.message}</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={passwordForm.handleSubmit(onPasswordSubmit)}
+                    disabled={changePassword.isPending}
+                  >
+                    {changePassword.isPending ? 'Saving...' : 'Save password'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setShowPasswordForm(false); passwordForm.reset(); }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center gap-4">
+                <div className="rounded-lg bg-muted p-2.5">
+                  <Lock className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium">Password</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Set a password to sign in with your email and password.
+                  </p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setShowPasswordForm(true)}>
+                  Change password
+                </Button>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <Separator />
 
