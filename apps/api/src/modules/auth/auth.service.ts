@@ -18,7 +18,7 @@ export const authService = {
     const passwordHash = password ? await bcrypt.hash(password, 12) : undefined;
     const user = await authRepository.createUser({ email, name, emailVerified: true, ...(passwordHash && { passwordHash }) });
 
-    return { userId: user.id, email: user.email };
+    return this.issueTokenPair(user.id);
   },
 
   async login(email: string, password: string) {

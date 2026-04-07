@@ -16,8 +16,9 @@ const REFRESH_COOKIE_OPTIONS = {
 export const authController = {
   async register(req: Request, res: Response) {
     const { email, name, password } = req.body;
-    const result = await authService.register(email, name, password);
-    sendCreated(res, result, 'Registration successful. You can now sign in.');
+    const tokens = await authService.register(email, name, password);
+    res.cookie('refreshToken', tokens.refreshToken, REFRESH_COOKIE_OPTIONS);
+    sendCreated(res, { accessToken: tokens.accessToken }, 'Registration successful.');
   },
 
   async login(req: Request, res: Response) {
