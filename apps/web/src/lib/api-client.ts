@@ -31,20 +31,17 @@ function buildUrl(path: string, params?: Record<string, string | number | undefi
 
 export async function refreshAccessToken(): Promise<string | null> {
   try {
-    console.log('[auth] refreshAccessToken → POST', `${env.API_URL}/auth/refresh`);
     const res = await fetch(`${env.API_URL}/auth/refresh`, {
       method: 'POST',
       credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
     });
-    console.log('[auth] refresh response status:', res.status);
     if (!res.ok) return null;
     const data = await res.json();
     const newToken = data.data?.accessToken ?? null;
     if (newToken) setAccessToken(newToken);
     return newToken;
-  } catch (err) {
-    console.error('[auth] refresh failed:', err);
+  } catch {
     return null;
   }
 }
