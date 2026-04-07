@@ -15,8 +15,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import { useModal } from '@/providers/modal-provider';
-import { useUpdateProfile, useDeleteAccount, useChangePassword } from '@/modules/user/user.queries';
-import { changePasswordSchema, type ChangePasswordValues } from '@/modules/auth/schemas';
+import { useUpdateProfile, useDeleteAccount, useChangePassword, useRequestEmailChange, useVerifyEmailChange } from '@/modules/user/user.queries';
+import {
+  changePasswordSchema, type ChangePasswordValues,
+  changeEmailSchema, type ChangeEmailValues,
+  verifyEmailChangeSchema, type VerifyEmailChangeValues,
+} from '@/modules/auth/schemas';
 import { ROUTES } from '@/constants/routes';
 
 function getInitials(name: string | null | undefined, email: string): string {
@@ -52,6 +56,44 @@ export function MyAccountTab() {
         onSuccess: () => {
           setShowPasswordForm(false);
           passwordForm.reset();
+        },
+      },
+    );
+  }
+
+  const requestEmailChange = useRequestEmailChange();
+  const verifyEmailChange = useVerifyEmailChange();
+  const [emailChangeStep, setEmailChangeStep] = useState<'idle' | 'request' | 'verify'>('idle');
+  const [changeToken, setChangeToken] = useState('');
+
+  const emailForm = useForm<ChangeEmailValues>({
+    resolver: zodResolver(changeEmailSchema),
+    defaultValues: { newEmail: '', password: '' },
+  });
+
+  const verifyEmailForm = useForm<VerifyEmailChangeValues>({
+    resolver: zodResolver(verifyEmailChangeSchema),
+    defaultValues: { code: '' },
+  });
+
+  function onEmailChangeRequest(values: ChangeEmailValues) {
+    requestEmailChange.mutate(values, {
+      onSuccess: (res) => {
+        setChangeToken(res.changeToken);
+        setEmailChangeStep('verify');
+      },
+    });
+  }
+
+  function onEmailChangeVerify(values: VerifyEmailChangeValues) {
+    verifyEmailChange.mutate(
+      { changeToken, code: values.code },
+      {
+        onSuccess: () => {
+          setEmailChangeStep('idle');
+          emailForm.reset();
+          verifyEmailForm.reset();
+          refreshUser();
         },
       },
     );
@@ -142,11 +184,95 @@ export function MyAccountTab() {
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label htmlFor="email">Email</Label>
-            <button type="button" onClick={comingSoon} className="text-xs text-primary hover:underline">
-              Change email
-            </button>
+            {emailChangeStep === 'idle' && (
+              <button
+                type="button"
+                onClick={() => setEmailChangeStep('request')}
+                className="text-xs text-primary hover:underline"
+              >
+                Change email
+              </button>
+            )}
+            {emailChangeStep !== 'idle' && (
+              <button
+                type="button"
+                onClick={() => { setEmailChangeStep('idle'); emailForm.reset(); verifyEmailForm.reset(); }}
+                className="text-xs text-primary hover:underline"
+              >
+                Cancel
+              </button>
+            )}
           </div>
           <Input id="email" value={user.email} readOnly className="bg-muted/50" />
+          {emailChangeStep === 'request' && (
+            <div className="space-y-3 rounded-md border p-4 mt-2">
+              <p className="text-xs text-muted-foreground">
+                Enter your new email and current password. We&apos;ll send a verification code to the new email.
+              </p>
+              <div className="space-y-1.5">
+                <Label htmlFor="newEmail">New email</Label>
+                <Input
+                  id="newEmail"
+                  type="email"
+                  placeholder="new@example.com"
+                  autoComplete="email"
+                  {...emailForm.register('newEmail')}
+                />
+                {emailForm.formState.errors.newEmail && (
+                  <p className="text-xs text-destructive">{emailForm.formState.errors.newEmail.message}</p>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="emailPassword">Password</Label>
+                <Input
+                  id="emailPassword"
+                  type="password"
+                  placeholder="Enter your password"
+                  autoComplete="current-password"
+                  {...emailForm.register('password')}
+                />
+                {emailForm.formState.errors.password && (
+                  <p className="text-xs text-destructive">{emailForm.formState.errors.password.message}</p>
+                )}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={emailForm.handleSubmit(onEmailChangeRequest)}
+                disabled={requestEmailChange.isPending}
+              >
+                {requestEmailChange.isPending ? 'Sending...' : 'Send verification code'}
+              </Button>
+            </div>
+          )}
+          {emailChangeStep === 'verify' && (
+            <div className="space-y-3 rounded-md border p-4 mt-2">
+              <p className="text-xs text-muted-foreground">
+                We sent a 6-digit code to your new email. Enter it below to confirm the change.
+              </p>
+              <div className="space-y-1.5">
+                <Label htmlFor="emailCode">Verification code</Label>
+                <Input
+                  id="emailCode"
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  maxLength={6}
+                  {...verifyEmailForm.register('code')}
+                />
+                {verifyEmailForm.formState.errors.code && (
+                  <p className="text-xs text-destructive">{verifyEmailForm.formState.errors.code.message}</p>
+                )}
+              </div>
+              <Button
+                type="button"
+                size="sm"
+                onClick={verifyEmailForm.handleSubmit(onEmailChangeVerify)}
+                disabled={verifyEmailChange.isPending}
+              >
+                {verifyEmailChange.isPending ? 'Verifying...' : 'Verify and change email'}
+              </Button>
+            </div>
+          )}
         </div>
 
         <Button type="submit" disabled={updateProfile.isPending}>

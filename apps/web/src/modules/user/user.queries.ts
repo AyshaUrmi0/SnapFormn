@@ -22,6 +22,35 @@ export function useUpdateProfile() {
   });
 }
 
+export function useRequestEmailChange() {
+  return useMutation({
+    mutationFn: (data: { newEmail: string; password: string }) =>
+      api.post<{ changeToken: string; sent: boolean }>('/auth/request-email-change', data),
+    onSuccess: () => {
+      toast.success('Verification code sent to your new email.');
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
+export function useVerifyEmailChange() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (data: { changeToken: string; code: string }) =>
+      api.post('/auth/verify-email-change', data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.me() });
+      toast.success('Email changed successfully!');
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+}
+
 export function useChangePassword() {
   return useMutation({
     mutationFn: (data: { currentPassword: string; newPassword: string }) =>

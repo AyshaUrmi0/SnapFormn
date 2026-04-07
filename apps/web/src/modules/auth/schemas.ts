@@ -33,6 +33,15 @@ export const resetPasswordSchema = z.object({
   path: ['confirmPassword'],
 });
 
+export const changeEmailSchema = z.object({
+  newEmail: z.string().min(1, 'Email is required').email('Please enter a valid email'),
+  password: z.string().min(1, 'Password is required'),
+});
+
+export const verifyEmailChangeSchema = z.object({
+  code: z.string().length(6, 'Code must be exactly 6 digits'),
+});
+
 export const changePasswordSchema = z.object({
   currentPassword: z.string().min(1, 'Current password is required'),
   newPassword: z.string().min(8, 'Password must be at least 8 characters').max(128),
@@ -48,4 +57,6 @@ export type VerifyOtpValues = z.infer<typeof verifyOtpSchema>;
 export type ForgotPasswordValues = z.infer<typeof forgotPasswordSchema>;
 export type CompleteProfileValues = z.infer<typeof completeProfileSchema>;
 export type ResetPasswordValues = z.infer<typeof resetPasswordSchema>;
+export type ChangeEmailValues = z.infer<typeof changeEmailSchema>;
+export type VerifyEmailChangeValues = z.infer<typeof verifyEmailChangeSchema>;
 export type ChangePasswordValues = z.infer<typeof changePasswordSchema>;

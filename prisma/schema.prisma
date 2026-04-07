@@ -192,7 +192,7 @@ model Form {
   updatedAt   DateTime   @updatedAt
 
   workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  createdBy   User         @relation(fields: [createdById], references: [id])
+  createdBy   User         @relation(fields: [createdById], references: [id], onDelete: Cascade)
   fields      FormField[]
   submissions Submission[]
 
