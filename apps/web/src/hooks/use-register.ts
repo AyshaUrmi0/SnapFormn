@@ -13,11 +13,9 @@ export function useRegister() {
 
   return useMutation({
     mutationFn: (data: RegisterValues) => registerFn(data),
-    onSuccess: (res) => {
-      toast.success('Account created! Check your email for a verification code.');
-      router.push(
-        `${ROUTES.VERIFY_OTP}?email=${encodeURIComponent(res.email)}&purpose=EMAIL_VERIFICATION`,
-      );
+    onSuccess: () => {
+      toast.success('Account created! You can now sign in.');
+      router.push(ROUTES.LOGIN);
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

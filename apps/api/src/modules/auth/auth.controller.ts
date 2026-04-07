@@ -17,7 +17,7 @@ export const authController = {
   async register(req: Request, res: Response) {
     const { email, name, password } = req.body;
     const result = await authService.register(email, name, password);
-    sendCreated(res, result, 'Registration successful. Check your email for a verification code.');
+    sendCreated(res, result, 'Registration successful. You can now sign in.');
   },
 
   async login(req: Request, res: Response) {

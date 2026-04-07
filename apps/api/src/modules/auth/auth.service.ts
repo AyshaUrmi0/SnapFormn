@@ -13,13 +13,10 @@ export const REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 export const authService = {
   async register(email: string, name?: string, password?: string) {
     const existing = await authRepository.findUserByEmail(email);
-    if (existing) throw AppError.conflict('Email already registered');
+    if (existing) throw AppError.conflict('An account with this email already exists. Try signing in instead.');
 
     const passwordHash = password ? await bcrypt.hash(password, 12) : undefined;
-    const user = await authRepository.createUser({ email, name, ...(passwordHash && { passwordHash }) });
-
-    const code = await otpService.generate(user.id, 'EMAIL_VERIFICATION');
-    await otpService.sendViaEmail(user.email, code, 'EMAIL_VERIFICATION');
+    const user = await authRepository.createUser({ email, name, emailVerified: true, ...(passwordHash && { passwordHash }) });
 
     return { userId: user.id, email: user.email };
   },
@@ -27,25 +24,21 @@ export const authService = {
   async login(email: string, password: string) {
     const user = await authRepository.findUserByEmail(email);
     if (!user || !user.passwordHash) {
-      throw AppError.unauthorized('Invalid credentials');
+      throw AppError.unauthorized('Incorrect email or password. Please try again.');
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) throw AppError.unauthorized('Invalid credentials');
-
-    if (!user.emailVerified) {
-      throw new AppError(403, ErrorCode.FORBIDDEN, 'Please verify your email before logging in');
-    }
+    if (!valid) throw AppError.unauthorized('Incorrect email or password. Please try again.');
 
     return this.issueTokenPair(user.id);
   },
 
   async verifyOtp(email: string, code: string, purpose: OtpPurpose) {
     const user = await authRepository.findUserByEmail(email);
-    if (!user) throw AppError.notFound('User not found');
+    if (!user) throw AppError.notFound('No account found with this email.');
 
     const valid = await otpService.verify(user.id, code, purpose);
-    if (!valid) throw new AppError(400, ErrorCode.OTP_INVALID, 'Invalid or expired OTP');
+    if (!valid) throw new AppError(400, ErrorCode.OTP_INVALID, 'The code you entered is incorrect or has expired. Please try again.');
 
     if (purpose === 'EMAIL_VERIFICATION') {
       await authRepository.updateUser(user.id, { emailVerified: true });
@@ -79,7 +72,7 @@ export const authService = {
       user = await authRepository.createUser({ email });
     }
 
-    if (!user) throw AppError.notFound('User not found');
+    if (!user) throw AppError.notFound('No account found with this email.');
 
     const code = await otpService.generate(user.id, purpose);
     await otpService.sendViaEmail(user.email, code, purpose);
@@ -92,7 +85,7 @@ export const authService = {
     try {
       payload = verifyAccessToken(resetToken);
     } catch {
-      throw AppError.unauthorized('Invalid or expired reset token');
+      throw AppError.unauthorized('Your reset link has expired. Please request a new one.');
     }
 
     const user = await authRepository.findById(payload.sub);
@@ -110,14 +103,14 @@ export const authService = {
     if (!user) throw AppError.notFound('User not found');
 
     if (!user.passwordHash) {
-      throw AppError.badRequest('No password set. Set a password first.');
+      throw AppError.badRequest('You don\'t have a password set yet. Please set one in your account settings first.');
     }
 
     const valid = await bcrypt.compare(password, user.passwordHash);
-    if (!valid) throw AppError.unauthorized('Incorrect password');
+    if (!valid) throw AppError.unauthorized('The password you entered is incorrect.');
 
     const existing = await authRepository.findUserByEmail(newEmail);
-    if (existing) throw AppError.conflict('Email already in use');
+    if (existing) throw AppError.conflict('This email is already being used by another account.');
 
     // Send OTP to the new email for verification
     const code = await otpService.generate(user.id, 'EMAIL_VERIFICATION');
@@ -138,7 +131,7 @@ export const authService = {
     try {
       payload = jwt.verify(changeToken, env.JWT_ACCESS_SECRET) as { sub: string; newEmail: string };
     } catch {
-      throw AppError.unauthorized('Invalid or expired change token');
+      throw AppError.unauthorized('Your email change request has expired. Please try again.');
     }
 
     if (!payload.newEmail) {
@@ -149,11 +142,11 @@ export const authService = {
     if (!user) throw AppError.notFound('User not found');
 
     const validOtp = await otpService.verify(user.id, code, 'EMAIL_VERIFICATION');
-    if (!validOtp) throw new AppError(400, ErrorCode.OTP_INVALID, 'Invalid or expired code');
+    if (!validOtp) throw new AppError(400, ErrorCode.OTP_INVALID, 'The code you entered is incorrect or has expired. Please try again.');
 
     // Check again that new email isn't taken
     const existing = await authRepository.findUserByEmail(payload.newEmail);
-    if (existing) throw AppError.conflict('Email already in use');
+    if (existing) throw AppError.conflict('This email is already being used by another account.');
 
     await authRepository.updateUser(user.id, { email: payload.newEmail });
 
@@ -165,11 +158,11 @@ export const authService = {
     if (!user) throw AppError.notFound('User not found');
 
     if (!user.passwordHash) {
-      throw AppError.badRequest('No password set. Use forgot password to set one.');
+      throw AppError.badRequest('You don\'t have a password yet. Use "Forgot password" on the login page to set one.');
     }
 
     const valid = await bcrypt.compare(currentPassword, user.passwordHash);
-    if (!valid) throw AppError.unauthorized('Current password is incorrect');
+    if (!valid) throw AppError.unauthorized('The current password you entered is incorrect.');
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
     await authRepository.updateUser(user.id, { passwordHash });
