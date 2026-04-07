@@ -15,8 +15,8 @@ const REFRESH_COOKIE_OPTIONS = {
 
 export const authController = {
   async register(req: Request, res: Response) {
-    const { email, name } = req.body;
-    const result = await authService.register(email, name);
+    const { email, name, password } = req.body;
+    const result = await authService.register(email, name, password);
     sendCreated(res, result, 'Registration successful. Check your email for a verification code.');
   },
 

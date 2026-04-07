@@ -41,6 +41,7 @@ export default function RegisterPage() {
     defaultValues: {
       name: '',
       email: '',
+      password: '',
     },
   });
 
@@ -122,6 +123,24 @@ export default function RegisterPage() {
                       type="email"
                       placeholder="you@example.com"
                       autoComplete="email"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="At least 8 characters"
+                      autoComplete="new-password"
                       {...field}
                     />
                   </FormControl>

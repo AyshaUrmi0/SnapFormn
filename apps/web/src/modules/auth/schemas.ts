@@ -8,6 +8,7 @@ export const loginSchema = z.object({
 export const registerSchema = z.object({
   name: z.string().max(100, 'Name must be 100 characters or less').optional(),
   email: z.string().min(1, 'Email is required').email('Please enter a valid email'),
+  password: z.string().min(8, 'Password must be at least 8 characters').max(128),
 });
 
 export const verifyOtpSchema = z.object({

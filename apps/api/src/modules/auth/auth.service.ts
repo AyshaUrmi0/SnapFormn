@@ -9,11 +9,12 @@ import { generateAccessToken, verifyAccessToken } from '../../utils/token';
 export const REFRESH_TOKEN_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000;
 
 export const authService = {
-  async register(email: string, name?: string) {
+  async register(email: string, name?: string, password?: string) {
     const existing = await authRepository.findUserByEmail(email);
     if (existing) throw AppError.conflict('Email already registered');
 
-    const user = await authRepository.createUser({ email, name });
+    const passwordHash = password ? await bcrypt.hash(password, 12) : undefined;
+    const user = await authRepository.createUser({ email, name, ...(passwordHash && { passwordHash }) });
 
     const code = await otpService.generate(user.id, 'EMAIL_VERIFICATION');
     await otpService.sendViaEmail(user.email, code, 'EMAIL_VERIFICATION');
