@@ -10,8 +10,7 @@ export interface User {
 }
 
 export interface RegisterResponse {
-  userId: string;
-  email: string;
+  accessToken: string;
 }
 
 export interface LoginResponse {
