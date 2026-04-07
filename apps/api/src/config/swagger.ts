@@ -1,7 +1,11 @@
+import path from 'path';
 import type { Express, RequestHandler } from 'express';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { env } from './env';
+
+// Resolve paths relative to the api package root, not cwd
+const apiRoot = path.resolve(__dirname, '../..');
 
 const options: swaggerJsdoc.Options = {
   definition: {
@@ -54,8 +58,8 @@ const options: swaggerJsdoc.Options = {
   },
   apis:
     env.NODE_ENV === 'production'
-      ? ['./dist/modules/**/*.routes.js', './dist/routes/**/*.js']
-      : ['./src/modules/**/*.routes.ts', './src/routes/**/*.ts'],
+      ? [path.join(apiRoot, 'dist/modules/**/*.routes.js'), path.join(apiRoot, 'dist/routes/**/*.js')]
+      : [path.join(apiRoot, 'src/modules/**/*.routes.ts'), path.join(apiRoot, 'src/routes/**/*.ts')],
 };
 
 const swaggerSpec = swaggerJsdoc(options);
