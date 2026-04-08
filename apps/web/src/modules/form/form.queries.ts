@@ -14,6 +14,10 @@ import {
   updateFormFields,
   duplicateForm,
   deleteForm,
+  listTrash,
+  restoreForm,
+  permanentDeleteForm,
+  emptyTrash,
 } from './form.service';
 import type {
   Form,
@@ -27,6 +31,10 @@ import type {
   UpdateFormFieldsKeys,
   DuplicateFormKeys,
   DeleteFormKeys,
+  ListTrashKeys,
+  RestoreFormKeys,
+  PermanentDeleteFormKeys,
+  EmptyTrashKeys,
 } from './types';
 
 // ─── Queries ─────────────────────────────────────────────────
@@ -157,7 +165,71 @@ export const useDeleteForm = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.forms.list(variables.workspaceId),
       });
-      toast.success('Form deleted.');
+      toast.success('Form moved to trash.');
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+};
+
+// ─── Trash ──────────────────────────────────────────────────
+
+export const useTrash = (workspaceId: string) => {
+  return useQuery<Form[], Error>({
+    queryKey: queryKeys.forms.trash(workspaceId),
+    queryFn: () => listTrash({ workspaceId }),
+    enabled: !!workspaceId,
+  });
+};
+
+export const useRestoreForm = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<Form, Error, RestoreFormKeys>({
+    mutationFn: (params: RestoreFormKeys) => restoreForm(params),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.forms.list(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.forms.trash(variables.workspaceId),
+      });
+      toast.success('Form restored.');
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+};
+
+export const usePermanentDeleteForm = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, PermanentDeleteFormKeys>({
+    mutationFn: (params: PermanentDeleteFormKeys) => permanentDeleteForm(params),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.forms.trash(variables.workspaceId),
+      });
+      toast.success('Form permanently deleted.');
+    },
+    onError: (error) => {
+      toast.error(getErrorMessage(error));
+    },
+  });
+};
+
+export const useEmptyTrash = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, EmptyTrashKeys>({
+    mutationFn: (params: EmptyTrashKeys) => emptyTrash(params),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.forms.trash(variables.workspaceId),
+      });
+      toast.success('Trash emptied.');
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));

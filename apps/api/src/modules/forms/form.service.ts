@@ -121,6 +121,38 @@ export const formService = {
     const form = await formRepository.findById(formId);
     if (!form) throw AppError.notFound('Form not found');
 
-    await formRepository.delete(formId);
+    const mutatedSlug = `${form.slug}-deleted-${Date.now()}`;
+    await formRepository.softDelete(formId, mutatedSlug);
+  },
+
+  async listTrash(workspaceId: string) {
+    return formRepository.findTrashed(workspaceId);
+  },
+
+  async restore(formId: string, workspaceId: string) {
+    const form = await formRepository.findById(formId, true);
+    if (!form) throw AppError.notFound('Form not found');
+    if (!form.deletedAt) throw AppError.badRequest('Form is not in trash');
+
+    // Extract original slug by stripping the -deleted-{timestamp} suffix
+    const originalSlug = form.slug.replace(/-deleted-\d+$/, '');
+
+    // Check if the original slug is taken
+    const conflict = await formRepository.findBySlug(workspaceId, originalSlug);
+    const restoredSlug = conflict ? `${originalSlug}-restored-${Date.now()}` : originalSlug;
+
+    return formRepository.restore(formId, restoredSlug);
+  },
+
+  async permanentDelete(formId: string) {
+    const form = await formRepository.findById(formId, true);
+    if (!form) throw AppError.notFound('Form not found');
+    if (!form.deletedAt) throw AppError.badRequest('Form is not in trash');
+
+    await formRepository.permanentDelete(formId);
+  },
+
+  async emptyTrash(workspaceId: string) {
+    await formRepository.emptyTrash(workspaceId);
   },
 };

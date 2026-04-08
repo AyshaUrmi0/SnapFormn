@@ -44,6 +44,7 @@ export interface Form {
   status: FormStatus;
   settings: Record<string, unknown>;
   closedAt: string | null;
+  deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
   fields?: FormField[];
@@ -100,4 +101,22 @@ export interface DuplicateFormKeys {
 export interface DeleteFormKeys {
   workspaceId: string;
   formId: string;
+}
+
+export interface ListTrashKeys {
+  workspaceId: string;
+}
+
+export interface RestoreFormKeys {
+  workspaceId: string;
+  formId: string;
+}
+
+export interface PermanentDeleteFormKeys {
+  workspaceId: string;
+  formId: string;
+}
+
+export interface EmptyTrashKeys {
+  workspaceId: string;
 }

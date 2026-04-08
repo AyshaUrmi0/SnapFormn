@@ -84,3 +84,9 @@ export const formListSchema = z.object({
     status: z.enum(['DRAFT', 'PUBLISHED', 'CLOSED']).optional(),
   }),
 });
+
+export const trashParamsSchema = z.object({
+  params: z.object({
+    workspaceId: z.string().min(1),
+  }),
+});

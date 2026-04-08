@@ -59,4 +59,27 @@ export const formController = {
     await formService.delete(req.params.formId as string);
     sendNoContent(res);
   },
+
+  async listTrash(req: Request, res: Response) {
+    const forms = await formService.listTrash(req.params.workspaceId as string);
+    sendSuccess(res, forms);
+  },
+
+  async restore(req: Request, res: Response) {
+    const form = await formService.restore(
+      req.params.formId as string,
+      req.params.workspaceId as string,
+    );
+    sendSuccess(res, form, 'Form restored');
+  },
+
+  async permanentDelete(req: Request, res: Response) {
+    await formService.permanentDelete(req.params.formId as string);
+    sendNoContent(res);
+  },
+
+  async emptyTrash(req: Request, res: Response) {
+    await formService.emptyTrash(req.params.workspaceId as string);
+    sendNoContent(res);
+  },
 };

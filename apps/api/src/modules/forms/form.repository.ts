@@ -6,9 +6,13 @@ export const formRepository = {
     return prisma.form.create({ data, include: { fields: true } });
   },
 
-  findById(id: string) {
-    return prisma.form.findUnique({
-      where: { id },
+  findById(id: string, includeDeleted = false) {
+    const where: Prisma.FormWhereUniqueInput = { id };
+    if (!includeDeleted) {
+      (where as any).deletedAt = null;
+    }
+    return prisma.form.findFirst({
+      where: where as Prisma.FormWhereInput,
       include: {
         fields: { orderBy: { order: 'asc' } },
         createdBy: { select: { id: true, name: true, email: true } },
@@ -17,14 +21,14 @@ export const formRepository = {
   },
 
   findBySlug(workspaceId: string, slug: string) {
-    return prisma.form.findUnique({
-      where: { workspaceId_slug: { workspaceId, slug } },
+    return prisma.form.findFirst({
+      where: { workspaceId, slug, deletedAt: null },
     });
   },
 
   findPublicBySlug(slug: string) {
     return prisma.form.findFirst({
-      where: { slug, status: 'PUBLISHED' },
+      where: { slug, status: 'PUBLISHED', deletedAt: null },
       include: {
         fields: { orderBy: { order: 'asc' } },
       },
@@ -35,7 +39,7 @@ export const formRepository = {
     workspaceId: string,
     options: { skip: number; take: number; status?: FormStatus },
   ) {
-    const where: Prisma.FormWhereInput = { workspaceId };
+    const where: Prisma.FormWhereInput = { workspaceId, deletedAt: null };
     if (options.status) where.status = options.status;
 
     return Promise.all([
@@ -61,8 +65,39 @@ export const formRepository = {
     });
   },
 
-  delete(id: string) {
+  softDelete(id: string, mutatedSlug: string) {
+    return prisma.form.update({
+      where: { id },
+      data: { deletedAt: new Date(), slug: mutatedSlug },
+    });
+  },
+
+  findTrashed(workspaceId: string) {
+    return prisma.form.findMany({
+      where: { workspaceId, deletedAt: { not: null } },
+      orderBy: { deletedAt: 'desc' },
+      include: {
+        createdBy: { select: { id: true, name: true } },
+      },
+    });
+  },
+
+  restore(id: string, slug: string) {
+    return prisma.form.update({
+      where: { id },
+      data: { deletedAt: null, slug },
+      include: { fields: { orderBy: { order: 'asc' } } },
+    });
+  },
+
+  permanentDelete(id: string) {
     return prisma.form.delete({ where: { id } });
+  },
+
+  emptyTrash(workspaceId: string) {
+    return prisma.form.deleteMany({
+      where: { workspaceId, deletedAt: { not: null } },
+    });
   },
 
   // Bulk upsert fields in a transaction

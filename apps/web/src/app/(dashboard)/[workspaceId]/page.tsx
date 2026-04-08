@@ -32,10 +32,9 @@ export default function WorkspaceHomePage() {
 
   async function handleDelete(form: Form) {
     const confirmed = await confirm({
-      title: 'Delete form',
-      description: `Are you sure you want to delete "${form.title}"? All submissions will be permanently lost.`,
-      confirmLabel: 'Delete',
-      variant: 'destructive',
+      title: 'Move to trash?',
+      description: `"${form.title}" will be moved to trash. You can restore it later.`,
+      confirmLabel: 'Move to trash',
     });
     if (confirmed) {
       deleteForm.mutate({ workspaceId, formId: form.id });
