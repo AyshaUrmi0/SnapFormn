@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import {
   Dialog,
@@ -15,6 +16,7 @@ import { Button } from '@/components/ui/button';
 import { FormPreview } from '@/features/editor/form-preview';
 import { useWorkspaces } from '@/modules/workspace/workspace.queries';
 import { useCreateForm, useUpdateFormFields } from '@/modules/form/form.queries';
+import { queryKeys } from '@/constants/query-keys';
 import { ROUTES } from '@/constants/routes';
 import type { FormTemplate, TemplateField } from '@/constants/form-templates';
 import type { EditorField } from '@/features/editor/types';
@@ -42,6 +44,7 @@ interface TemplatePreviewDialogProps {
 
 export function TemplatePreviewDialog({ template, open, onOpenChange }: TemplatePreviewDialogProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { data: workspaces } = useWorkspaces();
   const createForm = useCreateForm();
   const updateFormFields = useUpdateFormFields();
@@ -80,6 +83,12 @@ export function TemplatePreviewDialog({ template, open, onOpenChange }: Template
           validations: null,
           conditionals: null,
         })),
+      });
+
+      // Wait for the detail query to refetch with fields before navigating,
+      // otherwise the editor initializes with 0 fields from stale cache
+      await queryClient.refetchQueries({
+        queryKey: queryKeys.forms.detail(workspaceId, newForm.id),
       });
 
       onOpenChange(false);
