@@ -84,10 +84,12 @@ export interface UpdateFormStatusKeys {
   data: { status: FormStatus };
 }
 
+export type UpdateFormFieldData = Omit<FormField, 'id' | 'formId' | 'createdAt' | 'updatedAt'> & { id?: string };
+
 export interface UpdateFormFieldsKeys {
   workspaceId: string;
   formId: string;
-  fields: Omit<FormField, 'formId' | 'createdAt' | 'updatedAt'>[];
+  fields: UpdateFormFieldData[];
 }
 
 export interface DuplicateFormKeys {
