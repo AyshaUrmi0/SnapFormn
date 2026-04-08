@@ -28,6 +28,12 @@ const envSchema = z.object({
 
   STRIPE_SECRET_KEY: z.string().default(''),
   STRIPE_WEBHOOK_SECRET: z.string().default(''),
+  STRIPE_PRICE_PRO_MONTHLY: z.string().default(''),
+  STRIPE_PRICE_PRO_YEARLY: z.string().default(''),
+  STRIPE_PRICE_BUSINESS_MONTHLY: z.string().default(''),
+  STRIPE_PRICE_BUSINESS_YEARLY: z.string().default(''),
+
+  FRONTEND_URL: z.string().default('http://localhost:3000'),
 
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
 

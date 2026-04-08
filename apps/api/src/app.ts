@@ -32,7 +32,17 @@ app.use(
 );
 app.use(cors(corsConfig) as RequestHandler);
 app.use(compression() as RequestHandler);
-app.use(express.json({ limit: '5mb' }));
+app.use(
+  express.json({
+    limit: '5mb',
+    verify: (req: any, _res, buf) => {
+      // Preserve raw body for Stripe webhook signature verification
+      if (req.originalUrl === '/api/v1/billing/webhook') {
+        req.rawBody = buf;
+      }
+    },
+  }),
+);
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser() as RequestHandler);
 app.use(rateLimiterMiddleware as RequestHandler);

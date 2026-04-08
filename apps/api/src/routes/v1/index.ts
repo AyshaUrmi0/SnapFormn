@@ -31,6 +31,6 @@ router.use('/users', authenticate as RequestHandler, userRoutes);
 router.use('/workspaces', authenticate as RequestHandler, workspaceRoutes);
 router.use('/forms', formRoutes);
 router.use('/submissions', submissionRoutes);
-router.use('/billing', authenticate as RequestHandler, billingRoutes);
+router.use('/billing', billingRoutes); // Auth applied per-route (webhook must be unauthenticated)
 
 export default router;

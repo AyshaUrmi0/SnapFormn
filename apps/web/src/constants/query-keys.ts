@@ -24,4 +24,7 @@ export const queryKeys = {
     analytics: (workspaceId: string, formId: string) =>
       ['submissions', workspaceId, formId, 'analytics'] as const,
   },
+  billing: {
+    subscription: (workspaceId: string) => ['billing', 'subscription', workspaceId] as const,
+  },
 } as const;
