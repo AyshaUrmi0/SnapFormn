@@ -12,6 +12,7 @@ import {
   updateFormStatusSchema,
   formParamsSchema,
   formListSchema,
+  trashParamsSchema,
 } from './form.schema';
 import { z } from 'zod';
 
@@ -71,6 +72,23 @@ router.get(
   asyncHandler(formController.list),
 );
 
+// Trash routes (must be before :formId routes to avoid matching "trash" as formId)
+router.get(
+  '/workspace/:workspaceId/trash',
+  authenticate,
+  validate(trashParamsSchema),
+  requirePermission(PERMISSIONS.FORM_DELETE),
+  asyncHandler(formController.listTrash),
+);
+
+router.delete(
+  '/workspace/:workspaceId/trash',
+  authenticate,
+  validate(trashParamsSchema),
+  requirePermission(PERMISSIONS.FORM_DELETE),
+  asyncHandler(formController.emptyTrash),
+);
+
 router.get(
   '/workspace/:workspaceId/:formId',
   authenticate,
@@ -109,6 +127,22 @@ router.post(
   validate(formParamsSchema),
   requirePermission(PERMISSIONS.FORM_CREATE),
   asyncHandler(formController.duplicate),
+);
+
+router.post(
+  '/workspace/:workspaceId/:formId/restore',
+  authenticate,
+  validate(formParamsSchema),
+  requirePermission(PERMISSIONS.FORM_DELETE),
+  asyncHandler(formController.restore),
+);
+
+router.delete(
+  '/workspace/:workspaceId/:formId/permanent',
+  authenticate,
+  validate(formParamsSchema),
+  requirePermission(PERMISSIONS.FORM_DELETE),
+  asyncHandler(formController.permanentDelete),
 );
 
 router.delete(

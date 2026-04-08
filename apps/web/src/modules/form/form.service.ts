@@ -11,6 +11,10 @@ import type {
   UpdateFormFieldsKeys,
   DuplicateFormKeys,
   DeleteFormKeys,
+  ListTrashKeys,
+  RestoreFormKeys,
+  PermanentDeleteFormKeys,
+  EmptyTrashKeys,
 } from './types';
 
 const { GET, POST, PUT, PATCH, DELETE } = methodsEnums;
@@ -107,4 +111,38 @@ function deleteFormRequest({ workspaceId, formId }: DeleteFormKeys) {
 
 export const deleteForm = createApi<DeleteFormKeys, void>({
   request: deleteFormRequest,
+});
+
+// ─── Trash ──────────────────────────────────────────────────
+
+function listTrashRequest({ workspaceId }: ListTrashKeys) {
+  return { url: `/forms/workspace/${workspaceId}/trash`, method: GET };
+}
+
+export const listTrash = createApi<ListTrashKeys, Form[]>({
+  request: listTrashRequest,
+});
+
+function restoreFormRequest({ workspaceId, formId }: RestoreFormKeys) {
+  return { url: `/forms/workspace/${workspaceId}/${formId}/restore`, method: POST };
+}
+
+export const restoreForm = createApi<RestoreFormKeys, Form>({
+  request: restoreFormRequest,
+});
+
+function permanentDeleteFormRequest({ workspaceId, formId }: PermanentDeleteFormKeys) {
+  return { url: `/forms/workspace/${workspaceId}/${formId}/permanent`, method: DELETE };
+}
+
+export const permanentDeleteForm = createApi<PermanentDeleteFormKeys, void>({
+  request: permanentDeleteFormRequest,
+});
+
+function emptyTrashRequest({ workspaceId }: EmptyTrashKeys) {
+  return { url: `/forms/workspace/${workspaceId}/trash`, method: DELETE };
+}
+
+export const emptyTrash = createApi<EmptyTrashKeys, void>({
+  request: emptyTrashRequest,
 });
