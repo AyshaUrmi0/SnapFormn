@@ -3,6 +3,8 @@
 import { useState } from 'react';
 import { AuthGuard } from '@/components/shared/auth-guard';
 import { ModalProvider } from '@/providers/modal-provider';
+import { CommandPaletteProvider } from '@/providers/command-palette-provider';
+import { CommandPalette } from '@/components/command-palette';
 import { Sidebar } from '@/components/layout/sidebar';
 import { MobileSidebar } from '@/components/layout/mobile-sidebar';
 import { Topbar } from '@/components/layout/topbar';
@@ -13,6 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <AuthGuard>
       <ModalProvider>
+      <CommandPaletteProvider>
       <div className="flex h-screen overflow-hidden">
         {/* Desktop sidebar - hidden on mobile */}
         <div className="hidden md:flex">
@@ -28,6 +31,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <main className="flex-1 overflow-y-auto p-6">{children}</main>
         </div>
       </div>
+
+      <CommandPalette />
+      </CommandPaletteProvider>
       </ModalProvider>
     </AuthGuard>
   );
