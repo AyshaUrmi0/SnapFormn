@@ -64,9 +64,14 @@ export function TemplatePreviewDialog({ template, open, onOpenChange }: Template
 
     setIsCreating(true);
     try {
+      // Add a short random suffix to the slug so users can create
+      // multiple forms from the same template in one workspace
+      const suffix = crypto.randomUUID().slice(0, 6);
+      const slug = `${template.id}-${suffix}`;
+
       const newForm = await createForm.mutateAsync({
         workspaceId,
-        data: { title: template.title, description: template.description },
+        data: { title: template.title, description: template.description, slug },
       });
 
       await updateFormFields.mutateAsync({

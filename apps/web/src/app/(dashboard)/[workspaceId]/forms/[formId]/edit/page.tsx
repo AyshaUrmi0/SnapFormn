@@ -34,18 +34,19 @@ export default function FormEditorPage() {
 
   const [fields, setFields] = useState<EditorField[]>([]);
   const [title, setTitle] = useState('');
+  const [isReady, setIsReady] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isPreview, setIsPreview] = useState(false);
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [showPublishDialog, setShowPublishDialog] = useState(false);
-  const initialized = useRef(false);
   const editorRef = useRef<DocumentEditorRef>(null);
   const serverFieldIds = useRef<Set<string>>(new Set());
 
+  // Initialize editor state from form data — runs once when form first loads
   useEffect(() => {
-    if (form && !initialized.current) {
+    if (form && !isReady) {
       setTitle(form.title);
       serverFieldIds.current = new Set((form.fields ?? []).map((f) => f.id));
       setFields(
@@ -53,9 +54,9 @@ export default function FormEditorPage() {
           .sort((a, b) => a.order - b.order)
           .map(toEditorField),
       );
-      initialized.current = true;
+      setIsReady(true);
     }
-  }, [form]);
+  }, [form, isReady]);
 
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -208,7 +209,7 @@ export default function FormEditorPage() {
     ? `${window.location.origin}/f/${form.slug}`
     : '';
 
-  if (isLoading) {
+  if (isLoading || !isReady) {
     return (
       <div className="flex min-h-[50vh] items-center justify-center">
         <LoadingState message="Loading form editor..." />
