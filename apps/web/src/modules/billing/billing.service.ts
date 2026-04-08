@@ -2,7 +2,9 @@ import { createApi, methodsEnums } from '@/lib/createApi';
 import type {
   CreateCheckoutKeys,
   CheckoutResponse,
+  GetPortalKeys,
   PortalResponse,
+  SubscriptionInfo,
 } from './types';
 
 const { GET, POST } = methodsEnums;
@@ -15,10 +17,18 @@ export const createCheckout = createApi<CreateCheckoutKeys, CheckoutResponse>({
   request: createCheckoutRequest,
 });
 
-function getPortalRequest() {
-  return { url: '/billing/portal', method: GET };
+function getPortalRequest(data: GetPortalKeys) {
+  return { url: '/billing/portal', method: GET, params: { workspaceId: data.workspaceId } };
 }
 
-export const getPortal = createApi<void, PortalResponse>({
+export const getPortal = createApi<GetPortalKeys, PortalResponse>({
   request: getPortalRequest,
+});
+
+function getSubscriptionRequest(data: { workspaceId: string }) {
+  return { url: '/billing/subscription', method: GET, params: { workspaceId: data.workspaceId } };
+}
+
+export const getSubscription = createApi<{ workspaceId: string }, SubscriptionInfo | null>({
+  request: getSubscriptionRequest,
 });
