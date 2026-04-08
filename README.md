@@ -5,8 +5,8 @@ A Tally.so-inspired form builder platform built with a modern TypeScript stack.
 ## Tech Stack
 
 - **Monorepo**: npm workspaces
-- **Backend**: Node.js, Express, TypeScript, Prisma, PostgreSQL, Redis, Zod, JWT
-- **Frontend**: Next.js (App Router), React, TanStack Query, Tailwind CSS, shadcn/ui
+- **Backend**: Node.js, Express, TypeScript, Prisma, PostgreSQL (Neon), Redis (Upstash), Zod, JWT
+- **Frontend**: Next.js 16 (App Router), React, TanStack Query, Tailwind CSS v4, shadcn/ui v4 (base-ui), TipTap
 - **Shared**: Common types, schemas, utilities, RBAC constants
 - **Payments**: Stripe (scaffold)
 
@@ -21,6 +21,65 @@ snapform/
 │   └── shared/       # Shared types, schemas, utilities
 └── prisma/           # Prisma schema & migrations
 ```
+
+## Features
+
+### Form Builder
+- TipTap-based rich text editor with custom form block nodes
+- Slash command (`/`) to insert 16 field types across 4 categories
+- Inline block configuration (label, description, placeholder, required, options)
+- Drag-and-drop field reordering
+- Live form preview mode
+- Auto-save dirty state tracking with unsaved changes warning
+
+### Field Types
+- **Text & Input**: Short Text, Long Text, Email, Number, Phone, URL, Date
+- **Choice**: Dropdown, Multi-Select, Checkbox, Radio
+- **Special**: File Upload, Rating, Scale
+- **Layout**: Statement, Page Break
+
+### Templates
+- 10 pre-built form templates across 5 categories (Feedback, Registration, Survey, Business, Other)
+- Template preview with all fields rendered
+- One-click "Use this template" creates a form with all fields pre-populated
+- Multiple forms can be created from the same template
+
+### Public Forms
+- Published forms accessible at `/f/:slug` (no auth required)
+- Password-protected forms
+- Client-side field validation (required, email format)
+- Customizable success page (message, redirect URL, resubmit option)
+- Embeddable via iframe
+
+### Submissions & Analytics
+- View submissions in a list with detail dialog
+- Delete individual submissions
+- Analytics dashboard: total/completed counts, completion rate, submission timeline, field response rates
+
+### Workspace & Team Management
+- Create multiple workspaces
+- Invite members by email with role assignment
+- Role-based access control: Owner, Admin, Editor, Viewer
+- Workspace settings (name, slug, delete)
+
+### Dashboard
+- Tally.so-style sidebar with grouped navigation sections
+- Command palette (Ctrl+K / Cmd+K) for quick search and navigation
+- Search across forms, workspaces, and navigation actions
+- Clean list-based home page with relative timestamps
+- Dark/light theme toggle
+
+### Trash & Soft Delete
+- Deleted forms move to trash instead of permanent deletion
+- Restore forms from trash
+- Permanently delete individual forms or empty entire trash
+- Soft-deleted forms excluded from all active queries
+
+### User Settings
+- Profile management (name, avatar)
+- Password change
+- Email change with OTP verification
+- Account deletion
 
 ## Prerequisites
 
@@ -84,11 +143,14 @@ npm run dev:all
 | `npm run dev:all` | Start both API and frontend |
 | `npm run build` | Build shared package and API |
 | `npm run build:web` | Build the frontend |
+| `npm run build:render` | Build for Render deployment (includes migrations) |
+| `npm run build:vercel` | Build for Vercel deployment |
 | `npm run lint` | Run ESLint |
 | `npm run format` | Run Prettier |
 | `npm run typecheck` | TypeScript type checking |
 | `npm run db:generate` | Generate Prisma client |
-| `npm run db:migrate` | Run Prisma migrations |
+| `npm run db:migrate` | Run Prisma migrations (dev) |
+| `npm run db:migrate:prod` | Deploy Prisma migrations (production) |
 | `npm run db:seed` | Seed the database |
 | `npm run db:studio` | Open Prisma Studio |
 | `npm run db:reset` | Reset database (drops all data) |
@@ -99,24 +161,28 @@ npm run dev:all
 - `GET /api/v1/health` - Health check
 
 ### Auth
-- `POST /api/v1/auth/register` - Register
-- `POST /api/v1/auth/login` - Login
-- `POST /api/v1/auth/verify-otp` - Verify OTP
-- `POST /api/v1/auth/request-otp` - Request OTP
+- `POST /api/v1/auth/register` - Register with email/password
+- `POST /api/v1/auth/login` - Login with email/password
+- `POST /api/v1/auth/verify-otp` - Verify OTP code
+- `POST /api/v1/auth/request-otp` - Request OTP (login, verification, password reset)
 - `POST /api/v1/auth/google` - Google OAuth login
-- `POST /api/v1/auth/complete-profile` - Complete profile after OAuth
+- `POST /api/v1/auth/reset-password` - Reset password via token
+- `POST /api/v1/auth/change-password` - Change password (authenticated)
+- `POST /api/v1/auth/request-email-change` - Request email change (sends OTP)
+- `POST /api/v1/auth/verify-email-change` - Verify email change with OTP
+- `POST /api/v1/auth/complete-profile` - Complete profile after OAuth signup
 - `POST /api/v1/auth/refresh` - Refresh access token
-- `POST /api/v1/auth/logout` - Logout
+- `POST /api/v1/auth/logout` - Logout and revoke refresh token
 
 ### Users
-- `GET /api/v1/users/me` - Get profile
-- `PATCH /api/v1/users/me` - Update profile
+- `GET /api/v1/users/me` - Get current user profile
+- `PATCH /api/v1/users/me` - Update profile (name, avatar)
 - `DELETE /api/v1/users/me` - Delete account
 
 ### Workspaces
 - `POST /api/v1/workspaces` - Create workspace
-- `GET /api/v1/workspaces` - List workspaces
-- `GET /api/v1/workspaces/:id` - Get workspace
+- `GET /api/v1/workspaces` - List user's workspaces
+- `GET /api/v1/workspaces/:id` - Get workspace details
 - `PATCH /api/v1/workspaces/:id` - Update workspace
 - `DELETE /api/v1/workspaces/:id` - Delete workspace
 - `POST /api/v1/workspaces/:id/members` - Invite member
@@ -124,25 +190,33 @@ npm run dev:all
 - `DELETE /api/v1/workspaces/:id/members/:memberId` - Remove member
 
 ### Forms
-- `GET /api/v1/forms/:slug` - Get published form (public)
+- `GET /api/v1/forms/:slug` - Get published form by slug (public, no auth)
 - `POST /api/v1/forms/workspace/:workspaceId` - Create form
-- `GET /api/v1/forms/workspace/:workspaceId` - List forms
-- `GET /api/v1/forms/workspace/:workspaceId/:formId` - Get form
-- `PATCH /api/v1/forms/workspace/:workspaceId/:formId` - Update form
-- `PATCH /api/v1/forms/workspace/:workspaceId/:formId/status` - Update form status
-- `PUT /api/v1/forms/workspace/:workspaceId/:formId/fields` - Update form fields
-- `DELETE /api/v1/forms/workspace/:workspaceId/:formId` - Delete form
+- `GET /api/v1/forms/workspace/:workspaceId` - List forms (excludes trashed)
+- `GET /api/v1/forms/workspace/:workspaceId/:formId` - Get form with fields
+- `PATCH /api/v1/forms/workspace/:workspaceId/:formId` - Update form (title, description, settings)
+- `PATCH /api/v1/forms/workspace/:workspaceId/:formId/status` - Update form status (Draft/Published/Closed)
+- `PUT /api/v1/forms/workspace/:workspaceId/:formId/fields` - Replace all form fields
+- `POST /api/v1/forms/workspace/:workspaceId/:formId/duplicate` - Duplicate form with fields
+- `DELETE /api/v1/forms/workspace/:workspaceId/:formId` - Soft delete form (moves to trash)
+
+### Trash
+- `GET /api/v1/forms/workspace/:workspaceId/trash` - List trashed forms
+- `POST /api/v1/forms/workspace/:workspaceId/:formId/restore` - Restore form from trash
+- `DELETE /api/v1/forms/workspace/:workspaceId/:formId/permanent` - Permanently delete form
+- `DELETE /api/v1/forms/workspace/:workspaceId/trash` - Empty trash (delete all trashed forms)
 
 ### Submissions
-- `POST /api/v1/submissions/:slug` - Submit form (public)
+- `POST /api/v1/submissions/:slug` - Submit form response (public, no auth)
 - `GET /api/v1/submissions/workspace/:workspaceId/forms/:formId` - List submissions
+- `GET /api/v1/submissions/workspace/:workspaceId/forms/:formId/analytics` - Get form analytics
 - `GET /api/v1/submissions/workspace/:workspaceId/forms/:formId/:submissionId` - Get submission
 - `DELETE /api/v1/submissions/workspace/:workspaceId/forms/:formId/:submissionId` - Delete submission
 
 ### Billing (stubs)
-- `POST /api/v1/billing/checkout` - Create checkout session
-- `GET /api/v1/billing/portal` - Create portal session
-- `POST /api/v1/billing/webhook` - Stripe webhook
+- `POST /api/v1/billing/checkout` - Create Stripe checkout session
+- `GET /api/v1/billing/portal` - Create Stripe customer portal session
+- `POST /api/v1/billing/webhook` - Stripe webhook handler
 
 ## API Documentation
 
@@ -168,15 +242,38 @@ Both `apps/api` and `apps/web` depend on `@snapform/shared` which provides:
 
 ## Auth Flow
 
-1. Register with email -> receives verification OTP
-2. Verify OTP -> email confirmed
-3. Login with email/password -> receives JWT access token + httpOnly refresh token cookie
-4. Google OAuth login supported as alternative
+1. Register with email or login via Google OAuth
+2. Email login sends a 6-digit OTP verification code
+3. Verify OTP to complete login/registration
+4. Receives JWT access token + httpOnly refresh token cookie
 5. Access protected routes with `Authorization: Bearer <token>`
 6. Refresh token rotation with reuse detection
+7. Password reset via email token
 
 ## RBAC
 
 Workspace-scoped roles: **OWNER**, **ADMIN**, **EDITOR**, **VIEWER**
 
 Each role has a predefined set of permissions (seeded via `npm run db:seed`).
+
+| Permission | Owner | Admin | Editor | Viewer |
+|------------|-------|-------|--------|--------|
+| form:create | Yes | Yes | Yes | No |
+| form:edit | Yes | Yes | Yes | No |
+| form:delete | Yes | Yes | Yes | No |
+| form:publish | Yes | Yes | Yes | No |
+| form:view | Yes | Yes | Yes | Yes |
+| submission:view | Yes | Yes | Yes | Yes |
+| submission:delete | Yes | Yes | No | No |
+| member:invite | Yes | Yes | No | No |
+| member:manage_role | Yes | Yes | No | No |
+| member:remove | Yes | Yes | No | No |
+| workspace:manage | Yes | Yes | No | No |
+| workspace:delete | Yes | No | No | No |
+
+## Deployment
+
+- **Backend (API)**: Deployed on [Render](https://render.com) with `build:render` script
+- **Frontend (Web)**: Deployed on [Vercel](https://vercel.com) with `build:vercel` script
+- **Database**: PostgreSQL on [Neon](https://neon.tech)
+- **Cache**: Redis on [Upstash](https://upstash.com)
