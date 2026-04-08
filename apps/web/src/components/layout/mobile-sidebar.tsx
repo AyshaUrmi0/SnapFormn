@@ -10,6 +10,7 @@ import { ThemeToggle } from './theme-toggle';
 import { UserMenu } from './user-menu';
 import { WorkspaceSwitcher } from './workspace-switcher';
 import { getNavSections, getWorkspaceIdFromPath } from './sidebar';
+import { useCommandPalette } from '@/providers/command-palette-provider';
 import { ROUTES } from '@/constants/routes';
 
 interface MobileSidebarProps {
@@ -19,8 +20,11 @@ interface MobileSidebarProps {
 
 export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
   const pathname = usePathname();
+  const { open: openSearch } = useCommandPalette();
   const workspaceId = getWorkspaceIdFromPath(pathname);
-  const sections = getNavSections(workspaceId);
+  const sections = getNavSections(workspaceId, {
+    onSearchClick: () => { onOpenChange(false); openSearch(); },
+  });
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -69,19 +73,30 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
                 )}
                 <div className="space-y-0.5 px-1">
                   {section.items.map((item) => {
-                    const isActive = item.href !== '#' && pathname === item.href;
+                    const isActive = item.href !== '#' && !item.action && pathname === item.href;
+                    const classes = cn(
+                      'flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] transition-colors w-full',
+                      isActive
+                        ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+                        : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
+                      item.className,
+                    );
+
+                    if (item.action) {
+                      return (
+                        <button key={item.label} type="button" onClick={item.action} className={classes}>
+                          <item.icon className="h-4 w-4 shrink-0" />
+                          <span>{item.label}</span>
+                        </button>
+                      );
+                    }
+
                     return (
                       <Link
                         key={item.label}
                         href={item.href}
                         onClick={() => onOpenChange(false)}
-                        className={cn(
-                          'flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] transition-colors',
-                          isActive
-                            ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                            : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
-                          item.className,
-                        )}
+                        className={classes}
                       >
                         <item.icon className="h-4 w-4 shrink-0" />
                         <span>{item.label}</span>
