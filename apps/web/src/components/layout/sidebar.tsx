@@ -27,6 +27,7 @@ import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from './theme-toggle';
 import { UserMenu } from './user-menu';
 import { WorkspaceSwitcher } from './workspace-switcher';
+import { useCommandPalette } from '@/providers/command-palette-provider';
 import { ROUTES } from '@/constants/routes';
 
 const NON_WORKSPACE_ROUTES = [
@@ -50,6 +51,7 @@ interface NavItemDef {
   icon: React.ComponentType<{ className?: string }>;
   className?: string;
   exact?: boolean;
+  action?: () => void;
 }
 
 interface NavSectionDef {
@@ -57,12 +59,12 @@ interface NavSectionDef {
   items: NavItemDef[];
 }
 
-function getNavSections(workspaceId: string | null): NavSectionDef[] {
+function getNavSections(workspaceId: string | null, options?: { onSearchClick?: () => void }): NavSectionDef[] {
   const ws = workspaceId ? ROUTES.workspace(workspaceId) : null;
 
   const mainNav: NavItemDef[] = [
     { label: 'Home', href: ws?.ROOT ?? ROUTES.WORKSPACES, icon: Home, exact: true },
-    { label: 'Search', href: ROUTES.SEARCH, icon: Search },
+    { label: 'Search', href: '#', icon: Search, action: options?.onSearchClick },
     { label: 'Members', href: ws?.MEMBERS ?? ROUTES.MEMBERS, icon: Users },
     { label: 'Domains', href: ROUTES.DOMAINS, icon: Globe },
     { label: 'Settings', href: ROUTES.SETTINGS, icon: Settings },
@@ -104,18 +106,26 @@ function NavItem({
   isActive: boolean;
   onClick?: () => void;
 }) {
+  const classes = cn(
+    'flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] transition-colors w-full',
+    isActive
+      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
+      : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
+    item.className,
+  );
+
+  // If the item has an action callback, render a button instead of a link
+  if (item.action) {
+    return (
+      <button type="button" onClick={item.action} className={classes}>
+        <item.icon className="h-4 w-4 shrink-0" />
+        <span>{item.label}</span>
+      </button>
+    );
+  }
+
   return (
-    <Link
-      href={item.href}
-      onClick={onClick}
-      className={cn(
-        'flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] transition-colors',
-        isActive
-          ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-          : 'text-sidebar-foreground hover:bg-sidebar-accent/50',
-        item.className,
-      )}
-    >
+    <Link href={item.href} onClick={onClick} className={classes}>
       <item.icon className="h-4 w-4 shrink-0" />
       <span>{item.label}</span>
     </Link>
@@ -135,8 +145,9 @@ function SectionLabel({ label, action }: { label: string; action?: React.ReactNo
 
 export function Sidebar() {
   const pathname = usePathname();
+  const { open: openSearch } = useCommandPalette();
   const workspaceId = getWorkspaceIdFromPath(pathname);
-  const sections = getNavSections(workspaceId);
+  const sections = getNavSections(workspaceId, { onSearchClick: openSearch });
 
   return (
     <aside className="flex flex-col w-56 border-r border-sidebar-border bg-sidebar text-sidebar-foreground h-screen overflow-y-auto shrink-0">
