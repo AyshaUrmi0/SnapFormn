@@ -3,7 +3,6 @@
 import { useState } from 'react';
 import { Trash2, Undo2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { LoadingState } from '@/components/shared/loading-state';
 import { EmptyState } from '@/components/shared/empty-state';
 import { ConfirmDialog } from '@/components/shared/confirm-dialog';
@@ -78,36 +77,28 @@ export default function TrashPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-1">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() =>
-                          restoreMutation.mutate({
-                            workspaceId,
-                            formId: form.id,
-                          })
-                        }
-                        disabled={restoreMutation.isPending}
-                      >
-                        <Undo2 className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Restore</TooltipContent>
-                  </Tooltip>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setFormToDelete(form)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>Delete permanently</TooltipContent>
-                  </Tooltip>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Restore"
+                    onClick={() =>
+                      restoreMutation.mutate({
+                        workspaceId,
+                        formId: form.id,
+                      })
+                    }
+                    disabled={restoreMutation.isPending}
+                  >
+                    <Undo2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    title="Delete permanently"
+                    onClick={() => setFormToDelete(form)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
                 </div>
               </div>
             ))}
