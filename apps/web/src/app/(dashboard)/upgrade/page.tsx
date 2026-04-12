@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { Check, Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
@@ -10,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { useWorkspaces } from '@/modules/workspace/workspace.queries';
 import { useCreateCheckout } from '@/modules/billing/billing.queries';
 import { PLANS } from '@/constants/plans';
+import { ROUTES } from '@/constants/routes';
 import type { Plan } from '@/modules/workspace/types';
 
 export default function UpgradePage() {
@@ -77,8 +79,10 @@ export default function UpgradePage() {
             <div
               key={planKey}
               className={cn(
-                'rounded-xl border p-6 flex flex-col',
-                planKey === 'PRO' && 'ring-2 ring-primary',
+                'rounded-xl border p-6 flex flex-col transition-all',
+                isCurrentPlan
+                  ? 'ring-2 ring-primary border-primary'
+                  : 'hover:border-primary/50',
               )}
             >
               <div className="flex items-center gap-2 mb-1">
@@ -113,7 +117,6 @@ export default function UpgradePage() {
               <Button
                 onClick={() => handleUpgrade(planKey)}
                 disabled={isCurrentPlan || checkout.isPending}
-                variant={planKey === 'PRO' ? 'default' : 'outline'}
                 className="w-full"
               >
                 {checkout.isPending && checkout.variables?.plan === planKey && (
@@ -126,12 +129,20 @@ export default function UpgradePage() {
         })}
       </div>
 
-      {/* Free plan note */}
-      {currentPlan === 'FREE' && (
-        <p className="text-center text-sm text-muted-foreground mt-8">
-          You are currently on the <strong>Free</strong> plan.
+      {/* Current plan info + billing link */}
+      <div className="text-center text-sm text-muted-foreground mt-8 space-y-2">
+        <p>
+          You are currently on the <strong>{PLANS[currentPlan].name}</strong> plan.
         </p>
-      )}
+        {workspaceId && (
+          <Link
+            href={ROUTES.workspace(workspaceId).BILLING}
+            className="text-primary hover:underline inline-block"
+          >
+            View billing details →
+          </Link>
+        )}
+      </div>
     </div>
   );
 }
