@@ -13,6 +13,8 @@ import { FormActionsMenu } from '@/features/forms/form-actions-menu';
 import { RenameFormDialog } from '@/features/forms/rename-form-dialog';
 import { ROUTES } from '@/constants/routes';
 import { formatRelativeTime } from '@/lib/date-utils';
+import { redirectOnPlanLimit } from '@/lib/plan-gate';
+import { useCreateFormHref, useCreateWorkspaceHref } from '@/hooks/use-creation-hrefs';
 import { LoadingState } from '@/components/shared/loading-state';
 import { ErrorState } from '@/components/shared/error-state';
 import type { Form } from '@/modules/form/types';
@@ -27,6 +29,8 @@ export default function WorkspaceHomePage() {
   const deleteForm = useDeleteForm();
   const updateForm = useUpdateForm();
   const duplicateForm = useDuplicateForm();
+  const newFormHref = useCreateFormHref(workspaceId);
+  const newWorkspaceHref = useCreateWorkspaceHref();
 
   const [formToRename, setFormToRename] = useState<Form | null>(null);
 
@@ -50,7 +54,14 @@ export default function WorkspaceHomePage() {
   }
 
   function handleDuplicate(form: Form) {
-    duplicateForm.mutate({ workspaceId, formId: form.id });
+    duplicateForm.mutate(
+      { workspaceId, formId: form.id },
+      {
+        onError: (error) => {
+          redirectOnPlanLimit(error, router, workspaceId, 'forms');
+        },
+      },
+    );
   }
 
   return (
@@ -60,13 +71,13 @@ export default function WorkspaceHomePage() {
         <h1 className="text-2xl font-bold">Home</h1>
         <div className="flex items-center gap-2">
           <Link
-            href={ROUTES.NEW_WORKSPACE}
+            href={newWorkspaceHref}
             className={buttonVariants({ variant: 'outline', size: 'sm' })}
           >
             New workspace
           </Link>
           <Link
-            href={ROUTES.workspace(workspaceId).NEW_FORM}
+            href={newFormHref}
             className={buttonVariants({ size: 'sm' })}
           >
             <Plus className="mr-1.5 h-4 w-4" />
@@ -92,7 +103,7 @@ export default function WorkspaceHomePage() {
         <div className="text-center py-16 space-y-3">
           <p className="text-muted-foreground">No forms yet</p>
           <Link
-            href={ROUTES.workspace(workspaceId).NEW_FORM}
+            href={newFormHref}
             className={buttonVariants()}
           >
             <Plus className="mr-1.5 h-4 w-4" />

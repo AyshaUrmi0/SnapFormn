@@ -11,6 +11,7 @@ import { UserMenu } from './user-menu';
 import { WorkspaceSwitcher } from './workspace-switcher';
 import { getNavSections, getWorkspaceIdFromPath } from './sidebar';
 import { useCommandPalette } from '@/providers/command-palette-provider';
+import { useCreateWorkspaceHref } from '@/hooks/use-creation-hrefs';
 import { ROUTES } from '@/constants/routes';
 
 interface MobileSidebarProps {
@@ -25,6 +26,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
   const sections = getNavSections(workspaceId, {
     onSearchClick: () => { onOpenChange(false); openSearch(); },
   });
+  const newWorkspaceHref = useCreateWorkspaceHref();
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
@@ -49,7 +51,7 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
                       Workspaces
                     </p>
                     <Link
-                      href={ROUTES.NEW_WORKSPACE}
+                      href={newWorkspaceHref}
                       onClick={() => onOpenChange(false)}
                       className="p-0.5 rounded hover:bg-sidebar-accent text-muted-foreground"
                       title="Create workspace"

@@ -20,6 +20,12 @@ export const workspaceController = {
     sendSuccess(res, workspace);
   },
 
+  async getUsage(req: Request, res: Response) {
+    const userId = req.user!.sub;
+    const usage = await workspaceService.getUsage(req.params.workspaceId as string, userId);
+    sendSuccess(res, usage);
+  },
+
   async update(req: Request, res: Response) {
     const workspace = await workspaceService.update(req.params.workspaceId as string, req.body);
     sendSuccess(res, workspace, 'Workspace updated');

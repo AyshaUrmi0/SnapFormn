@@ -33,6 +33,10 @@ export class ApiError extends Error {
     return this.status === 429;
   }
 
+  get isPlanLimitExceeded() {
+    return this.errorCode === 'PLAN_LIMIT_EXCEEDED';
+  }
+
   getFieldError(field: string): string | undefined {
     return this.errors?.find((e) => e.field === field)?.message;
   }
@@ -55,4 +59,8 @@ export function getErrorMessage(error: unknown): string {
   }
   if (error instanceof Error) return error.message;
   return 'An unexpected error occurred';
+}
+
+export function isPlanLimitError(error: unknown): boolean {
+  return error instanceof ApiError && error.isPlanLimitExceeded;
 }

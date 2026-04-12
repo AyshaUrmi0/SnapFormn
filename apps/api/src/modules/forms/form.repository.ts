@@ -100,6 +100,12 @@ export const formRepository = {
     });
   },
 
+  countByWorkspace(workspaceId: string) {
+    return prisma.form.count({
+      where: { workspaceId, deletedAt: null },
+    });
+  },
+
   // Bulk upsert fields in a transaction
   async replaceFields(
     formId: string,

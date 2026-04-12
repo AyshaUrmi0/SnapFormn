@@ -68,6 +68,13 @@ router.get(
   asyncHandler(workspaceController.getById),
 );
 
+router.get(
+  '/:workspaceId/usage',
+  validate(workspaceParamsSchema),
+  requirePermission(PERMISSIONS.FORM_VIEW),
+  asyncHandler(workspaceController.getUsage),
+);
+
 router.patch(
   '/:workspaceId',
   validate(updateWorkspaceSchema),

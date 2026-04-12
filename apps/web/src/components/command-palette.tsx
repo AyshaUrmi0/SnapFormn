@@ -11,6 +11,7 @@ import { useCommandPalette } from '@/providers/command-palette-provider';
 import { useWorkspaces } from '@/modules/workspace/workspace.queries';
 import { useForms } from '@/modules/form/form.queries';
 import { getWorkspaceIdFromPath } from '@/components/layout/sidebar';
+import { useCreateFormHref, useCreateWorkspaceHref } from '@/hooks/use-creation-hrefs';
 import { ROUTES } from '@/constants/routes';
 import type { LucideIcon } from 'lucide-react';
 
@@ -52,6 +53,8 @@ export function CommandPalette() {
   const { data: forms, isLoading: formsLoading } = useForms({
     workspaceId: workspaceId ?? '',
   });
+  const newFormHref = useCreateFormHref(workspaceId ?? '');
+  const newWorkspaceHref = useCreateWorkspaceHref();
 
   // ─── Build items list ───────────────────────────────────────
   const allItems = useMemo(() => {
@@ -65,7 +68,7 @@ export function CommandPalette() {
       group: 'Actions',
       keywords: 'create add form',
       onExecute: () => {
-        if (workspaceId) router.push(ROUTES.workspace(workspaceId).NEW_FORM);
+        if (workspaceId) router.push(newFormHref);
         else router.push(ROUTES.WORKSPACES);
       },
     });
@@ -75,7 +78,7 @@ export function CommandPalette() {
       icon: Plus,
       group: 'Actions',
       keywords: 'create add workspace',
-      onExecute: () => router.push(ROUTES.NEW_WORKSPACE),
+      onExecute: () => router.push(newWorkspaceHref),
     });
 
     // Forms from current workspace
@@ -162,7 +165,7 @@ export function CommandPalette() {
     );
 
     return items;
-  }, [forms, workspaces, workspaceId, router]);
+  }, [forms, workspaces, workspaceId, router, newFormHref, newWorkspaceHref]);
 
   // ─── Filter & group ─────────────────────────────────────────
   // Only show forms & workspaces when user is actively searching

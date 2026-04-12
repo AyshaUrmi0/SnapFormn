@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Trash2, Undo2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/shared/loading-state';
@@ -14,9 +15,11 @@ import {
   useEmptyTrash,
 } from '@/modules/form/form.queries';
 import { formatRelativeTime } from '@/lib/date-utils';
+import { redirectOnPlanLimit } from '@/lib/plan-gate';
 import type { Form } from '@/modules/form/types';
 
 export default function TrashPage() {
+  const router = useRouter();
   const { data: workspaces, isLoading: workspacesLoading } = useWorkspaces();
   const workspaceId = workspaces?.[0]?.id ?? '';
 
@@ -82,10 +85,14 @@ export default function TrashPage() {
                     size="icon"
                     title="Restore"
                     onClick={() =>
-                      restoreMutation.mutate({
-                        workspaceId,
-                        formId: form.id,
-                      })
+                      restoreMutation.mutate(
+                        { workspaceId, formId: form.id },
+                        {
+                          onError: (error) => {
+                            redirectOnPlanLimit(error, router, workspaceId, 'forms');
+                          },
+                        },
+                      )
                     }
                     disabled={restoreMutation.isPending}
                   >

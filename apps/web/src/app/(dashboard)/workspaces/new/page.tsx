@@ -22,6 +22,7 @@ import {
 import { useCreateWorkspace } from '@/modules/workspace/workspace.queries';
 import { createWorkspaceSchema, type CreateWorkspaceValues } from '@/modules/workspace/schemas';
 import { ROUTES } from '@/constants/routes';
+import { redirectOnPlanLimit } from '@/lib/plan-gate';
 
 export default function NewWorkspacePage() {
   const router = useRouter();
@@ -52,6 +53,9 @@ export default function NewWorkspacePage() {
     createWorkspace.mutate(data, {
       onSuccess: (workspace) => {
         router.push(ROUTES.workspace(workspace.id).FORMS);
+      },
+      onError: (error) => {
+        redirectOnPlanLimit(error, router, null, 'workspaces');
       },
     });
   }

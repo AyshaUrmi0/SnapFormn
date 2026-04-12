@@ -2,10 +2,23 @@ import { AppError, slugify } from '@snapform/shared';
 import type { WorkspaceRole } from '@prisma/client';
 import { workspaceRepository } from './workspace.repository';
 import { prisma } from '../../lib/prisma';
+import { PLAN_LIMITS } from '../../config/planLimits';
+import { formRepository } from '../forms/form.repository';
+import { submissionRepository } from '../submissions/submission.repository';
 import type { CreateWorkspaceInput, UpdateWorkspaceInput } from './workspace.types';
 
 export const workspaceService = {
   async create(userId: string, input: CreateWorkspaceInput) {
+    // Enforce workspace limit for free users
+    const owned = await workspaceRepository.findOwnedByUser(userId);
+    const freeOwned = owned.filter((m) => m.workspace.plan === 'FREE');
+    const freeLimit = PLAN_LIMITS.FREE.maxWorkspacesPerUser;
+    if (freeLimit !== null && freeOwned.length >= freeLimit) {
+      throw AppError.planLimitExceeded(
+        `Free plan allows only ${freeLimit} workspace. Upgrade an existing workspace to Pro to create more.`,
+      );
+    }
+
     const slug = input.slug || slugify(input.name);
 
     const existing = await workspaceRepository.findBySlug(slug);
@@ -23,6 +36,33 @@ export const workspaceService = {
     });
 
     return workspace;
+  },
+
+  async getUsage(workspaceId: string, userId: string) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { plan: true },
+    });
+    if (!workspace) throw AppError.notFound('Workspace not found');
+
+    const limits = PLAN_LIMITS[workspace.plan];
+
+    const [formsCount, submissionsCount, membersCount, ownedWorkspaces] = await Promise.all([
+      formRepository.countByWorkspace(workspaceId),
+      submissionRepository.countByWorkspaceThisMonth(workspaceId),
+      workspaceRepository.countMembers(workspaceId),
+      workspaceRepository.findOwnedByUser(userId),
+    ]);
+
+    const freeOwnedCount = ownedWorkspaces.filter((m) => m.workspace.plan === 'FREE').length;
+
+    return {
+      plan: workspace.plan,
+      forms: { current: formsCount, limit: limits.maxForms },
+      submissionsThisMonth: { current: submissionsCount, limit: limits.maxSubmissionsPerMonth },
+      members: { current: membersCount, limit: limits.maxMembers },
+      workspacesOwned: { current: freeOwnedCount, limit: PLAN_LIMITS.FREE.maxWorkspacesPerUser },
+    };
   },
 
   async listByUser(userId: string) {
@@ -63,6 +103,23 @@ export const workspaceService = {
   },
 
   async inviteMember(workspaceId: string, email: string, role: WorkspaceRole) {
+    // Enforce member limit
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { plan: true },
+    });
+    if (!workspace) throw AppError.notFound('Workspace not found');
+
+    const limit = PLAN_LIMITS[workspace.plan].maxMembers;
+    if (limit !== null) {
+      const current = await workspaceRepository.countMembers(workspaceId);
+      if (current >= limit) {
+        throw AppError.planLimitExceeded(
+          `${workspace.plan} plan is limited to ${limit} members. Upgrade to invite more.`,
+        );
+      }
+    }
+
     const user = await prisma.user.findUnique({ where: { email } });
     if (!user) throw AppError.notFound('User with this email not found');
 

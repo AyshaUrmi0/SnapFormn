@@ -58,3 +58,20 @@ export interface RemoveMemberKeys {
   workspaceId: string;
   memberId: string;
 }
+
+export interface UsageMetric {
+  current: number;
+  limit: number | null;
+}
+
+export interface WorkspaceUsage {
+  plan: Plan;
+  forms: UsageMetric;
+  submissionsThisMonth: UsageMetric;
+  members: UsageMetric;
+  workspacesOwned: UsageMetric;
+}
+
+export interface GetWorkspaceUsageKeys {
+  workspaceId: string;
+}

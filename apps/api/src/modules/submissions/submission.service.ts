@@ -1,4 +1,6 @@
 import { AppError, paginate, buildPaginationMeta } from '@snapform/shared';
+import { prisma } from '../../lib/prisma';
+import { PLAN_LIMITS } from '../../config/planLimits';
 import { submissionRepository } from './submission.repository';
 import { formRepository } from '../forms/form.repository';
 import type { SubmitFormInput, FormAnalytics } from './submission.types';
@@ -7,6 +9,23 @@ export const submissionService = {
   async submit(slug: string, input: SubmitFormInput, ip?: string, userAgent?: string) {
     const form = await formRepository.findPublicBySlug(slug);
     if (!form) throw AppError.notFound('Form not found or not published');
+
+    // Enforce monthly submission limit based on workspace plan
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: form.workspaceId },
+      select: { plan: true },
+    });
+    if (workspace) {
+      const limit = PLAN_LIMITS[workspace.plan].maxSubmissionsPerMonth;
+      if (limit !== null) {
+        const current = await submissionRepository.countByWorkspaceThisMonth(form.workspaceId);
+        if (current >= limit) {
+          throw AppError.planLimitExceeded(
+            'This form has reached its monthly submission limit. Please try again later.',
+          );
+        }
+      }
+    }
 
     // Validate that all required fields are present
     const requiredFieldIds = form.fields.filter((f) => f.required).map((f) => f.id);

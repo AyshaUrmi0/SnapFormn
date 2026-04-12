@@ -7,6 +7,7 @@ import { getErrorMessage } from '@/lib/errors';
 import {
   listWorkspaces,
   getWorkspace,
+  getWorkspaceUsage,
   createWorkspace,
   updateWorkspace,
   deleteWorkspace,
@@ -19,6 +20,7 @@ import type {
   WorkspaceWithRole,
   WorkspaceWithMembers,
   WorkspaceMember,
+  WorkspaceUsage,
   CreateWorkspaceKeys,
   UpdateWorkspaceKeys,
   DeleteWorkspaceKeys,
@@ -41,6 +43,14 @@ export const useWorkspace = (id: string) => {
     queryKey: queryKeys.workspaces.detail(id),
     queryFn: () => getWorkspace(id),
     enabled: !!id,
+  });
+};
+
+export const useWorkspaceUsage = (workspaceId: string) => {
+  return useQuery<WorkspaceUsage, Error>({
+    queryKey: queryKeys.workspaces.usage(workspaceId),
+    queryFn: () => getWorkspaceUsage({ workspaceId }),
+    enabled: !!workspaceId,
   });
 };
 
