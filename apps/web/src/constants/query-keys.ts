@@ -9,6 +9,7 @@ export const queryKeys = {
     all: () => ['workspaces'] as const,
     detail: (id: string) => ['workspaces', id] as const,
     members: (id: string) => ['workspaces', id, 'members'] as const,
+    usage: (id: string) => ['workspaces', id, 'usage'] as const,
   },
   forms: {
     list: (workspaceId: string) => ['forms', workspaceId] as const,

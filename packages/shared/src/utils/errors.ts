@@ -10,6 +10,7 @@ export enum ErrorCode {
   OTP_INVALID = 'OTP_INVALID',
   TOKEN_EXPIRED = 'TOKEN_EXPIRED',
   TOKEN_INVALID = 'TOKEN_INVALID',
+  PLAN_LIMIT_EXCEEDED = 'PLAN_LIMIT_EXCEEDED',
 }
 
 export class AppError extends Error {
@@ -53,5 +54,9 @@ export class AppError extends Error {
 
   static internal(message = 'Internal server error') {
     return new AppError(500, ErrorCode.INTERNAL_ERROR, message);
+  }
+
+  static planLimitExceeded(message: string) {
+    return new AppError(403, ErrorCode.PLAN_LIMIT_EXCEEDED, message);
   }
 }

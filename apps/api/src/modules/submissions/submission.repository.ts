@@ -56,6 +56,19 @@ export const submissionRepository = {
     return prisma.submission.delete({ where: { id } });
   },
 
+  countByWorkspaceThisMonth(workspaceId: string) {
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    return prisma.submission.count({
+      where: {
+        createdAt: { gte: startOfMonth },
+        form: { workspaceId, deletedAt: null },
+      },
+    });
+  },
+
   async getAnalyticsOverview(formId: string) {
     const [total, completed, agg] = await Promise.all([
       prisma.submission.count({ where: { formId } }),

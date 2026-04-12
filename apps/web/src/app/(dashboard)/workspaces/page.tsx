@@ -9,12 +9,13 @@ import { Button } from '@/components/ui/button';
 import { useWorkspaces } from '@/modules/workspace/workspace.queries';
 import { WorkspaceCard } from '@/features/workspaces/workspace-card';
 import { useAuth } from '@/hooks/use-auth';
-import { ROUTES } from '@/constants/routes';
+import { useCreateWorkspaceHref } from '@/hooks/use-creation-hrefs';
 import { Briefcase, Plus } from 'lucide-react';
 
 export default function WorkspacesPage() {
   const { user } = useAuth();
   const { data: workspaces, isLoading, isError, error, refetch } = useWorkspaces();
+  const newWorkspaceHref = useCreateWorkspaceHref();
 
   return (
     <div className="space-y-6">
@@ -22,7 +23,7 @@ export default function WorkspacesPage() {
         title="Workspaces"
         description={user ? `Welcome, ${user.name || user.email}` : 'Manage your workspaces'}
         action={
-          <Link href={ROUTES.NEW_WORKSPACE}>
+          <Link href={newWorkspaceHref}>
             <Button size="sm">
               <Plus className="mr-2 h-4 w-4" />
               Create workspace
@@ -46,7 +47,7 @@ export default function WorkspacesPage() {
           title="No workspaces yet"
           description="Create your first workspace to start building forms."
           action={
-            <Link href={ROUTES.NEW_WORKSPACE}>
+            <Link href={newWorkspaceHref}>
               <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 Create workspace

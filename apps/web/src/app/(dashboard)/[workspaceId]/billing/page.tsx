@@ -7,9 +7,44 @@ import { Badge } from '@/components/ui/badge';
 import { PageHeader } from '@/components/layout/page-header';
 import { LoadingState } from '@/components/shared/loading-state';
 import { useWorkspaceContext } from '@/providers/workspace-provider';
+import { useWorkspaceUsage } from '@/modules/workspace/workspace.queries';
 import { useSubscription, useGetPortal } from '@/modules/billing/billing.queries';
 import { PLANS } from '@/constants/plans';
 import { ROUTES } from '@/constants/routes';
+
+function UsageRow({ label, current, limit }: { label: string; current: number; limit: number | null }) {
+  if (limit === null) {
+    return (
+      <div className="space-y-1.5">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">{label}</span>
+          <span className="font-medium">{current} / Unlimited</span>
+        </div>
+      </div>
+    );
+  }
+  const percent = Math.min(100, Math.round((current / limit) * 100));
+  const isOverHalf = percent >= 50;
+  const isCritical = percent >= 90;
+  return (
+    <div className="space-y-1.5">
+      <div className="flex justify-between text-sm">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={isCritical ? 'font-semibold text-amber-600 dark:text-amber-400' : 'font-medium'}>
+          {current} / {limit}
+        </span>
+      </div>
+      <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
+        <div
+          className={`h-full transition-all ${
+            isCritical ? 'bg-amber-500' : isOverHalf ? 'bg-primary' : 'bg-primary'
+          }`}
+          style={{ width: `${percent}%` }}
+        />
+      </div>
+    </div>
+  );
+}
 
 const STATUS_COLORS: Record<string, string> = {
   ACTIVE: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
@@ -22,6 +57,7 @@ const STATUS_COLORS: Record<string, string> = {
 export default function WorkspaceBillingPage() {
   const { workspace } = useWorkspaceContext();
   const { data: subscription, isLoading } = useSubscription(workspace.id);
+  const { data: usage } = useWorkspaceUsage(workspace.id);
   const portal = useGetPortal();
 
   const planKey = workspace.plan;
@@ -98,6 +134,27 @@ export default function WorkspaceBillingPage() {
           </Link>
         </div>
       </div>
+
+      {/* Usage */}
+      {usage && (
+        <div className="rounded-xl border p-6 space-y-4">
+          <div>
+            <h3 className="font-semibold">Usage this period</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Resets monthly. Upgrade to remove limits.
+            </p>
+          </div>
+          <div className="space-y-4">
+            <UsageRow label="Forms" current={usage.forms.current} limit={usage.forms.limit} />
+            <UsageRow
+              label="Submissions this month"
+              current={usage.submissionsThisMonth.current}
+              limit={usage.submissionsThisMonth.limit}
+            />
+            <UsageRow label="Members" current={usage.members.current} limit={usage.members.limit} />
+          </div>
+        </div>
+      )}
 
       {/* Free plan upgrade prompt */}
       {planKey === 'FREE' && (

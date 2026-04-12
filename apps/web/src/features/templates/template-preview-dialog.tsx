@@ -18,6 +18,7 @@ import { useWorkspaces } from '@/modules/workspace/workspace.queries';
 import { useCreateForm, useUpdateFormFields } from '@/modules/form/form.queries';
 import { queryKeys } from '@/constants/query-keys';
 import { ROUTES } from '@/constants/routes';
+import { redirectOnPlanLimit } from '@/lib/plan-gate';
 import type { FormTemplate, TemplateField } from '@/constants/form-templates';
 import type { EditorField } from '@/features/editor/types';
 
@@ -98,8 +99,12 @@ export function TemplatePreviewDialog({ template, open, onOpenChange }: Template
 
       onOpenChange(false);
       router.push(ROUTES.workspace(workspaceId).form(newForm.id).EDIT);
-    } catch {
-      // Error toasts handled by mutation onError callbacks
+    } catch (error) {
+      // If the error is a plan limit, redirect to upgrade page
+      if (redirectOnPlanLimit(error, router, workspaceId, 'forms')) {
+        onOpenChange(false);
+      }
+      // Other error toasts handled by mutation onError callbacks
     } finally {
       setIsCreating(false);
     }

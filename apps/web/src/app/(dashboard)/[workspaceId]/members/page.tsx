@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { MoreHorizontal, UserPlus } from 'lucide-react';
@@ -36,6 +37,7 @@ import {
 } from '@/modules/workspace/workspace.queries';
 import { inviteMemberSchema, type InviteMemberValues } from '@/modules/workspace/schemas';
 import { PERMISSIONS } from '@/lib/permissions';
+import { redirectOnPlanLimit } from '@/lib/plan-gate';
 import type { WorkspaceMember, WorkspaceRole } from '@/modules/workspace/types';
 
 const ASSIGNABLE_ROLES: WorkspaceRole[] = ['ADMIN', 'EDITOR', 'VIEWER'];
@@ -53,6 +55,7 @@ function getInitials(name: string | null | undefined, email: string): string {
 }
 
 export default function WorkspaceMembersPage() {
+  const router = useRouter();
   const { workspace, currentUserPermissions } = useWorkspaceContext();
   const { user } = useAuth();
   const inviteMember = useInviteMember();
@@ -71,7 +74,12 @@ export default function WorkspaceMembersPage() {
   function onInvite(values: InviteMemberValues) {
     inviteMember.mutate(
       { workspaceId: workspace.id, data: values },
-      { onSuccess: () => form.reset() },
+      {
+        onSuccess: () => form.reset(),
+        onError: (error) => {
+          redirectOnPlanLimit(error, router, workspace.id, 'members');
+        },
+      },
     );
   }
 

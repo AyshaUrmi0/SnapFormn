@@ -1,10 +1,32 @@
 import { AppError, slugify, paginate, buildPaginationMeta } from '@snapform/shared';
 import type { FormStatus } from '@prisma/client';
+import { prisma } from '../../lib/prisma';
+import { PLAN_LIMITS } from '../../config/planLimits';
 import { formRepository } from './form.repository';
 import type { CreateFormInput, UpdateFormInput, FormFieldInput } from './form.types';
 
+async function enforceFormLimit(workspaceId: string) {
+  const workspace = await prisma.workspace.findUnique({
+    where: { id: workspaceId },
+    select: { plan: true },
+  });
+  if (!workspace) throw AppError.notFound('Workspace not found');
+
+  const limit = PLAN_LIMITS[workspace.plan].maxForms;
+  if (limit === null) return; // unlimited
+
+  const current = await formRepository.countByWorkspace(workspaceId);
+  if (current >= limit) {
+    throw AppError.planLimitExceeded(
+      `${workspace.plan} plan is limited to ${limit} forms. Upgrade to create more.`,
+    );
+  }
+}
+
 export const formService = {
   async create(workspaceId: string, userId: string, input: CreateFormInput) {
+    await enforceFormLimit(workspaceId);
+
     const slug = input.slug || slugify(input.title);
 
     const existing = await formRepository.findBySlug(workspaceId, slug);
@@ -74,6 +96,8 @@ export const formService = {
   },
 
   async duplicate(formId: string, workspaceId: string, userId: string) {
+    await enforceFormLimit(workspaceId);
+
     const form = await formRepository.findById(formId);
     if (!form) throw AppError.notFound('Form not found');
 
@@ -130,6 +154,8 @@ export const formService = {
   },
 
   async restore(formId: string, workspaceId: string) {
+    await enforceFormLimit(workspaceId);
+
     const form = await formRepository.findById(formId, true);
     if (!form) throw AppError.notFound('Form not found');
     if (!form.deletedAt) throw AppError.badRequest('Form is not in trash');

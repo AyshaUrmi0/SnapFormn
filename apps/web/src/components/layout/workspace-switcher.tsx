@@ -18,6 +18,7 @@ import { useModal } from '@/providers/modal-provider';
 import { useWorkspaces } from '@/modules/workspace/workspace.queries';
 import { useForms, useDeleteForm, useUpdateForm, useDuplicateForm } from '@/modules/form/form.queries';
 import { RenameFormDialog } from '@/features/forms/rename-form-dialog';
+import { useCreateFormHref } from '@/hooks/use-creation-hrefs';
 import { ROUTES } from '@/constants/routes';
 import type { Workspace } from '@/modules/workspace/types';
 import type { Form } from '@/modules/form/types';
@@ -134,6 +135,7 @@ function WorkspaceItem({
   const pathname = usePathname();
 
   const { data: forms } = useForms({ workspaceId: workspace.id });
+  const newFormHref = useCreateFormHref(workspace.id);
 
   const wsRoutes = ROUTES.workspace(workspace.id);
 
@@ -168,7 +170,7 @@ function WorkspaceItem({
         {/* Actions: + for new form */}
         <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
           <Link
-            href={wsRoutes.NEW_FORM}
+            href={newFormHref}
             onClick={onNavigate}
             className="p-0.5 rounded hover:bg-sidebar-accent"
             title="Create form"

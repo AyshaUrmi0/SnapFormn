@@ -58,4 +58,15 @@ export const workspaceRepository = {
   removeMember(id: string) {
     return prisma.workspaceMember.delete({ where: { id } });
   },
+
+  countMembers(workspaceId: string) {
+    return prisma.workspaceMember.count({ where: { workspaceId } });
+  },
+
+  findOwnedByUser(userId: string) {
+    return prisma.workspaceMember.findMany({
+      where: { userId, role: 'OWNER' },
+      include: { workspace: { select: { id: true, plan: true } } },
+    });
+  },
 };

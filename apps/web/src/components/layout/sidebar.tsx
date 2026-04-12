@@ -28,6 +28,7 @@ import { ThemeToggle } from './theme-toggle';
 import { UserMenu } from './user-menu';
 import { WorkspaceSwitcher } from './workspace-switcher';
 import { useCommandPalette } from '@/providers/command-palette-provider';
+import { useCreateWorkspaceHref } from '@/hooks/use-creation-hrefs';
 import { ROUTES } from '@/constants/routes';
 
 const NON_WORKSPACE_ROUTES = [
@@ -148,6 +149,7 @@ export function Sidebar() {
   const { open: openSearch } = useCommandPalette();
   const workspaceId = getWorkspaceIdFromPath(pathname);
   const sections = getNavSections(workspaceId, { onSearchClick: openSearch });
+  const newWorkspaceHref = useCreateWorkspaceHref();
 
   return (
     <aside className="flex flex-col w-56 border-r border-sidebar-border bg-sidebar text-sidebar-foreground h-screen overflow-y-auto shrink-0">
@@ -168,7 +170,7 @@ export function Sidebar() {
                   label="Workspaces"
                   action={
                     <Link
-                      href={ROUTES.NEW_WORKSPACE}
+                      href={newWorkspaceHref}
                       className="p-0.5 rounded hover:bg-sidebar-accent text-muted-foreground"
                       title="Create workspace"
                     >

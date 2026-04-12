@@ -74,6 +74,9 @@ export const useCreateForm = () => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.forms.list(variables.workspaceId),
       });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.usage(variables.workspaceId),
+      });
       toast.success('Form created!');
     },
     onError: (error) => {
@@ -164,6 +167,9 @@ export const useDeleteForm = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.forms.list(variables.workspaceId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.workspaces.usage(variables.workspaceId),
       });
       toast.success('Form moved to trash.');
     },

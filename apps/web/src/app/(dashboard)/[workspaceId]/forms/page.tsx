@@ -19,6 +19,8 @@ import { FormStatusBadge } from '@/features/forms/form-status-badge';
 import { PERMISSIONS } from '@/lib/permissions';
 import { ROUTES } from '@/constants/routes';
 import { formatRelativeTime } from '@/lib/date-utils';
+import { redirectOnPlanLimit } from '@/lib/plan-gate';
+import { useCreateFormHref } from '@/hooks/use-creation-hrefs';
 import type { Form, FormStatus } from '@/modules/form/types';
 
 const STATUS_FILTERS: { label: string; value: FormStatus | 'ALL' }[] = [
@@ -43,6 +45,7 @@ export default function WorkspaceFormsPage() {
   const deleteForm = useDeleteForm();
   const updateForm = useUpdateForm();
   const duplicateForm = useDuplicateForm();
+  const newFormHref = useCreateFormHref(workspace.id);
 
   const forms = data ?? [];
 
@@ -66,7 +69,14 @@ export default function WorkspaceFormsPage() {
   }
 
   function handleDuplicate(form: Form) {
-    duplicateForm.mutate({ workspaceId: workspace.id, formId: form.id });
+    duplicateForm.mutate(
+      { workspaceId: workspace.id, formId: form.id },
+      {
+        onError: (error) => {
+          redirectOnPlanLimit(error, router, workspace.id, 'forms');
+        },
+      },
+    );
   }
 
   return (
@@ -76,7 +86,7 @@ export default function WorkspaceFormsPage() {
         description={`Forms in ${workspace.name}`}
         action={
           <PermissionGate permissions={[PERMISSIONS.FORM_CREATE]} userPermissions={currentUserPermissions}>
-            <Link href={ROUTES.workspace(workspace.id).NEW_FORM}>
+            <Link href={newFormHref}>
               <Button size="sm">
                 <Plus className="mr-2 h-4 w-4" />
                 Create form
@@ -116,7 +126,7 @@ export default function WorkspaceFormsPage() {
           action={
             statusFilter === 'ALL' ? (
               <PermissionGate permissions={[PERMISSIONS.FORM_CREATE]} userPermissions={currentUserPermissions}>
-                <Link href={ROUTES.workspace(workspace.id).NEW_FORM}>
+                <Link href={newFormHref}>
                   <Button>
                     <Plus className="mr-2 h-4 w-4" />
                     Create form

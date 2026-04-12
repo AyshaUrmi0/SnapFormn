@@ -4,12 +4,14 @@ import type {
   WorkspaceWithRole,
   WorkspaceWithMembers,
   WorkspaceMember,
+  WorkspaceUsage,
   CreateWorkspaceKeys,
   UpdateWorkspaceKeys,
   DeleteWorkspaceKeys,
   InviteMemberKeys,
   UpdateMemberRoleKeys,
   RemoveMemberKeys,
+  GetWorkspaceUsageKeys,
 } from './types';
 
 const { GET, POST, PATCH, DELETE } = methodsEnums;
@@ -30,6 +32,14 @@ function getWorkspaceRequest(id: string) {
 
 export const getWorkspace = createApi<string, WorkspaceWithMembers>({
   request: getWorkspaceRequest,
+});
+
+function getWorkspaceUsageRequest({ workspaceId }: GetWorkspaceUsageKeys) {
+  return { url: `/workspaces/${workspaceId}/usage`, method: GET };
+}
+
+export const getWorkspaceUsage = createApi<GetWorkspaceUsageKeys, WorkspaceUsage>({
+  request: getWorkspaceUsageRequest,
 });
 
 function createWorkspaceRequest(data: CreateWorkspaceKeys) {

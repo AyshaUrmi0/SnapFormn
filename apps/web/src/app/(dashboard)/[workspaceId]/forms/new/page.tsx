@@ -20,6 +20,7 @@ import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useCreateForm } from '@/modules/form/form.queries';
 import { createFormSchema, type CreateFormValues } from '@/modules/form/schemas';
 import { ROUTES } from '@/constants/routes';
+import { redirectOnPlanLimit } from '@/lib/plan-gate';
 
 export default function NewFormPage() {
   const router = useRouter();
@@ -40,6 +41,9 @@ export default function NewFormPage() {
       {
         onSuccess: (newForm) => {
           router.push(ROUTES.workspace(workspace.id).form(newForm.id).EDIT);
+        },
+        onError: (error) => {
+          redirectOnPlanLimit(error, router, workspace.id, 'forms');
         },
       },
     );
