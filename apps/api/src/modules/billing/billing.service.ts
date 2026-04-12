@@ -15,8 +15,7 @@ export const billingService = {
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
     if (!user) throw AppError.notFound('User not found');
 
-    // Get workspace for success URL
-    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { slug: true } });
+    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { id: true } });
     if (!workspace) throw AppError.notFound('Workspace not found');
 
     // Reuse existing Stripe customer if workspace already has a subscription
@@ -40,7 +39,7 @@ export const billingService = {
       line_items: [{ price: priceId, quantity: 1 }],
       metadata: { workspaceId, userId, plan },
       subscription_data: { metadata: { workspaceId } },
-      success_url: `${env.FRONTEND_URL}/${workspace.slug}/billing?session_id={CHECKOUT_SESSION_ID}`,
+      success_url: `${env.FRONTEND_URL}/${workspace.id}/billing?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${env.FRONTEND_URL}/upgrade`,
       allow_promotion_codes: true,
     });
@@ -187,11 +186,9 @@ export const billingService = {
     const subscription = await billingRepository.findByWorkspaceId(workspaceId);
     if (!subscription) throw AppError.notFound('No active subscription found');
 
-    const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { slug: true } });
-
     const session = await stripe.billingPortal.sessions.create({
       customer: subscription.stripeCustomerId,
-      return_url: `${env.FRONTEND_URL}/${workspace?.slug ?? workspaceId}/billing`,
+      return_url: `${env.FRONTEND_URL}/${workspaceId}/billing`,
     });
 
     return { url: session.url };
