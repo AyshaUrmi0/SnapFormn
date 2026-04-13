@@ -1,4 +1,4 @@
-import { CHOICE_FIELD_TYPES } from './types';
+import { CHOICE_FIELD_TYPES, getChoiceOptions } from './types';
 import type { EditorField } from './types';
 import type { FieldType } from '@/modules/form/types';
 
@@ -34,7 +34,7 @@ export function validateFields(fields: EditorField[]): ValidationError[] {
 
     // Choice fields need at least 1 option with a non-empty label
     if (CHOICE_FIELD_TYPES.includes(field.type)) {
-      const validOptions = (field.options ?? []).filter((o) => o.label.trim());
+      const validOptions = getChoiceOptions(field).filter((o) => o.label.trim());
       if (validOptions.length === 0) {
         errors.push({
           fieldId: field.id,

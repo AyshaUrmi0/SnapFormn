@@ -7,8 +7,10 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { FIELD_TYPE_CONFIG } from '@/constants/field-types';
 import { FieldOptionsEditor } from './field-options-editor';
-import { CHOICE_FIELD_TYPES } from './types';
-import type { EditorField, FieldOption } from './types';
+import { MediaUploader } from './media-uploader';
+import { CHOICE_FIELD_TYPES, MEDIA_FIELD_TYPES, getChoiceOptions, getMediaOptions } from './types';
+import type { EditorField, FieldOption, MediaOptions } from './types';
+import type { ResourceType } from '@/lib/cloudinary-upload';
 
 interface FieldConfigProps {
   field: EditorField;
@@ -36,9 +38,18 @@ export function FieldConfig({ field, onChange, onClose, errors }: FieldConfigPro
   const showPlaceholder = !NO_PLACEHOLDER_TYPES.includes(field.type);
   const showRequired = !NO_REQUIRED_TYPES.includes(field.type);
   const showOptions = CHOICE_FIELD_TYPES.includes(field.type);
+  const showMediaUploader = MEDIA_FIELD_TYPES.includes(field.type);
 
   const hasLabelError = errors?.some((e) => e.toLowerCase().includes('label'));
   const hasOptionsError = errors?.some((e) => e.toLowerCase().includes('option'));
+
+  // Cloudinary resource type per block
+  const resourceTypeFor: Record<string, ResourceType> = {
+    IMAGE: 'image',
+    VIDEO: 'video',
+    AUDIO: 'raw',
+    EMBED: 'auto',
+  };
 
   return (
     <div className="space-y-4">
@@ -112,13 +123,27 @@ export function FieldConfig({ field, onChange, onClose, errors }: FieldConfigPro
           <Separator />
           <div>
             <FieldOptionsEditor
-              options={field.options ?? []}
+              options={getChoiceOptions(field)}
               onChange={(options: FieldOption[]) => onChange({ options })}
             />
             {hasOptionsError && (
               <p className="text-sm text-destructive mt-1">At least one option is required</p>
             )}
           </div>
+        </>
+      )}
+
+      {showMediaUploader && (
+        <>
+          <Separator />
+          <MediaUploader
+            value={getMediaOptions(field)}
+            onChange={(next: MediaOptions) => onChange({ options: next as Record<string, unknown> })}
+            fieldId={field.id}
+            resourceType={resourceTypeFor[field.type] ?? 'auto'}
+            label={field.type === 'IMAGE' ? 'Image' : field.type === 'VIDEO' ? 'Video' : field.type === 'AUDIO' ? 'Audio' : 'Embed URL'}
+            allowExternalUrl={field.type !== 'IMAGE'}
+          />
         </>
       )}
     </div>
