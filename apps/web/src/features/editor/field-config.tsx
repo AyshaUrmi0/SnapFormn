@@ -17,8 +17,19 @@ interface FieldConfigProps {
   errors?: string[];
 }
 
-const NO_PLACEHOLDER_TYPES = ['STATEMENT', 'PAGE_BREAK', 'FILE_UPLOAD', 'RATING', 'SCALE', 'CHECKBOX'];
-const NO_REQUIRED_TYPES = ['STATEMENT', 'PAGE_BREAK'];
+const NO_PLACEHOLDER_TYPES = [
+  'STATEMENT', 'PAGE_BREAK', 'FILE_UPLOAD', 'RATING', 'SCALE', 'CHECKBOX',
+  'MATRIX', 'RANKING', 'SIGNATURE', 'THANK_YOU_PAGE',
+  'HEADING_1', 'HEADING_2', 'HEADING_3', 'DIVIDER', 'TITLE', 'LABEL',
+  'IMAGE', 'VIDEO', 'AUDIO', 'EMBED',
+  'CONDITIONAL_LOGIC', 'CALCULATED', 'HIDDEN', 'RECAPTCHA', 'COUNTRY',
+];
+const NO_REQUIRED_TYPES = [
+  'STATEMENT', 'PAGE_BREAK', 'THANK_YOU_PAGE',
+  'HEADING_1', 'HEADING_2', 'HEADING_3', 'DIVIDER', 'TITLE', 'LABEL',
+  'IMAGE', 'VIDEO', 'AUDIO', 'EMBED',
+  'CONDITIONAL_LOGIC', 'CALCULATED', 'HIDDEN', 'RECAPTCHA',
+];
 
 export function FieldConfig({ field, onChange, onClose, errors }: FieldConfigProps) {
   const config = FIELD_TYPE_CONFIG[field.type];

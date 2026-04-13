@@ -2,7 +2,9 @@
 
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import {
-  Type, Calendar, ChevronDown, Upload, Star,
+  Type, Calendar, ChevronDown, Upload, Star, Clock, PenLine,
+  CheckCircle2, Image as ImageIcon, Video, Music, Code,
+  GitBranch, Calculator, EyeOff, Shield, Globe,
   GripVertical, Trash2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -11,11 +13,21 @@ import { FIELD_ICON_MAP } from '@/constants/icon-map';
 import { useEditorSelection } from '../editor-selection-context';
 import type { FieldType } from '@/modules/form/types';
 
-function FieldPreview({ fieldType, label, placeholder, required }: {
+interface KeyValue { label: string; value: string }
+interface MatrixShape { rows?: KeyValue[]; columns?: KeyValue[] }
+interface MediaShape { src?: string }
+
+function parseJson<T>(json: unknown): T | null {
+  if (typeof json !== 'string' || !json) return null;
+  try { return JSON.parse(json) as T; } catch { return null; }
+}
+
+function FieldPreview({ fieldType, label, placeholder, required, options }: {
   fieldType: FieldType;
   label: string;
   placeholder: string | null;
   required: boolean;
+  options: string | null;
 }) {
   const displayLabel = label || FIELD_TYPE_CONFIG[fieldType]?.label || 'Untitled field';
 
@@ -162,10 +174,251 @@ function FieldPreview({ fieldType, label, placeholder, required }: {
       return (
         <div className="flex items-center gap-3 py-2">
           <div className="h-px flex-1 bg-border" />
-          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Page break</span>
+          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">New page</span>
           <div className="h-px flex-1 bg-border" />
         </div>
       );
+
+    // ─── New question blocks ───────────────────────────────
+    case 'TIME':
+      return (
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium">
+            {displayLabel}
+            {required && <span className="text-destructive ml-0.5">*</span>}
+          </p>
+          <div className="h-10 rounded-md border border-input bg-background px-3 flex items-center">
+            <span className="text-sm text-muted-foreground">--:--</span>
+            <Clock className="ml-auto h-4 w-4 text-muted-foreground" />
+          </div>
+        </div>
+      );
+    case 'MATRIX': {
+      const parsed = parseJson<MatrixShape>(options);
+      const rows = parsed?.rows ?? [{ label: 'Row 1', value: 'r1' }, { label: 'Row 2', value: 'r2' }];
+      const cols = parsed?.columns ?? [{ label: 'Col 1', value: 'c1' }, { label: 'Col 2', value: 'c2' }];
+      return (
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium">
+            {displayLabel}
+            {required && <span className="text-destructive ml-0.5">*</span>}
+          </p>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs border border-border">
+              <thead>
+                <tr>
+                  <th className="p-1.5" />
+                  {cols.map((c) => <th key={c.value} className="p-1.5 font-normal text-muted-foreground">{c.label}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.value}>
+                    <td className="p-1.5 text-muted-foreground">{r.label}</td>
+                    {cols.map((c) => (
+                      <td key={c.value} className="p-1.5 text-center">
+                        <div className="h-3 w-3 mx-auto rounded-full border border-input" />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      );
+    }
+    case 'RANKING':
+      return (
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium">
+            {displayLabel}
+            {required && <span className="text-destructive ml-0.5">*</span>}
+          </p>
+          <div className="space-y-1">
+            {['Option 1', 'Option 2', 'Option 3'].map((opt, i) => (
+              <div key={opt} className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5">
+                <span className="text-xs text-muted-foreground w-4">{i + 1}.</span>
+                <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">{opt}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    case 'SIGNATURE':
+      return (
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium">
+            {displayLabel}
+            {required && <span className="text-destructive ml-0.5">*</span>}
+          </p>
+          <div className="h-24 rounded-md border-2 border-dashed border-input bg-background flex items-center justify-center">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <PenLine className="h-4 w-4" />
+              <span className="text-sm">Sign here</span>
+            </div>
+          </div>
+        </div>
+      );
+
+    // ─── Layout blocks ─────────────────────────────────────
+    case 'THANK_YOU_PAGE':
+      return (
+        <div className="flex items-center gap-3 py-3 rounded-md bg-primary/5 border border-primary/20 px-4">
+          <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
+          <div>
+            <p className="text-sm font-medium">{displayLabel}</p>
+            <p className="text-xs text-muted-foreground">Shown after a respondent submits the form</p>
+          </div>
+        </div>
+      );
+    case 'HEADING_1':
+      return <h1 className="text-3xl font-bold">{displayLabel}</h1>;
+    case 'HEADING_2':
+      return <h2 className="text-2xl font-semibold">{displayLabel}</h2>;
+    case 'HEADING_3':
+      return <h3 className="text-xl font-semibold">{displayLabel}</h3>;
+    case 'DIVIDER':
+      return <div className="h-px w-full bg-border my-2" />;
+    case 'TITLE':
+      return <h1 className="text-4xl font-bold tracking-tight">{displayLabel}</h1>;
+    case 'LABEL':
+      return (
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+          {displayLabel}
+        </p>
+      );
+
+    // ─── Embed blocks ──────────────────────────────────────
+    case 'IMAGE': {
+      const media = parseJson<MediaShape>(options);
+      return (
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium">{displayLabel}</p>
+          {media?.src ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={media.src} alt={displayLabel} className="rounded-md max-h-48 border" />
+          ) : (
+            <div className="h-32 rounded-md border-2 border-dashed border-input bg-muted/20 flex items-center justify-center">
+              <ImageIcon className="h-6 w-6 text-muted-foreground" />
+            </div>
+          )}
+        </div>
+      );
+    }
+    case 'VIDEO': {
+      const media = parseJson<MediaShape>(options);
+      return (
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium">{displayLabel}</p>
+          <div className="aspect-video rounded-md border-2 border-dashed border-input bg-muted/20 flex items-center justify-center">
+            {media?.src ? (
+              <span className="text-xs text-muted-foreground truncate px-3">{media.src}</span>
+            ) : (
+              <Video className="h-6 w-6 text-muted-foreground" />
+            )}
+          </div>
+        </div>
+      );
+    }
+    case 'AUDIO': {
+      const media = parseJson<MediaShape>(options);
+      return (
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium">{displayLabel}</p>
+          <div className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-2">
+            <Music className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground truncate">
+              {media?.src || 'No audio source set'}
+            </span>
+          </div>
+        </div>
+      );
+    }
+    case 'EMBED': {
+      const media = parseJson<MediaShape>(options);
+      return (
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium">{displayLabel}</p>
+          <div className="rounded-md border border-input bg-muted/20 p-3 flex items-center gap-2">
+            <Code className="h-4 w-4 text-muted-foreground shrink-0" />
+            <span className="text-xs text-muted-foreground truncate">
+              {media?.src || 'Embed URL not set'}
+            </span>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── Advanced blocks ───────────────────────────────────
+    case 'CONDITIONAL_LOGIC': {
+      const parsed = parseJson<{ rules?: unknown[] }>(options);
+      const ruleCount = parsed?.rules?.length ?? 0;
+      return (
+        <div className="flex items-center gap-3 rounded-md border border-dashed border-input p-3">
+          <GitBranch className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">{displayLabel}</p>
+            <p className="text-xs text-muted-foreground">
+              {ruleCount === 0 ? 'No rules configured' : `${ruleCount} rule${ruleCount !== 1 ? 's' : ''}`}
+            </p>
+          </div>
+        </div>
+      );
+    }
+    case 'CALCULATED': {
+      const parsed = parseJson<{ formula?: string }>(options);
+      return (
+        <div className="flex items-center gap-3 rounded-md border border-dashed border-input p-3">
+          <Calculator className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">{displayLabel}</p>
+            <p className="text-xs font-mono text-muted-foreground truncate">
+              {parsed?.formula || 'No formula set'}
+            </p>
+          </div>
+        </div>
+      );
+    }
+    case 'HIDDEN': {
+      const parsed = parseJson<{ paramName?: string }>(options);
+      return (
+        <div className="flex items-center gap-3 rounded-md border border-dashed border-input p-3">
+          <EyeOff className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium">{displayLabel}</p>
+            <p className="text-xs font-mono text-muted-foreground truncate">
+              {parsed?.paramName ? `?${parsed.paramName}=` : 'No query param set'}
+            </p>
+          </div>
+        </div>
+      );
+    }
+    case 'RECAPTCHA':
+      return (
+        <div className="flex items-center gap-3 rounded-md border border-dashed border-input p-3">
+          <Shield className="h-4 w-4 text-muted-foreground shrink-0" />
+          <div>
+            <p className="text-sm font-medium">{displayLabel}</p>
+            <p className="text-xs text-muted-foreground">Google reCAPTCHA v3</p>
+          </div>
+        </div>
+      );
+    case 'COUNTRY':
+      return (
+        <div className="space-y-1.5">
+          <p className="text-sm font-medium">
+            {displayLabel}
+            {required && <span className="text-destructive ml-0.5">*</span>}
+          </p>
+          <div className="h-10 rounded-md border border-input bg-muted/20 px-3 flex items-center gap-2">
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">Auto-detected from IP</span>
+          </div>
+        </div>
+      );
+
     default:
       return (
         <div className="space-y-1.5">
@@ -229,6 +482,7 @@ export function FormBlockRenderer({ node, deleteNode }: NodeViewProps) {
           label={attrs.label as string}
           placeholder={attrs.placeholder as string | null}
           required={attrs.required as boolean}
+          options={attrs.options as string | null}
         />
       </div>
     </NodeViewWrapper>

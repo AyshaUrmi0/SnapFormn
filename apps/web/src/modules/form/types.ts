@@ -1,6 +1,7 @@
 export type FormStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED';
 
 export type FieldType =
+  // Questions
   | 'SHORT_TEXT'
   | 'LONG_TEXT'
   | 'EMAIL'
@@ -8,15 +9,38 @@ export type FieldType =
   | 'PHONE'
   | 'URL'
   | 'DATE'
+  | 'TIME'
   | 'DROPDOWN'
   | 'MULTI_SELECT'
   | 'CHECKBOX'
   | 'RADIO'
+  | 'MATRIX'
+  | 'RANKING'
   | 'FILE_UPLOAD'
   | 'RATING'
   | 'SCALE'
+  | 'SIGNATURE'
+  // Layout
   | 'STATEMENT'
-  | 'PAGE_BREAK';
+  | 'PAGE_BREAK'
+  | 'THANK_YOU_PAGE'
+  | 'HEADING_1'
+  | 'HEADING_2'
+  | 'HEADING_3'
+  | 'DIVIDER'
+  | 'TITLE'
+  | 'LABEL'
+  // Embed
+  | 'IMAGE'
+  | 'VIDEO'
+  | 'AUDIO'
+  | 'EMBED'
+  // Advanced
+  | 'CONDITIONAL_LOGIC'
+  | 'CALCULATED'
+  | 'HIDDEN'
+  | 'RECAPTCHA'
+  | 'COUNTRY';
 
 export interface FormField {
   id: string;

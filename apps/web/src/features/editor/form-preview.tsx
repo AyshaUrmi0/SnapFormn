@@ -202,6 +202,32 @@ function PreviewField({ field }: { field: EditorField }) {
         </div>
       );
 
+    // Layout blocks — render directly from label
+    case 'HEADING_1':
+      return <h1 className="text-3xl font-bold">{displayLabel}</h1>;
+    case 'HEADING_2':
+      return <h2 className="text-2xl font-semibold">{displayLabel}</h2>;
+    case 'HEADING_3':
+      return <h3 className="text-xl font-semibold">{displayLabel}</h3>;
+    case 'TITLE':
+      return <h1 className="text-4xl font-bold tracking-tight">{displayLabel}</h1>;
+    case 'LABEL':
+      return (
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+          {displayLabel}
+        </p>
+      );
+    case 'DIVIDER':
+      return <div className="h-px w-full bg-border my-4" />;
+
+    // Invisible / runtime-only blocks — hide in preview
+    case 'THANK_YOU_PAGE':
+    case 'CONDITIONAL_LOGIC':
+    case 'CALCULATED':
+    case 'HIDDEN':
+    case 'RECAPTCHA':
+      return null;
+
     default:
       return (
         <div className="space-y-2">

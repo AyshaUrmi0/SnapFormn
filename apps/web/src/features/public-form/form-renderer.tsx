@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Star, Upload, Calendar, ChevronDown } from 'lucide-react';
+import {
+  Star, Upload, ChevronDown, Clock, PenLine,
+  Image as ImageIcon, Video, Music, Code, Globe,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -272,6 +275,226 @@ function FormFieldRenderer({ field, value, onChange, error }: FormFieldRendererP
         </div>
       );
 
+    case 'TIME':
+      return (
+        <div className="space-y-2">
+          {labelEl}
+          {descEl}
+          <div className="relative">
+            <Input
+              type="time"
+              value={(value as string) ?? ''}
+              onChange={(e) => onChange((e.target as HTMLInputElement).value)}
+              className={error ? 'border-destructive' : ''}
+            />
+            <Clock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          </div>
+          {errorEl}
+        </div>
+      );
+
+    case 'MATRIX': {
+      const matrix = field.options as { rows?: { label: string; value: string }[]; columns?: { label: string; value: string }[] } | null;
+      const rows = matrix?.rows ?? [];
+      const cols = matrix?.columns ?? [];
+      const selected = (value as Record<string, string>) ?? {};
+      return (
+        <div className="space-y-2">
+          {labelEl}
+          {descEl}
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b">
+                  <th />
+                  {cols.map((c) => <th key={c.value} className="p-2 font-medium text-xs">{c.label}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((r) => (
+                  <tr key={r.value} className="border-b last:border-0">
+                    <td className="p-2 text-xs text-muted-foreground">{r.label}</td>
+                    {cols.map((c) => (
+                      <td key={c.value} className="p-2 text-center">
+                        <input
+                          type="radio"
+                          name={`${field.id}-${r.value}`}
+                          checked={selected[r.value] === c.value}
+                          onChange={() => onChange({ ...selected, [r.value]: c.value })}
+                          className="h-4 w-4"
+                        />
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {errorEl}
+        </div>
+      );
+    }
+
+    case 'RANKING': {
+      const ordered = (value as string[]) ?? options.map((o) => o.value);
+      function move(index: number, dir: -1 | 1) {
+        const next = [...ordered];
+        const ni = index + dir;
+        if (ni < 0 || ni >= next.length) return;
+        [next[index], next[ni]] = [next[ni], next[index]];
+        onChange(next);
+      }
+      return (
+        <div className="space-y-2">
+          {labelEl}
+          {descEl}
+          <div className="space-y-1.5">
+            {ordered.map((val, i) => {
+              const opt = options.find((o) => o.value === val);
+              if (!opt) return null;
+              return (
+                <div key={val} className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
+                  <span className="text-xs text-muted-foreground w-4">{i + 1}.</span>
+                  <span className="flex-1 text-sm">{opt.label}</span>
+                  <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="px-1.5 text-xs disabled:opacity-30">↑</button>
+                  <button type="button" onClick={() => move(i, 1)} disabled={i === ordered.length - 1} className="px-1.5 text-xs disabled:opacity-30">↓</button>
+                </div>
+              );
+            })}
+          </div>
+          {errorEl}
+        </div>
+      );
+    }
+
+    case 'SIGNATURE':
+      return (
+        <div className="space-y-2">
+          {labelEl}
+          {descEl}
+          <div className="h-32 rounded-md border-2 border-dashed border-input bg-background flex items-center justify-center">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <PenLine className="h-4 w-4" />
+              <span className="text-sm">Signature capture coming soon</span>
+            </div>
+          </div>
+          {errorEl}
+        </div>
+      );
+
+    case 'THANK_YOU_PAGE':
+      return null;
+
+    case 'HEADING_1':
+      return <h1 className="text-3xl font-bold">{displayLabel}</h1>;
+    case 'HEADING_2':
+      return <h2 className="text-2xl font-semibold">{displayLabel}</h2>;
+    case 'HEADING_3':
+      return <h3 className="text-xl font-semibold">{displayLabel}</h3>;
+    case 'DIVIDER':
+      return <div className="h-px w-full bg-border my-4" />;
+    case 'TITLE':
+      return <h1 className="text-4xl font-bold tracking-tight">{displayLabel}</h1>;
+    case 'LABEL':
+      return (
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-medium">
+          {displayLabel}
+        </p>
+      );
+
+    case 'IMAGE': {
+      const media = field.options as { src?: string } | null;
+      if (!media?.src) {
+        return (
+          <div className="h-32 rounded-md border-2 border-dashed border-input bg-muted/20 flex items-center justify-center">
+            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+          </div>
+        );
+      }
+      // eslint-disable-next-line @next/next/no-img-element
+      return <img src={media.src} alt={displayLabel} className="rounded-md max-w-full" />;
+    }
+
+    case 'VIDEO': {
+      const media = field.options as { src?: string } | null;
+      if (!media?.src) {
+        return (
+          <div className="aspect-video rounded-md border-2 border-dashed border-input bg-muted/20 flex items-center justify-center">
+            <Video className="h-6 w-6 text-muted-foreground" />
+          </div>
+        );
+      }
+      const isYouTube = /youtube\.com|youtu\.be/.test(media.src);
+      const isVimeo = /vimeo\.com/.test(media.src);
+      if (isYouTube || isVimeo) {
+        return (
+          <iframe
+            src={media.src}
+            className="w-full aspect-video rounded-md"
+            allow="accelerometer; autoplay; encrypted-media; gyroscope"
+            allowFullScreen
+            title={displayLabel}
+          />
+        );
+      }
+      return <video src={media.src} controls className="w-full rounded-md" />;
+    }
+
+    case 'AUDIO': {
+      const media = field.options as { src?: string } | null;
+      if (!media?.src) {
+        return (
+          <div className="flex items-center gap-2 rounded-md border border-input bg-muted/20 px-3 py-2">
+            <Music className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">No audio source</span>
+          </div>
+        );
+      }
+      return <audio src={media.src} controls className="w-full" />;
+    }
+
+    case 'EMBED': {
+      const media = field.options as { src?: string } | null;
+      if (!media?.src) {
+        return (
+          <div className="rounded-md border border-input bg-muted/20 p-3 flex items-center gap-2">
+            <Code className="h-4 w-4 text-muted-foreground" />
+            <span className="text-xs text-muted-foreground">Embed URL not set</span>
+          </div>
+        );
+      }
+      return (
+        <iframe
+          src={media.src}
+          className="w-full h-64 rounded-md border"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
+          title={displayLabel}
+        />
+      );
+    }
+
+    case 'CONDITIONAL_LOGIC':
+    case 'CALCULATED':
+    case 'HIDDEN':
+    case 'RECAPTCHA':
+      // These blocks are not visible to respondents — they run logic silently
+      return null;
+
+    case 'COUNTRY':
+      return (
+        <div className="space-y-2">
+          {labelEl}
+          {descEl}
+          <div className="h-10 rounded-md border border-input bg-muted/20 px-3 flex items-center gap-2">
+            <Globe className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm text-muted-foreground">
+              {(value as string) || 'Auto-detected from IP'}
+            </span>
+          </div>
+          {errorEl}
+        </div>
+      );
+
     default:
       return (
         <div className="space-y-2">
@@ -310,8 +533,15 @@ export function FormRenderer({ title, description, fields, isSubmitting, onSubmi
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  const NON_INTERACTIVE_TYPES: FieldType[] = [
+    'PAGE_BREAK', 'STATEMENT', 'THANK_YOU_PAGE',
+    'HEADING_1', 'HEADING_2', 'HEADING_3', 'DIVIDER', 'TITLE', 'LABEL',
+    'IMAGE', 'VIDEO', 'AUDIO', 'EMBED',
+    'CONDITIONAL_LOGIC', 'CALCULATED', 'HIDDEN', 'RECAPTCHA',
+  ];
+
   const interactiveFields = fields
-    .filter((f) => f.type !== 'PAGE_BREAK' && f.type !== 'STATEMENT')
+    .filter((f) => !NON_INTERACTIVE_TYPES.includes(f.type))
     .sort((a, b) => a.order - b.order);
 
   const allFields = fields.sort((a, b) => a.order - b.order);
