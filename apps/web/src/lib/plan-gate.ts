@@ -1,5 +1,6 @@
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 import { isPlanLimitError } from './errors';
+import { ROUTES } from '@/constants/routes';
 
 export type PlanLimitReason =
   | 'forms'
@@ -11,7 +12,11 @@ export type PlanLimitReason =
 
 /**
  * If `error` is a plan-limit error, redirect the user to the upgrade page
- * with the given reason and workspace. Returns `true` if redirected.
+ * with the given reason. Returns `true` if redirected.
+ *
+ * If a workspaceId is provided, redirects to that workspace's upgrade page.
+ * Otherwise (e.g. workspace creation failed), falls back to the legacy global
+ * /upgrade route which then redirects to the user's first workspace.
  */
 export function redirectOnPlanLimit(
   error: unknown,
@@ -21,9 +26,11 @@ export function redirectOnPlanLimit(
 ): boolean {
   if (!isPlanLimitError(error)) return false;
 
-  const params = new URLSearchParams();
-  if (workspaceId) params.set('workspace', workspaceId);
-  params.set('reason', reason);
-  router.push(`/upgrade?${params.toString()}`);
+  const search = `?reason=${reason}`;
+  if (workspaceId) {
+    router.push(`${ROUTES.workspace(workspaceId).UPGRADE}${search}`);
+  } else {
+    router.push(`/upgrade${search}`);
+  }
   return true;
 }

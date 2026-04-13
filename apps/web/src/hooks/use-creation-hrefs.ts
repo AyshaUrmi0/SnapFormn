@@ -8,7 +8,7 @@ import { ROUTES } from '@/constants/routes';
  * Returns the href for the "Create form" action.
  *
  * - If the workspace is on a paid plan → returns the normal NEW_FORM route
- * - If the workspace is FREE and at the form limit → returns /upgrade
+ * - If the workspace is FREE and at the form limit → returns the workspace's upgrade page
  * - Otherwise → returns the normal NEW_FORM route
  */
 export function useCreateFormHref(workspaceId: string): string {
@@ -23,7 +23,7 @@ export function useCreateFormHref(workspaceId: string): string {
   // Free plan: gate based on usage if available
   if (!usage) return ROUTES.workspace(workspaceId).NEW_FORM;
   if (usage.forms.limit !== null && usage.forms.current >= usage.forms.limit) {
-    return `${ROUTES.UPGRADE}?workspace=${workspaceId}&reason=forms`;
+    return `${ROUTES.workspace(workspaceId).UPGRADE}?reason=forms`;
   }
   return ROUTES.workspace(workspaceId).NEW_FORM;
 }
@@ -31,15 +31,20 @@ export function useCreateFormHref(workspaceId: string): string {
 /**
  * Returns the href for the "Create workspace" action.
  *
- * - If the user owns at least one FREE workspace → returns /upgrade (free users
- *   can only own one workspace; they must upgrade an existing one to create more)
- * - Otherwise → returns the normal NEW_WORKSPACE route
+ * - If the user can create more workspaces (paid plan, or under free limit) →
+ *   returns the normal NEW_WORKSPACE route
+ * - Otherwise (free user already at the workspace limit) → returns the
+ *   first owned workspace's upgrade page so they can upgrade it
  */
 export function useCreateWorkspaceHref(): string {
-  const { hasFreeOwnedWorkspace } = usePlan();
+  const { canCreateWorkspace, workspaces } = usePlan();
 
-  if (hasFreeOwnedWorkspace) {
-    return `${ROUTES.UPGRADE}?reason=workspaces`;
+  if (canCreateWorkspace) return ROUTES.NEW_WORKSPACE;
+
+  // Free user at workspace limit → send them to upgrade their existing workspace
+  const firstOwned = workspaces?.find((w) => w.role === 'OWNER');
+  if (firstOwned) {
+    return `${ROUTES.workspace(firstOwned.id).UPGRADE}?reason=workspaces`;
   }
   return ROUTES.NEW_WORKSPACE;
 }

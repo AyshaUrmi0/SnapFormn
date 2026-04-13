@@ -127,7 +127,7 @@ export default function WorkspaceBillingPage() {
             </Button>
           )}
           <Link
-            href={`${ROUTES.UPGRADE}?workspace=${workspace.id}`}
+            href={ROUTES.workspace(workspace.id).UPGRADE}
             className={buttonVariants({ variant: subscription ? 'ghost' : 'default' })}
           >
             {planKey === 'FREE' ? 'Upgrade' : 'Change plan'}
@@ -164,7 +164,7 @@ export default function WorkspaceBillingPage() {
             Upgrade to Pro or Business to remove branding, get unlimited forms, advanced analytics, and more.
           </p>
           <Link
-            href={`${ROUTES.UPGRADE}?workspace=${workspace.id}`}
+            href={ROUTES.workspace(workspace.id).UPGRADE}
             className={buttonVariants()}
           >
             View pricing

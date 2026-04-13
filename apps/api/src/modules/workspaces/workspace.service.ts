@@ -9,13 +9,17 @@ import type { CreateWorkspaceInput, UpdateWorkspaceInput } from './workspace.typ
 
 export const workspaceService = {
   async create(userId: string, input: CreateWorkspaceInput) {
-    // Enforce workspace limit for free users
+    // Enforce workspace limit. Users with at least one paid (PRO/BUSINESS)
+    // workspace can create unlimited new ones. Users who only own FREE
+    // workspaces are capped at PLAN_LIMITS.FREE.maxWorkspacesPerUser.
     const owned = await workspaceRepository.findOwnedByUser(userId);
-    const freeOwned = owned.filter((m) => m.workspace.plan === 'FREE');
+    const hasPaidWorkspace = owned.some(
+      (m) => m.workspace.plan === 'PRO' || m.workspace.plan === 'BUSINESS',
+    );
     const freeLimit = PLAN_LIMITS.FREE.maxWorkspacesPerUser;
-    if (freeLimit !== null && freeOwned.length >= freeLimit) {
+    if (!hasPaidWorkspace && freeLimit !== null && owned.length >= freeLimit) {
       throw AppError.planLimitExceeded(
-        `Free plan allows only ${freeLimit} workspace. Upgrade an existing workspace to Pro to create more.`,
+        `Free plan allows only ${freeLimit} workspace. Upgrade an existing workspace to create more.`,
       );
     }
 

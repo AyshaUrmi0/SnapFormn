@@ -15,8 +15,13 @@ interface PlanContextValue {
   isFree: (workspaceId: string) => boolean;
   /** True if the workspace is on a paid plan (PRO or BUSINESS) */
   isPaid: (workspaceId: string) => boolean;
-  /** True if the user owns at least one FREE workspace */
-  hasFreeOwnedWorkspace: boolean;
+  /** True if the user owns at least one paid (PRO/BUSINESS) workspace */
+  hasPaidWorkspace: boolean;
+  /**
+   * True if the user can create another workspace.
+   * Free users are limited; paid users have no limit.
+   */
+  canCreateWorkspace: boolean;
   /** Force a refresh of the plan/workspace data (use after returning from Stripe) */
   refresh: () => Promise<void>;
 }
@@ -44,6 +49,15 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
     const findPlan = (id: string): Plan =>
       workspaces?.find((w) => w.id === id)?.plan ?? 'FREE';
 
+    const ownedWorkspaces = workspaces?.filter((w) => w.role === 'OWNER') ?? [];
+    const hasPaidWorkspace = ownedWorkspaces.some(
+      (w) => w.plan === 'PRO' || w.plan === 'BUSINESS',
+    );
+
+    // Paid users can create unlimited workspaces. Free users are capped at 1.
+    const canCreateWorkspace =
+      hasPaidWorkspace || ownedWorkspaces.length < 1 || !workspaces;
+
     return {
       workspaces,
       getPlan: findPlan,
@@ -52,9 +66,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         const plan = findPlan(id);
         return plan === 'PRO' || plan === 'BUSINESS';
       },
-      hasFreeOwnedWorkspace: !!workspaces?.some(
-        (w) => w.plan === 'FREE' && w.role === 'OWNER',
-      ),
+      hasPaidWorkspace,
+      canCreateWorkspace,
       refresh,
     };
   }, [workspaces, refresh]);
