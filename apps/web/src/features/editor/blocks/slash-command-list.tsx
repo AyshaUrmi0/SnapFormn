@@ -17,6 +17,44 @@ interface CommandItem {
   command: (editor: any) => void;
 }
 
+function defaultOptionsForType(type: FieldType): string {
+  const choiceTypes = ['DROPDOWN', 'MULTI_SELECT', 'CHECKBOX', 'RADIO', 'RANKING'];
+  if (choiceTypes.includes(type)) {
+    return JSON.stringify([
+      { label: 'Option 1', value: 'option_1' },
+      { label: 'Option 2', value: 'option_2' },
+    ]);
+  }
+  if (type === 'MATRIX') {
+    return JSON.stringify({
+      rows: [
+        { label: 'Row 1', value: 'row_1' },
+        { label: 'Row 2', value: 'row_2' },
+      ],
+      columns: [
+        { label: 'Column 1', value: 'col_1' },
+        { label: 'Column 2', value: 'col_2' },
+      ],
+    });
+  }
+  if (type === 'EMBED' || type === 'IMAGE' || type === 'VIDEO' || type === 'AUDIO') {
+    return JSON.stringify({ src: '', width: null, height: null });
+  }
+  if (type === 'HIDDEN') {
+    return JSON.stringify({ paramName: '', defaultValue: '' });
+  }
+  if (type === 'CALCULATED') {
+    return JSON.stringify({ formula: '' });
+  }
+  if (type === 'RECAPTCHA') {
+    return JSON.stringify({ siteKey: '' });
+  }
+  if (type === 'CONDITIONAL_LOGIC') {
+    return JSON.stringify({ rules: [] });
+  }
+  return '[]';
+}
+
 function buildCommandItems(): CommandItem[] {
   return (Object.entries(FIELD_TYPE_CONFIG) as [FieldType, { label: string; icon: string; category: string }][]).map(
     ([type, config]) => ({
@@ -25,7 +63,6 @@ function buildCommandItems(): CommandItem[] {
       icon: config.icon,
       category: config.category,
       command: (editor: any) => {
-        const choiceTypes = ['DROPDOWN', 'MULTI_SELECT', 'CHECKBOX', 'RADIO'];
         editor
           .chain()
           .focus()
@@ -38,10 +75,7 @@ function buildCommandItems(): CommandItem[] {
               description: null,
               placeholder: null,
               required: false,
-              options: choiceTypes.includes(type) ? JSON.stringify([
-                { label: 'Option 1', value: 'option_1' },
-                { label: 'Option 2', value: 'option_2' },
-              ]) : '[]',
+              options: defaultOptionsForType(type),
             },
           })
           .run();

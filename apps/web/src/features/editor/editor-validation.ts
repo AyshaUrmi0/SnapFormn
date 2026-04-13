@@ -1,5 +1,6 @@
 import { CHOICE_FIELD_TYPES } from './types';
 import type { EditorField } from './types';
+import type { FieldType } from '@/modules/form/types';
 
 export interface ValidationError {
   fieldId: string;
@@ -7,14 +8,23 @@ export interface ValidationError {
   message: string;
 }
 
+// Block types that don't require a label (layout, embed, decorative blocks)
+const LABEL_OPTIONAL_TYPES: FieldType[] = [
+  'PAGE_BREAK',
+  'DIVIDER',
+  'THANK_YOU_PAGE',
+  'RECAPTCHA',
+  'CONDITIONAL_LOGIC',
+  'HIDDEN',
+];
+
 export function validateFields(fields: EditorField[]): ValidationError[] {
   const errors: ValidationError[] = [];
 
   for (const field of fields) {
     const fieldLabel = field.label || `Field #${field.order + 1}`;
 
-    // All fields except PAGE_BREAK need a label
-    if (field.type !== 'PAGE_BREAK' && !field.label.trim()) {
+    if (!LABEL_OPTIONAL_TYPES.includes(field.type) && !field.label.trim()) {
       errors.push({
         fieldId: field.id,
         fieldLabel,
