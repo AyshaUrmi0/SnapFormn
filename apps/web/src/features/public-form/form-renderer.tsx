@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import {
-  Star, Upload, ChevronDown, Clock, PenLine,
+  Star, Upload, ChevronDown, Clock, PenLine, Loader2, X,
   Image as ImageIcon, Video, Music, Code, Globe,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { uploadToCloudinary, type UploadResult } from '@/lib/cloudinary-upload';
 import type { FormField, FieldType } from '@/modules/form/types';
 
 interface FieldOption {
@@ -26,14 +28,101 @@ function parseOptions(options: unknown): FieldOption[] {
   return [];
 }
 
+interface FileUploadFieldProps {
+  slug: string;
+  field: FormField;
+  value: UploadResult | null;
+  onChange: (value: UploadResult | null) => void;
+}
+
+function FileUploadField({ slug, field, value, onChange }: FileUploadFieldProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  async function handleFile(file: File) {
+    setUploading(true);
+    setProgress(0);
+    try {
+      const result = await uploadToCloudinary(file, {
+        mode: 'respondent',
+        slug,
+        fieldId: field.id,
+        resourceType: 'auto',
+        onProgress: setProgress,
+      });
+      onChange(result);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Upload failed');
+    } finally {
+      setUploading(false);
+      setProgress(0);
+    }
+  }
+
+  if (value) {
+    return (
+      <div className="flex items-center justify-between gap-3 rounded-lg border border-input bg-background px-3 py-2">
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{value.filename}</p>
+          <p className="text-xs text-muted-foreground">
+            {(value.bytes / 1024).toFixed(1)} KB · uploaded
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onChange(null)}
+          className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive shrink-0"
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <input
+        ref={inputRef}
+        type="file"
+        className="sr-only"
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void handleFile(file);
+        }}
+      />
+      <button
+        type="button"
+        onClick={() => inputRef.current?.click()}
+        disabled={uploading}
+        className="w-full flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-input p-8 cursor-pointer hover:border-primary/50 transition-colors disabled:cursor-not-allowed"
+      >
+        {uploading ? (
+          <>
+            <Loader2 className="h-6 w-6 text-muted-foreground animate-spin" />
+            <p className="text-sm text-muted-foreground">Uploading... {progress}%</p>
+          </>
+        ) : (
+          <>
+            <Upload className="h-6 w-6 text-muted-foreground" />
+            <p className="text-sm text-muted-foreground">Click to upload</p>
+            <p className="text-xs text-muted-foreground/70">PNG, JPG, PDF, MP4 up to 100MB</p>
+          </>
+        )}
+      </button>
+    </>
+  );
+}
+
 interface FormFieldRendererProps {
   field: FormField;
   value: unknown;
   onChange: (value: unknown) => void;
   error?: string;
+  slug: string;
 }
 
-function FormFieldRenderer({ field, value, onChange, error }: FormFieldRendererProps) {
+function FormFieldRenderer({ field, value, onChange, error, slug }: FormFieldRendererProps) {
   const options = parseOptions(field.options);
   const displayLabel = field.label || 'Untitled';
 
@@ -193,11 +282,7 @@ function FormFieldRenderer({ field, value, onChange, error }: FormFieldRendererP
         <div className="space-y-2">
           {labelEl}
           {descEl}
-          <div className="flex flex-col items-center gap-3 rounded-lg border-2 border-dashed border-input p-8 cursor-pointer hover:border-primary/50 transition-colors">
-            <Upload className="h-8 w-8 text-muted-foreground" />
-            <p className="text-sm text-muted-foreground">Click to upload or drag and drop</p>
-            <p className="text-xs text-muted-foreground/70">PNG, JPG, PDF up to 10MB</p>
-          </div>
+          <FileUploadField slug={slug} field={field} value={value as UploadResult | null} onChange={onChange} />
           {errorEl}
         </div>
       );
@@ -524,12 +609,13 @@ function inputType(fieldType: FieldType): string {
 interface FormRendererProps {
   title: string;
   description: string | null;
+  slug: string;
   fields: FormField[];
   isSubmitting: boolean;
   onSubmit: (values: Record<string, unknown>) => void;
 }
 
-export function FormRenderer({ title, description, fields, isSubmitting, onSubmit }: FormRendererProps) {
+export function FormRenderer({ title, description, slug, fields, isSubmitting, onSubmit }: FormRendererProps) {
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -601,6 +687,7 @@ export function FormRenderer({ title, description, fields, isSubmitting, onSubmi
         {allFields.map((field) => (
           <FormFieldRenderer
             key={field.id}
+            slug={slug}
             field={field}
             value={values[field.id]}
             onChange={(val) => {
