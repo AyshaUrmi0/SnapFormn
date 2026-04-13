@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { AuthGuard } from '@/components/shared/auth-guard';
 import { ModalProvider } from '@/providers/modal-provider';
 import { CommandPaletteProvider } from '@/providers/command-palette-provider';
+import { PlanProvider } from '@/providers/plan-provider';
 import { CommandPalette } from '@/components/command-palette';
 import { Sidebar } from '@/components/layout/sidebar';
 import { MobileSidebar } from '@/components/layout/mobile-sidebar';
@@ -14,6 +15,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <AuthGuard>
+      <PlanProvider>
       <ModalProvider>
       <CommandPaletteProvider>
       <div className="flex h-screen overflow-hidden">
@@ -35,6 +37,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <CommandPalette />
       </CommandPaletteProvider>
       </ModalProvider>
+      </PlanProvider>
     </AuthGuard>
   );
 }

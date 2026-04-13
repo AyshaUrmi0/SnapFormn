@@ -1,15 +1,26 @@
 'use client';
 
-import { useWorkspaces, useWorkspaceUsage } from '@/modules/workspace/workspace.queries';
+import { useWorkspaceUsage } from '@/modules/workspace/workspace.queries';
+import { usePlan } from '@/providers/plan-provider';
 import { ROUTES } from '@/constants/routes';
 
 /**
- * Returns an href for the "Create form" action.
- * If the workspace is at its form limit, returns the upgrade page URL instead.
+ * Returns the href for the "Create form" action.
+ *
+ * - If the workspace is on a paid plan → returns the normal NEW_FORM route
+ * - If the workspace is FREE and at the form limit → returns /upgrade
+ * - Otherwise → returns the normal NEW_FORM route
  */
 export function useCreateFormHref(workspaceId: string): string {
+  const { isPaid } = usePlan();
   const { data: usage } = useWorkspaceUsage(workspaceId);
 
+  // Paid plans always go to the create page (no form limit)
+  if (workspaceId && isPaid(workspaceId)) {
+    return ROUTES.workspace(workspaceId).NEW_FORM;
+  }
+
+  // Free plan: gate based on usage if available
   if (!usage) return ROUTES.workspace(workspaceId).NEW_FORM;
   if (usage.forms.limit !== null && usage.forms.current >= usage.forms.limit) {
     return `${ROUTES.UPGRADE}?workspace=${workspaceId}&reason=forms`;
@@ -18,15 +29,16 @@ export function useCreateFormHref(workspaceId: string): string {
 }
 
 /**
- * Returns an href for the "Create workspace" action.
- * If the user already owns a FREE workspace, returns the upgrade page URL instead.
+ * Returns the href for the "Create workspace" action.
+ *
+ * - If the user owns at least one FREE workspace → returns /upgrade (free users
+ *   can only own one workspace; they must upgrade an existing one to create more)
+ * - Otherwise → returns the normal NEW_WORKSPACE route
  */
 export function useCreateWorkspaceHref(): string {
-  const { data: workspaces } = useWorkspaces();
+  const { hasFreeOwnedWorkspace } = usePlan();
 
-  if (!workspaces) return ROUTES.NEW_WORKSPACE;
-  const freeOwned = workspaces.filter((w) => w.plan === 'FREE' && w.role === 'OWNER').length;
-  if (freeOwned >= 1) {
+  if (hasFreeOwnedWorkspace) {
     return `${ROUTES.UPGRADE}?reason=workspaces`;
   }
   return ROUTES.NEW_WORKSPACE;
