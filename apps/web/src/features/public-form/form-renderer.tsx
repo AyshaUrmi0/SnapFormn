@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import {
-  Star, Upload, ChevronDown, Clock, PenLine, Loader2, X,
+  Star, Upload, ChevronDown, Clock, Loader2, X,
   Image as ImageIcon, Video, Music, Code, Globe,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { uploadToCloudinary, type UploadResult } from '@/lib/cloudinary-upload';
+import { SignaturePad } from './signature-pad';
 import type { FormField, FieldType } from '@/modules/form/types';
 
 interface FieldOption {
@@ -457,12 +458,12 @@ function FormFieldRenderer({ field, value, onChange, error, slug }: FormFieldRen
         <div className="space-y-2">
           {labelEl}
           {descEl}
-          <div className="h-32 rounded-md border-2 border-dashed border-input bg-background flex items-center justify-center">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <PenLine className="h-4 w-4" />
-              <span className="text-sm">Signature capture coming soon</span>
-            </div>
-          </div>
+          <SignaturePad
+            slug={slug}
+            fieldId={field.id}
+            value={value as UploadResult | null}
+            onChange={onChange}
+          />
           {errorEl}
         </div>
       );
