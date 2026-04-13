@@ -1,9 +1,18 @@
 import { z } from 'zod';
 
 const fieldTypeEnum = z.enum([
-  'SHORT_TEXT', 'LONG_TEXT', 'EMAIL', 'NUMBER', 'PHONE', 'URL', 'DATE',
-  'DROPDOWN', 'MULTI_SELECT', 'CHECKBOX', 'RADIO', 'FILE_UPLOAD',
-  'RATING', 'SCALE', 'STATEMENT', 'PAGE_BREAK',
+  // Questions
+  'SHORT_TEXT', 'LONG_TEXT', 'EMAIL', 'NUMBER', 'PHONE', 'URL', 'DATE', 'TIME',
+  'DROPDOWN', 'MULTI_SELECT', 'CHECKBOX', 'RADIO', 'MATRIX', 'RANKING',
+  'FILE_UPLOAD', 'RATING', 'SCALE', 'SIGNATURE',
+  // Layout
+  'STATEMENT', 'PAGE_BREAK', 'THANK_YOU_PAGE',
+  'HEADING_1', 'HEADING_2', 'HEADING_3',
+  'DIVIDER', 'TITLE', 'LABEL',
+  // Embed
+  'IMAGE', 'VIDEO', 'AUDIO', 'EMBED',
+  // Advanced
+  'CONDITIONAL_LOGIC', 'CALCULATED', 'HIDDEN', 'RECAPTCHA', 'COUNTRY',
 ]);
 
 export const createFormSchema = z.object({
