@@ -42,6 +42,7 @@ export const ROUTES = {
     MEMBERS: `/${workspaceId}/members`,
     SETTINGS: `/${workspaceId}/settings`,
     BILLING: `/${workspaceId}/billing`,
+    UPGRADE: `/${workspaceId}/upgrade`,
   }),
 
   // Public

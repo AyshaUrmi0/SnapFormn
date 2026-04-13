@@ -69,7 +69,7 @@ function getNavSections(workspaceId: string | null, options?: { onSearchClick?: 
     { label: 'Members', href: ws?.MEMBERS ?? ROUTES.MEMBERS, icon: Users },
     { label: 'Domains', href: ROUTES.DOMAINS, icon: Globe },
     { label: 'Settings', href: ROUTES.SETTINGS, icon: Settings },
-    { label: 'Upgrade plan', href: ROUTES.UPGRADE, icon: Sparkles, className: 'text-primary' },
+    { label: 'Upgrade plan', href: ws?.UPGRADE ?? '/upgrade', icon: Sparkles, className: 'text-primary' },
   ];
 
   const productNav: NavItemDef[] = [
