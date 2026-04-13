@@ -3,7 +3,31 @@ import { prisma } from '../../lib/prisma';
 import { PLAN_LIMITS } from '../../config/planLimits';
 import { submissionRepository } from './submission.repository';
 import { formRepository } from '../forms/form.repository';
+import { uploadService } from '../uploads/upload.service';
 import type { SubmitFormInput, FormAnalytics } from './submission.types';
+
+// Media field value shape stored in SubmissionField.value
+interface MediaValue {
+  url?: string;
+  publicId?: string;
+  resourceType?: 'image' | 'video' | 'raw' | 'auto';
+}
+
+function extractMediaValues(
+  fields: Array<{ value: unknown; field?: { type?: string } | null }>,
+): Array<{ publicId: string; resourceType: 'image' | 'video' | 'raw' | 'auto' }> {
+  const media: Array<{ publicId: string; resourceType: 'image' | 'video' | 'raw' | 'auto' }> = [];
+  for (const f of fields) {
+    const val = f.value as MediaValue | null;
+    if (val && typeof val === 'object' && typeof val.publicId === 'string') {
+      media.push({
+        publicId: val.publicId,
+        resourceType: val.resourceType ?? 'auto',
+      });
+    }
+  }
+  return media;
+}
 
 export const submissionService = {
   async submit(slug: string, input: SubmitFormInput, ip?: string, userAgent?: string) {
@@ -70,6 +94,13 @@ export const submissionService = {
   async delete(submissionId: string) {
     const submission = await submissionRepository.findById(submissionId);
     if (!submission) throw AppError.notFound('Submission not found');
+
+    // Clean up any Cloudinary assets referenced by this submission's fields
+    const mediaAssets = extractMediaValues(submission.fields ?? []);
+    for (const asset of mediaAssets) {
+      await uploadService.destroy(asset.publicId, asset.resourceType);
+    }
+
     await submissionRepository.delete(submissionId);
   },
 

@@ -8,6 +8,7 @@ import workspaceRoutes from '../../modules/workspaces/workspace.routes';
 import formRoutes from '../../modules/forms/form.routes';
 import submissionRoutes from '../../modules/submissions/submission.routes';
 import billingRoutes from '../../modules/billing/billing.routes';
+import uploadRoutes from '../../modules/uploads/upload.routes';
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.use('/workspaces', authenticate as RequestHandler, workspaceRoutes);
 router.use('/forms', formRoutes);
 router.use('/submissions', submissionRoutes);
 router.use('/billing', billingRoutes); // Auth applied per-route (webhook must be unauthenticated)
+router.use('/uploads', uploadRoutes); // Auth applied per-route (public sign endpoint is unauthenticated)
 
 export default router;

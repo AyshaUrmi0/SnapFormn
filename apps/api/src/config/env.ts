@@ -33,6 +33,11 @@ const envSchema = z.object({
   STRIPE_PRICE_BUSINESS_MONTHLY: z.string().default(''),
   STRIPE_PRICE_BUSINESS_YEARLY: z.string().default(''),
 
+  CLOUDINARY_CLOUD_NAME: z.string().default(''),
+  CLOUDINARY_API_KEY: z.string().default(''),
+  CLOUDINARY_API_SECRET: z.string().default(''),
+  CLOUDINARY_UPLOAD_FOLDER: z.string().default('snapform'),
+
   FRONTEND_URL: z.string().default('http://localhost:3000'),
 
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),
