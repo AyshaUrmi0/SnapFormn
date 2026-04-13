@@ -8,7 +8,7 @@ A Tally.so-inspired form builder platform built with a modern TypeScript stack.
 - **Backend**: Node.js, Express, TypeScript, Prisma, PostgreSQL (Neon), Redis (Upstash), Zod, JWT
 - **Frontend**: Next.js 16 (App Router), React, TanStack Query, Tailwind CSS v4, shadcn/ui v4 (base-ui), TipTap
 - **Shared**: Common types, schemas, utilities, RBAC constants
-- **Payments**: Stripe (scaffold)
+- **Payments**: Stripe Checkout, Customer Portal, Webhooks
 
 ## Project Structure
 
@@ -81,6 +81,38 @@ snapform/
 - Email change with OTP verification
 - Account deletion
 
+### Billing & Subscriptions
+- Stripe Checkout integration with monthly and yearly pricing
+- Three plans: Free, Pro ($29/mo), Business ($89/mo)
+- Per-workspace subscriptions — each workspace has its own plan and billing
+- Stripe Customer Portal for managing subscriptions, payment methods, and invoices
+- Webhook-driven subscription state sync (checkout.session.completed, customer.subscription.updated/deleted, invoice.payment_succeeded/failed)
+- Tally-style upgrade page with monthly/yearly toggle and feature comparison
+
+### Plan Limits & Enforcement
+- Free plan limits: 1 workspace, 3 forms, 100 submissions/month, 2 members per workspace
+- Pro plan: unlimited workspaces, unlimited forms, 10,000 submissions/month, unlimited members
+- Business plan: unlimited everything
+- Backend enforcement on form creation, submission, member invite, workspace creation
+- `GET /workspaces/:id/usage` endpoint exposes current usage and limits
+- Frontend usage dashboard with progress bars on each workspace card
+- Proactive gating — buttons redirect to upgrade page when at limit (no failed requests)
+- Reactive gating — `redirectOnPlanLimit` helper handles backend errors at every call site
+
+### Workspace Dashboard
+- All workspaces shown as cards with plan badge, usage stats, and quick actions
+- Per-workspace metrics: forms, submissions this month, members
+- Free plans show progress bars; paid plans show unlimited indicators
+- Open / Upgrade / Billing buttons contextual to the workspace plan
+
+### Help & Onboarding
+- Get Started page with 5-step onboarding guide
+- How-to Guides organized by category
+- Help Center with FAQ accordion
+- Public roadmap (Shipped / In Progress / Planned)
+- What's New changelog
+- Rewards (referral program)
+
 ## Prerequisites
 
 - Node.js >= 18
@@ -103,7 +135,35 @@ npm install
 cp apps/api/.env.example apps/api/.env
 ```
 
-Edit `apps/api/.env` with your database, Redis, JWT, and OAuth settings.
+Edit `apps/api/.env` with your database, Redis, JWT, OAuth, and Stripe settings:
+
+```env
+# Database & cache
+DATABASE_URL=postgresql://...
+REDIS_URL=rediss://...
+
+# JWT
+JWT_ACCESS_SECRET=...
+JWT_REFRESH_SECRET=...
+
+# Google OAuth
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+
+# Email (Resend)
+RESEND_API_KEY=...
+
+# Stripe
+STRIPE_SECRET_KEY=sk_test_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+STRIPE_PRICE_PRO_MONTHLY=price_...
+STRIPE_PRICE_PRO_YEARLY=price_...
+STRIPE_PRICE_BUSINESS_MONTHLY=price_...
+STRIPE_PRICE_BUSINESS_YEARLY=price_...
+
+# Frontend URL (for Stripe redirects)
+FRONTEND_URL=http://localhost:3000
+```
 
 ### 3. Set up database
 
@@ -180,24 +240,25 @@ npm run dev:all
 - `DELETE /api/v1/users/me` - Delete account
 
 ### Workspaces
-- `POST /api/v1/workspaces` - Create workspace
+- `POST /api/v1/workspaces` - Create workspace (subject to free plan limit)
 - `GET /api/v1/workspaces` - List user's workspaces
 - `GET /api/v1/workspaces/:id` - Get workspace details
+- `GET /api/v1/workspaces/:id/usage` - Get current usage and limits (forms, submissions, members)
 - `PATCH /api/v1/workspaces/:id` - Update workspace
 - `DELETE /api/v1/workspaces/:id` - Delete workspace
-- `POST /api/v1/workspaces/:id/members` - Invite member
+- `POST /api/v1/workspaces/:id/members` - Invite member (subject to plan limit)
 - `PATCH /api/v1/workspaces/:id/members/:memberId` - Update member role
 - `DELETE /api/v1/workspaces/:id/members/:memberId` - Remove member
 
 ### Forms
 - `GET /api/v1/forms/:slug` - Get published form by slug (public, no auth)
-- `POST /api/v1/forms/workspace/:workspaceId` - Create form
+- `POST /api/v1/forms/workspace/:workspaceId` - Create form (subject to plan limit)
 - `GET /api/v1/forms/workspace/:workspaceId` - List forms (excludes trashed)
 - `GET /api/v1/forms/workspace/:workspaceId/:formId` - Get form with fields
 - `PATCH /api/v1/forms/workspace/:workspaceId/:formId` - Update form (title, description, settings)
 - `PATCH /api/v1/forms/workspace/:workspaceId/:formId/status` - Update form status (Draft/Published/Closed)
 - `PUT /api/v1/forms/workspace/:workspaceId/:formId/fields` - Replace all form fields
-- `POST /api/v1/forms/workspace/:workspaceId/:formId/duplicate` - Duplicate form with fields
+- `POST /api/v1/forms/workspace/:workspaceId/:formId/duplicate` - Duplicate form with fields (subject to plan limit)
 - `DELETE /api/v1/forms/workspace/:workspaceId/:formId` - Soft delete form (moves to trash)
 
 ### Trash
@@ -207,16 +268,17 @@ npm run dev:all
 - `DELETE /api/v1/forms/workspace/:workspaceId/trash` - Empty trash (delete all trashed forms)
 
 ### Submissions
-- `POST /api/v1/submissions/:slug` - Submit form response (public, no auth)
+- `POST /api/v1/submissions/:slug` - Submit form response (public, no auth, subject to monthly limit)
 - `GET /api/v1/submissions/workspace/:workspaceId/forms/:formId` - List submissions
 - `GET /api/v1/submissions/workspace/:workspaceId/forms/:formId/analytics` - Get form analytics
 - `GET /api/v1/submissions/workspace/:workspaceId/forms/:formId/:submissionId` - Get submission
 - `DELETE /api/v1/submissions/workspace/:workspaceId/forms/:formId/:submissionId` - Delete submission
 
-### Billing (stubs)
-- `POST /api/v1/billing/checkout` - Create Stripe checkout session
-- `GET /api/v1/billing/portal` - Create Stripe customer portal session
-- `POST /api/v1/billing/webhook` - Stripe webhook handler
+### Billing
+- `POST /api/v1/billing/checkout` - Create Stripe checkout session (body: `{ workspaceId, plan: 'PRO' | 'BUSINESS', period: 'monthly' | 'yearly' }`)
+- `GET /api/v1/billing/subscription?workspaceId=:id` - Get subscription details for a workspace
+- `GET /api/v1/billing/portal?workspaceId=:id` - Create Stripe customer portal session
+- `POST /api/v1/billing/webhook` - Stripe webhook handler (signature verified, handles checkout.session.completed, customer.subscription.updated/deleted, invoice.payment_succeeded/failed)
 
 ## API Documentation
 
@@ -265,11 +327,26 @@ Each role has a predefined set of permissions (seeded via `npm run db:seed`).
 | form:view | Yes | Yes | Yes | Yes |
 | submission:view | Yes | Yes | Yes | Yes |
 | submission:delete | Yes | Yes | No | No |
+| submission:export | Yes | Yes | Yes | Yes |
 | member:invite | Yes | Yes | No | No |
 | member:manage_role | Yes | Yes | No | No |
 | member:remove | Yes | Yes | No | No |
 | workspace:manage | Yes | Yes | No | No |
 | workspace:delete | Yes | No | No | No |
+| billing:manage | Yes | Yes | No | No |
+
+## Plan Limits
+
+Each workspace has its own plan and limits. Limits are enforced server-side and surfaced to the client via `GET /workspaces/:id/usage`.
+
+| Resource | Free | Pro | Business |
+|----------|------|-----|----------|
+| Workspaces per user | 1 | Unlimited | Unlimited |
+| Forms per workspace | 3 | Unlimited | Unlimited |
+| Submissions per month | 100 | 10,000 | Unlimited |
+| Members per workspace | 2 | Unlimited | Unlimited |
+
+A user is considered "free" if all their owned workspaces are on the FREE plan. Once any workspace upgrades, the user can create unlimited additional workspaces (each starting on FREE, individually upgradable).
 
 ## Deployment
 
