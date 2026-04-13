@@ -3,15 +3,13 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
 import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useWorkspaces } from '@/modules/workspace/workspace.queries';
 import { useCreateCheckout } from '@/modules/billing/billing.queries';
-import { queryKeys } from '@/constants/query-keys';
+import { usePlan } from '@/providers/plan-provider';
 import { PLANS } from '@/constants/plans';
 import { ROUTES } from '@/constants/routes';
 import type { Plan } from '@/modules/workspace/types';
@@ -27,23 +25,22 @@ const REASON_LABELS: Record<string, string> = {
 
 export default function UpgradePage() {
   const searchParams = useSearchParams();
-  const queryClient = useQueryClient();
   const workspaceIdParam = searchParams.get('workspace');
   const reason = searchParams.get('reason');
 
-  const { data: workspaces } = useWorkspaces();
+  const { workspaces, getPlan, refresh } = usePlan();
   const checkout = useCreateCheckout();
 
   const [period, setPeriod] = useState<'monthly' | 'yearly'>('monthly');
 
-  // Refetch workspaces on mount so the current plan reflects the latest
-  // DB state (e.g. after returning from Stripe checkout)
+  // Refresh plan on mount so the current plan reflects the latest DB state
+  // (e.g. after returning from Stripe checkout success page)
   useEffect(() => {
-    queryClient.invalidateQueries({ queryKey: queryKeys.workspaces.all() });
-  }, [queryClient]);
+    refresh();
+  }, [refresh]);
 
   const workspaceId = workspaceIdParam || workspaces?.[0]?.id || '';
-  const currentPlan: Plan = workspaces?.find((w) => w.id === workspaceId)?.plan ?? 'FREE';
+  const currentPlan: Plan = workspaceId ? getPlan(workspaceId) : 'FREE';
 
   function handleUpgrade(plan: 'PRO' | 'BUSINESS') {
     if (!workspaceId) {
