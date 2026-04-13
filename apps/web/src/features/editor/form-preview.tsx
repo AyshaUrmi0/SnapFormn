@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { FIELD_TYPE_CONFIG } from '@/constants/field-types';
-import type { EditorField, FieldOption } from './types';
+import { getChoiceOptions } from './types';
+import type { EditorField } from './types';
 import type { FieldType } from '@/modules/form/types';
 
 function PreviewField({ field }: { field: EditorField }) {
   const displayLabel = field.label || FIELD_TYPE_CONFIG[field.type]?.label || 'Untitled';
-  const options: FieldOption[] = field.options ?? [];
+  const options = getChoiceOptions(field);
 
   switch (field.type) {
     case 'SHORT_TEXT':

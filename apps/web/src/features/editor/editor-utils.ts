@@ -1,5 +1,5 @@
 import type { JSONContent } from '@tiptap/core';
-import type { EditorField, FieldOption } from './types';
+import type { EditorField, EditorFieldOptions } from './types';
 import { CHOICE_FIELD_TYPES } from './types';
 import type { FieldType } from '@/modules/form/types';
 
@@ -45,13 +45,17 @@ export function docToEditorFields(doc: JSONContent): EditorField[] {
 
   for (const node of nodes) {
     if (node.type === 'formBlock' && node.attrs) {
-      let options: FieldOption[] | null = null;
+      let options: EditorFieldOptions = null;
       try {
-        const parsed = JSON.parse((node.attrs.options as string) || '[]');
+        const parsed = JSON.parse((node.attrs.options as string) || 'null');
         if (Array.isArray(parsed)) {
+          // Choice / ranking fields — array of { label, value }
           options = parsed.filter(
-            (o: any) => typeof o.label === 'string' && typeof o.value === 'string',
+            (o: any) => typeof o === 'object' && o !== null && typeof o.label === 'string' && typeof o.value === 'string',
           );
+        } else if (parsed && typeof parsed === 'object') {
+          // Media / matrix / hidden / etc. object shapes
+          options = parsed as Record<string, unknown>;
         }
       } catch {
         options = null;
