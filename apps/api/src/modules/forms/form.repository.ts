@@ -31,6 +31,7 @@ export const formRepository = {
       where: { slug, status: 'PUBLISHED', deletedAt: null },
       include: {
         fields: { orderBy: { order: 'asc' } },
+        _count: { select: { submissions: true } },
       },
     });
   },

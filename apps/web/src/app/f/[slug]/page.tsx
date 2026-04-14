@@ -2,7 +2,7 @@
 
 import { use, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Lock } from 'lucide-react';
+import { Lock, Clock, CalendarX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { LoadingState } from '@/components/shared/loading-state';
@@ -11,7 +11,11 @@ import { useFormBySlug } from '@/modules/form/form.queries';
 import { useSubmitForm } from '@/modules/submission/submission.queries';
 import { FormRenderer } from '@/features/public-form/form-renderer';
 import { ROUTES } from '@/constants/routes';
-import { DEFAULT_SHARE_CONFIG, type FormSettings } from '@/modules/form/settings-types';
+import {
+  DEFAULT_SHARE_CONFIG,
+  getScheduleStatus,
+  type FormSettings,
+} from '@/modules/form/settings-types';
 
 export default function PublicFormPage({
   params,
@@ -92,6 +96,42 @@ export default function PublicFormPage({
                 Access form
               </Button>
             </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Check schedule status (start/end dates + max submissions cap)
+  const submissionCount = (form as { _count?: { submissions?: number } })._count?.submissions ?? 0;
+  const scheduleStatus = getScheduleStatus(settings.schedule, submissionCount);
+
+  if (scheduleStatus.state !== 'open') {
+    const isNotYetOpen = scheduleStatus.state === 'not_yet_open';
+    const Icon = isNotYetOpen ? Clock : CalendarX;
+    const heading = isNotYetOpen ? 'This form opens soon' : 'This form is closed';
+    let body = '';
+    if (scheduleStatus.state === 'not_yet_open') {
+      body = `Submissions open on ${scheduleStatus.opensAt.toLocaleString()}.`;
+    } else if (scheduleStatus.state === 'closed_by_date') {
+      body = `Submissions closed on ${scheduleStatus.closedAt.toLocaleString()}.`;
+    } else if (scheduleStatus.state === 'closed_by_cap') {
+      body = `This form has reached its maximum of ${scheduleStatus.cap} responses.`;
+    }
+    return (
+      <div className={`min-h-screen flex items-center justify-center py-12 px-4 ${isEmbedded ? '' : 'bg-muted/30'}`}>
+        <div className="max-w-sm mx-auto w-full">
+          <div className="rounded-xl border bg-card p-6 sm:p-8 shadow-sm space-y-4 text-center">
+            <div className="flex justify-center">
+              <div className="rounded-full bg-muted p-3">
+                <Icon className="h-6 w-6 text-muted-foreground" />
+              </div>
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-xl font-bold">{form.title}</h1>
+              <p className="text-sm font-medium text-foreground">{heading}</p>
+              <p className="text-sm text-muted-foreground">{body}</p>
+            </div>
           </div>
         </div>
       </div>
