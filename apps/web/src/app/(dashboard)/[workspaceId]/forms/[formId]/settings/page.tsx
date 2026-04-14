@@ -19,10 +19,12 @@ import {
   DEFAULT_SUCCESS_CONFIG,
   DEFAULT_SHARE_CONFIG,
   DEFAULT_EMBED_CONFIG,
+  DEFAULT_SCHEDULE_CONFIG,
   type FormSettings,
   type FormSuccessConfig,
   type FormShareConfig,
   type FormEmbedConfig,
+  type FormScheduleConfig,
 } from '@/modules/form/settings-types';
 
 export default function FormSettingsPage({
@@ -38,6 +40,7 @@ export default function FormSettingsPage({
   const [successConfig, setSuccessConfig] = useState<FormSuccessConfig>(DEFAULT_SUCCESS_CONFIG);
   const [shareConfig, setShareConfig] = useState<FormShareConfig>(DEFAULT_SHARE_CONFIG);
   const [embedConfig, setEmbedConfig] = useState<FormEmbedConfig>(DEFAULT_EMBED_CONFIG);
+  const [scheduleConfig, setScheduleConfig] = useState<FormScheduleConfig>(DEFAULT_SCHEDULE_CONFIG);
   const [isDirty, setIsDirty] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
 
@@ -47,6 +50,7 @@ export default function FormSettingsPage({
       setSuccessConfig({ ...DEFAULT_SUCCESS_CONFIG, ...settings.successPage });
       setShareConfig({ ...DEFAULT_SHARE_CONFIG, ...settings.share });
       setEmbedConfig({ ...DEFAULT_EMBED_CONFIG, ...settings.embed });
+      setScheduleConfig({ ...DEFAULT_SCHEDULE_CONFIG, ...settings.schedule });
     }
   }, [form]);
 
@@ -55,6 +59,7 @@ export default function FormSettingsPage({
       successPage: successConfig,
       share: shareConfig,
       embed: embedConfig,
+      schedule: scheduleConfig,
     };
     updateForm.mutate(
       { workspaceId, formId, data: { settings } },
@@ -124,6 +129,65 @@ export default function FormSettingsPage({
             >
               {copied === 'Link' ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Schedule */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Schedule</CardTitle>
+          <CardDescription>
+            Control when your form accepts responses. Leave blank for no time limit.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="starts-at">Opens at</Label>
+              <Input
+                id="starts-at"
+                type="datetime-local"
+                value={scheduleConfig.startsAt}
+                onChange={(e) => {
+                  setScheduleConfig((prev) => ({ ...prev, startsAt: (e.target as HTMLInputElement).value }));
+                  setIsDirty(true);
+                }}
+              />
+              <p className="text-xs text-muted-foreground">Form rejects submissions before this date.</p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="ends-at">Closes at</Label>
+              <Input
+                id="ends-at"
+                type="datetime-local"
+                value={scheduleConfig.endsAt}
+                onChange={(e) => {
+                  setScheduleConfig((prev) => ({ ...prev, endsAt: (e.target as HTMLInputElement).value }));
+                  setIsDirty(true);
+                }}
+              />
+              <p className="text-xs text-muted-foreground">Form auto-closes after this date.</p>
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="max-submissions">Maximum submissions</Label>
+            <Input
+              id="max-submissions"
+              type="number"
+              min={0}
+              value={scheduleConfig.maxSubmissions || ''}
+              onChange={(e) => {
+                const val = parseInt((e.target as HTMLInputElement).value, 10);
+                setScheduleConfig((prev) => ({ ...prev, maxSubmissions: Number.isFinite(val) ? val : 0 }));
+                setIsDirty(true);
+              }}
+              placeholder="Unlimited"
+            />
+            <p className="text-xs text-muted-foreground">
+              Auto-close after this many submissions. Leave blank for unlimited.
+            </p>
           </div>
         </CardContent>
       </Card>

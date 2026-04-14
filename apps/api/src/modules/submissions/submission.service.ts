@@ -4,6 +4,7 @@ import { PLAN_LIMITS } from '../../config/planLimits';
 import { submissionRepository } from './submission.repository';
 import { formRepository } from '../forms/form.repository';
 import { uploadService } from '../uploads/upload.service';
+import { extractSchedule, getScheduleStatus } from '../forms/schedule';
 import type { SubmitFormInput, FormAnalytics } from './submission.types';
 
 // Media field value shape stored in SubmissionField.value
@@ -33,6 +34,28 @@ export const submissionService = {
   async submit(slug: string, input: SubmitFormInput, ip?: string, userAgent?: string) {
     const form = await formRepository.findPublicBySlug(slug);
     if (!form) throw AppError.notFound('Form not found or not published');
+
+    // Enforce form schedule (start/end date + max submissions cap)
+    const schedule = extractSchedule(form.settings);
+    if (schedule) {
+      const totalCount = await prisma.submission.count({ where: { formId: form.id } });
+      const status = getScheduleStatus(schedule, totalCount);
+      if (status.state === 'not_yet_open') {
+        throw AppError.forbidden(
+          `This form is not yet accepting responses. It opens on ${status.opensAt.toLocaleString()}.`,
+        );
+      }
+      if (status.state === 'closed_by_date') {
+        throw AppError.forbidden(
+          `This form stopped accepting responses on ${status.closedAt.toLocaleString()}.`,
+        );
+      }
+      if (status.state === 'closed_by_cap') {
+        throw AppError.forbidden(
+          `This form has reached its maximum of ${status.cap} responses.`,
+        );
+      }
+    }
 
     // Enforce monthly submission limit based on workspace plan
     const workspace = await prisma.workspace.findUnique({
