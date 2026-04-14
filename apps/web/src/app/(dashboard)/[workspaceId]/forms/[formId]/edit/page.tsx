@@ -11,7 +11,7 @@ import { useForm as useFormQuery } from '@/modules/form/form.queries';
 import { useUpdateForm, useUpdateFormFields, useUpdateFormStatus } from '@/modules/form/form.queries';
 import { EditorTopbar } from '@/features/editor/editor-topbar';
 import { DocumentEditor, type DocumentEditorRef } from '@/features/editor/document-editor';
-import { FormPreview } from '@/features/editor/form-preview';
+import { FormRenderer } from '@/features/public-form/form-renderer';
 import { FieldConfig } from '@/features/editor/field-config';
 import { PublishSuccessDialog } from '@/features/editor/publish-success-dialog';
 import { EditorSelectionContext } from '@/features/editor/editor-selection-context';
@@ -248,7 +248,30 @@ export default function FormEditorPage() {
         {/* Main editor / preview area */}
         <div className="flex-1 overflow-y-auto bg-muted/20">
           {isPreview ? (
-            <FormPreview title={title} fields={fields} />
+            <div className="max-w-xl mx-auto py-8 px-4">
+              <div className="rounded-xl border bg-card p-6 sm:p-8 shadow-sm">
+                <FormRenderer
+                  title={title}
+                  description={form.description}
+                  uploadContext={{ mode: 'owner', formId }}
+                  fields={fields.map((f) => ({
+                    ...f,
+                    formId,
+                    createdAt: '',
+                    updatedAt: '',
+                  }))}
+                  isSubmitting={false}
+                  onSubmit={() => {}}
+                  previewMode
+                  thankYouMessage={
+                    (form.settings as { successPage?: { message?: string } } | null)?.successPage?.message
+                  }
+                />
+              </div>
+              <p className="text-center text-xs text-muted-foreground mt-4">
+                Preview mode — submissions are not saved
+              </p>
+            </div>
           ) : (
             <div className="py-8 px-4">
               {/* Editable title */}

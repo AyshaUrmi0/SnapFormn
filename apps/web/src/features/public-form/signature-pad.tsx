@@ -5,9 +5,10 @@ import { Eraser, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { uploadToCloudinary, type UploadResult } from '@/lib/cloudinary-upload';
+import type { UploadContext } from './form-renderer';
 
 interface SignaturePadProps {
-  slug: string;
+  uploadContext: UploadContext;
   fieldId: string;
   value: UploadResult | null;
   onChange: (value: UploadResult | null) => void;
@@ -18,7 +19,7 @@ interface SignaturePadProps {
  * On save, converts canvas to a PNG blob and uploads to Cloudinary
  * via the public sign endpoint.
  */
-export function SignaturePad({ slug, fieldId, value, onChange }: SignaturePadProps) {
+export function SignaturePad({ uploadContext, fieldId, value, onChange }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
   const lastPoint = useRef<{ x: number; y: number } | null>(null);
@@ -107,12 +108,12 @@ export function SignaturePad({ slug, fieldId, value, onChange }: SignaturePadPro
       if (!blob) throw new Error('Could not export signature');
 
       const file = new File([blob], `signature-${Date.now()}.png`, { type: 'image/png' });
-      const result = await uploadToCloudinary(file, {
-        mode: 'respondent',
-        slug,
-        fieldId,
-        resourceType: 'image',
-      });
+      const result = await uploadToCloudinary(
+        file,
+        uploadContext.mode === 'owner'
+          ? { mode: 'owner', formId: uploadContext.formId, fieldId, resourceType: 'image' }
+          : { mode: 'respondent', slug: uploadContext.slug, fieldId, resourceType: 'image' },
+      );
 
       onChange(result);
       toast.success('Signature saved');
