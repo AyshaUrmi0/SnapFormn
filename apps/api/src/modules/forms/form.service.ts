@@ -27,10 +27,13 @@ export const formService = {
   async create(workspaceId: string, userId: string, input: CreateFormInput) {
     await enforceFormLimit(workspaceId);
 
-    const slug = input.slug || slugify(input.title);
-
-    const existing = await formRepository.findBySlug(workspaceId, slug);
-    if (existing) throw AppError.conflict('A form with this slug already exists in this workspace');
+    const baseSlug = input.slug || slugify(input.title);
+    let slug = baseSlug;
+    let counter = 2;
+    while (await formRepository.findBySlug(workspaceId, slug)) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
 
     return formRepository.create({
       workspace: { connect: { id: workspaceId } },
@@ -43,7 +46,11 @@ export const formService = {
 
   async list(workspaceId: string, page: number, limit: number, status?: FormStatus) {
     const { skip, take } = paginate(page, limit);
-    const [forms, total] = await formRepository.findByWorkspace(workspaceId, { skip, take, status });
+    const [forms, total] = await formRepository.findByWorkspace(workspaceId, {
+      skip,
+      take,
+      status,
+    });
     const meta = buildPaginationMeta(total, page, limit);
     return { forms, meta };
   },

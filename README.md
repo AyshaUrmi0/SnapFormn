@@ -1,14 +1,18 @@
 # Snapform
 
 A Tally.so-inspired form builder platform built with a modern TypeScript stack.
+Features 36 field types, a TipTap-based editor with slash commands and a Tally-style
+insert-block modal, real-time preview, scheduled forms, signed Cloudinary media uploads,
+plan-based billing with Stripe, and per-workspace usage enforcement.
 
 ## Tech Stack
 
 - **Monorepo**: npm workspaces
 - **Backend**: Node.js, Express, TypeScript, Prisma, PostgreSQL (Neon), Redis (Upstash), Zod, JWT
-- **Frontend**: Next.js 16 (App Router), React, TanStack Query, Tailwind CSS v4, shadcn/ui v4 (base-ui), TipTap
+- **Frontend**: Next.js 16 (App Router), React 19, TanStack Query, Tailwind CSS v4, shadcn/ui v4 (base-ui), TipTap
 - **Shared**: Common types, schemas, utilities, RBAC constants
 - **Payments**: Stripe Checkout, Customer Portal, Webhooks
+- **Media**: Cloudinary signed direct uploads (owner + respondent flows)
 
 ## Project Structure
 
@@ -26,17 +30,19 @@ snapform/
 
 ### Form Builder
 - TipTap-based rich text editor with custom form block nodes
-- Slash command (`/`) to insert 16 field types across 4 categories
-- Inline block configuration (label, description, placeholder, required, options)
+- Slash command (`/`) and Tally-style insert-block modal with searchable category groups
+- Per-block inline action bar: drag handle, delete, and "+" insert
+- Inline block configuration in the right sidebar (label, placeholder, required, options)
+- Real-time preview as you edit — option/label changes reflect immediately in the block preview
+- True preview mode that uses the actual public form renderer (fill it like a respondent, see the configured Thank You page, file uploads and signatures actually work)
 - Drag-and-drop field reordering
-- Live form preview mode
-- Auto-save dirty state tracking with unsaved changes warning
+- Auto-save dirty state tracking with unsaved-changes warning
 
-### Field Types
-- **Text & Input**: Short Text, Long Text, Email, Number, Phone, URL, Date
-- **Choice**: Dropdown, Multi-Select, Checkbox, Radio
-- **Special**: File Upload, Rating, Scale
-- **Layout**: Statement, Page Break
+### Field Types (36 total)
+- **Questions**: Short Text, Long Text, Email, Number, Phone, URL, Date, Time, Dropdown, Multi-Select, Checkbox, Radio, Matrix, Ranking, File Upload, Rating, Scale, Signature
+- **Layout**: Statement, Page Break, Thank You Page, Heading 1/2/3, Divider, Title, Label
+- **Media**: Image, Video, Audio, Embed
+- **Advanced**: Conditional Logic, Calculated, Hidden, reCAPTCHA, Country
 
 ### Templates
 - 10 pre-built form templates across 5 categories (Feedback, Registration, Survey, Business, Other)
@@ -48,8 +54,11 @@ snapform/
 - Published forms accessible at `/f/:slug` (no auth required)
 - Password-protected forms
 - Client-side field validation (required, email format)
-- Customizable success page (message, redirect URL, resubmit option)
-- Embeddable via iframe
+- Customizable success page (message, redirect URL, "submit another response" toggle)
+- Custom Thank You Page block for richer post-submit content
+- Scheduled forms — open/close dates and a maximum-submissions cap (enforced server-side too)
+- Embeddable via iframe (`?embedded=true` strips the Snapform wrapper)
+- File and signature uploads via signed Cloudinary direct uploads — no files ever transit the API server
 
 ### Submissions & Analytics
 - View submissions in a list with detail dialog
@@ -106,8 +115,8 @@ snapform/
 - Open / Upgrade / Billing buttons contextual to the workspace plan
 
 ### Help & Onboarding
-- Get Started page with 5-step onboarding guide
-- How-to Guides organized by category
+- Get Started page with an 8-step onboarding checklist (persisted to localStorage, real CTA links into your first workspace)
+- How-to Guides with search and click-to-expand accordion across 6 categories
 - Help Center with FAQ accordion
 - Public roadmap (Shipped / In Progress / Planned)
 - What's New changelog
@@ -161,8 +170,20 @@ STRIPE_PRICE_PRO_YEARLY=price_...
 STRIPE_PRICE_BUSINESS_MONTHLY=price_...
 STRIPE_PRICE_BUSINESS_YEARLY=price_...
 
+# Cloudinary (signed media uploads)
+CLOUDINARY_CLOUD_NAME=...
+CLOUDINARY_API_KEY=...
+CLOUDINARY_API_SECRET=...
+
 # Frontend URL (for Stripe redirects)
 FRONTEND_URL=http://localhost:3000
+```
+
+The frontend also needs a public Cloudinary cloud name in `apps/web/.env.local`:
+
+```env
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=...
+NEXT_PUBLIC_API_URL=http://localhost:4000
 ```
 
 ### 3. Set up database
@@ -268,11 +289,15 @@ npm run dev:all
 - `DELETE /api/v1/forms/workspace/:workspaceId/trash` - Empty trash (delete all trashed forms)
 
 ### Submissions
-- `POST /api/v1/submissions/:slug` - Submit form response (public, no auth, subject to monthly limit)
+- `POST /api/v1/submissions/:slug` - Submit form response (public, no auth, subject to schedule + monthly limit)
 - `GET /api/v1/submissions/workspace/:workspaceId/forms/:formId` - List submissions
 - `GET /api/v1/submissions/workspace/:workspaceId/forms/:formId/analytics` - Get form analytics
 - `GET /api/v1/submissions/workspace/:workspaceId/forms/:formId/:submissionId` - Get submission
 - `DELETE /api/v1/submissions/workspace/:workspaceId/forms/:formId/:submissionId` - Delete submission
+
+### Uploads (Cloudinary)
+- `POST /api/v1/uploads/sign` - Sign a Cloudinary upload for an authenticated form owner (preview / editor)
+- `POST /api/v1/uploads/sign-public` - Sign a Cloudinary upload for an anonymous respondent (only for PUBLISHED forms)
 
 ### Billing
 - `POST /api/v1/billing/checkout` - Create Stripe checkout session (body: `{ workspaceId, plan: 'PRO' | 'BUSINESS', period: 'monthly' | 'yearly' }`)
@@ -282,7 +307,15 @@ npm run dev:all
 
 ## API Documentation
 
-Swagger UI is available at [https://snapformn.onrender.com/api/docs](https://snapformn.onrender.com/api/docs).
+Interactive Swagger UI is available at:
+
+- **Production**: [https://snapformn.onrender.com/api/docs](https://snapformn.onrender.com/api/docs)
+- **Local**: [http://localhost:4000/api/docs](http://localhost:4000/api/docs)
+
+The raw OpenAPI 3.0 spec is served at `/api/docs.json`. Documentation is generated
+from JSDoc `@swagger` blocks in each `*.routes.ts` file via `swagger-jsdoc`, and
+common types (Form, Submission, Workspace, FieldType, ApiError, etc.) are defined
+once in `apps/api/src/config/swagger.ts` and `$ref`-linked from individual routes.
 
 ## Architecture
 
