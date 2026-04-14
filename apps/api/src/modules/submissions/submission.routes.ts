@@ -38,7 +38,28 @@ const router = Router();
  *                     fieldId: { type: string }
  *                     value: {}
  *     responses:
- *       201: { description: Submission received }
+ *       201:
+ *         description: Submission received
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: '#/components/schemas/Submission' }
+ *       400:
+ *         description: Missing required fields or invalid field IDs
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/ApiError' }
+ *       403:
+ *         description: Form is closed by schedule, has hit its submission cap, or workspace plan limit reached
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/ApiError' }
+ *       404:
+ *         description: Form not found or not published
  */
 router.post(
   '/:slug',
@@ -46,7 +67,45 @@ router.post(
   asyncHandler(submissionController.submit),
 );
 
-// Authenticated routes - manage submissions
+/**
+ * @swagger
+ * /submissions/workspace/{workspaceId}/forms/{formId}:
+ *   get:
+ *     summary: List submissions for a form
+ *     tags: [Submissions]
+ *     parameters:
+ *       - in: path
+ *         name: workspaceId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: formId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: page
+ *         schema: { type: integer, minimum: 1, default: 1 }
+ *       - in: query
+ *         name: limit
+ *         schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+ *     responses:
+ *       200:
+ *         description: Paginated list of submissions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: object
+ *                       properties:
+ *                         submissions:
+ *                           type: array
+ *                           items: { $ref: '#/components/schemas/Submission' }
+ *                         meta: { $ref: '#/components/schemas/PaginationMeta' }
+ */
 router.get(
   '/workspace/:workspaceId/forms/:formId',
   authenticate,
@@ -55,6 +114,52 @@ router.get(
   asyncHandler(submissionController.list),
 );
 
+/**
+ * @swagger
+ * /submissions/workspace/{workspaceId}/forms/{formId}/analytics:
+ *   get:
+ *     summary: Get submission analytics for a form
+ *     description: Returns overview counts, a daily timeline, and per-field stats.
+ *     tags: [Submissions]
+ *     parameters:
+ *       - in: path
+ *         name: workspaceId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: formId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: query
+ *         name: days
+ *         schema: { type: integer, minimum: 1, maximum: 365, default: 30 }
+ *     responses:
+ *       200:
+ *         description: Analytics payload
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 overview:
+ *                   type: object
+ *                   properties:
+ *                     totalSubmissions: { type: integer }
+ *                     completedSubmissions: { type: integer }
+ *                     completionRate: { type: integer }
+ *                     firstSubmissionAt: { type: string, format: date-time, nullable: true }
+ *                     lastSubmissionAt: { type: string, format: date-time, nullable: true }
+ *                 timeline:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       date: { type: string, format: date }
+ *                       count: { type: integer }
+ *                 fieldStats:
+ *                   type: array
+ *                   items: { type: object }
+ */
 router.get(
   '/workspace/:workspaceId/forms/:formId/analytics',
   authenticate,
@@ -63,6 +168,55 @@ router.get(
   asyncHandler(submissionController.analytics),
 );
 
+/**
+ * @swagger
+ * /submissions/workspace/{workspaceId}/forms/{formId}/{submissionId}:
+ *   get:
+ *     summary: Get a single submission
+ *     tags: [Submissions]
+ *     parameters:
+ *       - in: path
+ *         name: workspaceId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: formId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: submissionId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200:
+ *         description: Submission details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/ApiResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data: { $ref: '#/components/schemas/Submission' }
+ *   delete:
+ *     summary: Delete a submission and any associated Cloudinary uploads
+ *     tags: [Submissions]
+ *     parameters:
+ *       - in: path
+ *         name: workspaceId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: formId
+ *         required: true
+ *         schema: { type: string }
+ *       - in: path
+ *         name: submissionId
+ *         required: true
+ *         schema: { type: string }
+ *     responses:
+ *       200: { description: Submission deleted }
+ */
 router.get(
   '/workspace/:workspaceId/forms/:formId/:submissionId',
   authenticate,
