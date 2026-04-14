@@ -132,7 +132,7 @@ export default function PublicFormPage({
           <FormRenderer
             title={form.title}
             description={form.description}
-            slug={form.slug}
+            uploadContext={{ mode: 'respondent', slug: form.slug }}
             fields={form.fields ?? []}
             isSubmitting={submitForm.isPending}
             onSubmit={handleSubmit}

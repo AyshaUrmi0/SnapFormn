@@ -15,7 +15,10 @@ function createLimiter(max: number, message: string) {
   });
 }
 
-export const rateLimiterMiddleware = createLimiter(100, 'Too many requests, please try again later');
+export const rateLimiterMiddleware = createLimiter(
+  1000,
+  'Too many requests, please try again later',
+);
 
 export const authRateLimiter = createLimiter(
   50,

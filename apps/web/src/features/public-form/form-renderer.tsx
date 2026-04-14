@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import {
-  Star, Upload, ChevronDown, Clock, Loader2, X,
+  Star, Upload, ChevronDown, Clock, Loader2, X, CheckCircle2,
   Image as ImageIcon, Video, Music, Code, Globe,
 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,6 +13,15 @@ import { cn } from '@/lib/utils';
 import { uploadToCloudinary, type UploadResult } from '@/lib/cloudinary-upload';
 import { SignaturePad } from './signature-pad';
 import type { FormField, FieldType } from '@/modules/form/types';
+
+/**
+ * Context passed to upload components so they call the right signing endpoint.
+ *  - respondent: public form, uses slug + PUBLISHED check
+ *  - owner: authenticated preview, uses formId + workspace check
+ */
+export type UploadContext =
+  | { mode: 'respondent'; slug: string }
+  | { mode: 'owner'; formId: string };
 
 interface FieldOption {
   label: string;
@@ -30,13 +39,13 @@ function parseOptions(options: unknown): FieldOption[] {
 }
 
 interface FileUploadFieldProps {
-  slug: string;
+  uploadContext: UploadContext;
   field: FormField;
   value: UploadResult | null;
   onChange: (value: UploadResult | null) => void;
 }
 
-function FileUploadField({ slug, field, value, onChange }: FileUploadFieldProps) {
+function FileUploadField({ uploadContext, field, value, onChange }: FileUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -45,13 +54,24 @@ function FileUploadField({ slug, field, value, onChange }: FileUploadFieldProps)
     setUploading(true);
     setProgress(0);
     try {
-      const result = await uploadToCloudinary(file, {
-        mode: 'respondent',
-        slug,
-        fieldId: field.id,
-        resourceType: 'auto',
-        onProgress: setProgress,
-      });
+      const result = await uploadToCloudinary(
+        file,
+        uploadContext.mode === 'owner'
+          ? {
+              mode: 'owner',
+              formId: uploadContext.formId,
+              fieldId: field.id,
+              resourceType: 'auto',
+              onProgress: setProgress,
+            }
+          : {
+              mode: 'respondent',
+              slug: uploadContext.slug,
+              fieldId: field.id,
+              resourceType: 'auto',
+              onProgress: setProgress,
+            },
+      );
       onChange(result);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Upload failed');
@@ -120,10 +140,10 @@ interface FormFieldRendererProps {
   value: unknown;
   onChange: (value: unknown) => void;
   error?: string;
-  slug: string;
+  uploadContext: UploadContext;
 }
 
-function FormFieldRenderer({ field, value, onChange, error, slug }: FormFieldRendererProps) {
+function FormFieldRenderer({ field, value, onChange, error, uploadContext }: FormFieldRendererProps) {
   const options = parseOptions(field.options);
   const displayLabel = field.label || 'Untitled';
 
@@ -283,7 +303,7 @@ function FormFieldRenderer({ field, value, onChange, error, slug }: FormFieldRen
         <div className="space-y-2">
           {labelEl}
           {descEl}
-          <FileUploadField slug={slug} field={field} value={value as UploadResult | null} onChange={onChange} />
+          <FileUploadField uploadContext={uploadContext} field={field} value={value as UploadResult | null} onChange={onChange} />
           {errorEl}
         </div>
       );
@@ -459,7 +479,7 @@ function FormFieldRenderer({ field, value, onChange, error, slug }: FormFieldRen
           {labelEl}
           {descEl}
           <SignaturePad
-            slug={slug}
+            uploadContext={uploadContext}
             fieldId={field.id}
             value={value as UploadResult | null}
             onChange={onChange}
@@ -610,15 +630,32 @@ function inputType(fieldType: FieldType): string {
 interface FormRendererProps {
   title: string;
   description: string | null;
-  slug: string;
+  uploadContext: UploadContext;
   fields: FormField[];
   isSubmitting: boolean;
   onSubmit: (values: Record<string, unknown>) => void;
+  /**
+   * When true, form submissions render the thank-you page inline without
+   * calling `onSubmit`. Used by the editor "Preview" mode.
+   */
+  previewMode?: boolean;
+  /** Custom thank-you message from form settings. Falls back to a default. */
+  thankYouMessage?: string;
 }
 
-export function FormRenderer({ title, description, slug, fields, isSubmitting, onSubmit }: FormRendererProps) {
+export function FormRenderer({
+  title,
+  description,
+  uploadContext,
+  fields,
+  isSubmitting,
+  onSubmit,
+  previewMode = false,
+  thankYouMessage,
+}: FormRendererProps) {
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState(false);
 
   const NON_INTERACTIVE_TYPES: FieldType[] = [
     'PAGE_BREAK', 'STATEMENT', 'THANK_YOU_PAGE',
@@ -672,7 +709,49 @@ export function FormRenderer({ title, description, slug, fields, isSubmitting, o
       }
     }
 
+    // In preview mode, show the thank-you page locally without calling the API
+    if (previewMode) {
+      setSubmitted(true);
+      return;
+    }
+
     onSubmit(submissionValues);
+  }
+
+  // Resolve the thank-you content. Priority:
+  //   1. A THANK_YOU_PAGE block in the form's fields (use its label)
+  //   2. The `thankYouMessage` prop (from form settings)
+  //   3. Default message
+  const thankYouBlock = fields.find((f) => f.type === 'THANK_YOU_PAGE');
+  const successHeading = thankYouBlock?.label || 'Thanks for your submission!';
+  const successDescription =
+    thankYouBlock?.description ||
+    thankYouMessage ||
+    'Your response has been recorded.';
+
+  if (submitted && previewMode) {
+    return (
+      <div className="flex flex-col items-center text-center py-12 space-y-4">
+        <div className="flex h-14 w-14 items-center justify-center rounded-full bg-primary/10 text-primary">
+          <CheckCircle2 className="h-7 w-7" />
+        </div>
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold">{successHeading}</h2>
+          <p className="text-muted-foreground">{successDescription}</p>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => {
+            setSubmitted(false);
+            setValues({});
+            setErrors({});
+          }}
+        >
+          Fill out again
+        </Button>
+      </div>
+    );
   }
 
   return (
@@ -688,7 +767,7 @@ export function FormRenderer({ title, description, slug, fields, isSubmitting, o
         {allFields.map((field) => (
           <FormFieldRenderer
             key={field.id}
-            slug={slug}
+            uploadContext={uploadContext}
             field={field}
             value={values[field.id]}
             onChange={(val) => {

@@ -12,7 +12,8 @@ export const queryKeys = {
     usage: (id: string) => ['workspaces', id, 'usage'] as const,
   },
   forms: {
-    list: (workspaceId: string) => ['forms', workspaceId] as const,
+    list: (workspaceId: string, status?: string) =>
+      status ? (['forms', workspaceId, status] as const) : (['forms', workspaceId] as const),
     detail: (workspaceId: string, formId: string) => ['forms', workspaceId, formId] as const,
     public: (slug: string) => ['forms', 'public', slug] as const,
     trash: (workspaceId: string) => ['forms', workspaceId, 'trash'] as const,

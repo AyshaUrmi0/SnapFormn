@@ -84,16 +84,6 @@ export function FieldConfig({ field, onChange, onClose, errors }: FieldConfigPro
           )}
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="field-description">Description</Label>
-          <Input
-            id="field-description"
-            value={field.description ?? ''}
-            onChange={(e) => onChange({ description: (e.target as HTMLInputElement).value || null })}
-            placeholder="Help text (optional)"
-          />
-        </div>
-
         {showPlaceholder && (
           <div className="space-y-1.5">
             <Label htmlFor="field-placeholder">Placeholder</Label>
