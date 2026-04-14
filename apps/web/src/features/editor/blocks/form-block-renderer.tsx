@@ -1,16 +1,19 @@
 'use client';
 
+import { useState } from 'react';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import {
   Type, Calendar, ChevronDown, Upload, Star, Clock, PenLine,
   CheckCircle2, Image as ImageIcon, Video, Music, Code,
   GitBranch, Calculator, EyeOff, Shield, Globe,
-  GripVertical, Trash2,
+  GripVertical, Trash2, Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { FIELD_TYPE_CONFIG } from '@/constants/field-types';
 import { FIELD_ICON_MAP } from '@/constants/icon-map';
 import { useEditorSelection } from '../editor-selection-context';
+import { InsertBlockDialog } from '../insert-block-dialog';
+import { buildInsertPayload } from './slash-command-list';
 import type { FieldType } from '@/modules/form/types';
 
 interface KeyValue { label: string; value: string }
@@ -73,7 +76,8 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
           </div>
         </div>
       );
-    case 'DROPDOWN':
+    case 'DROPDOWN': {
+      const parsedOpts = parseJson<KeyValue[]>(options) ?? [];
       return (
         <div className="space-y-1.5">
           <p className="text-sm font-medium">
@@ -81,13 +85,20 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
             {required && <span className="text-destructive ml-0.5">*</span>}
           </p>
           <div className="h-10 rounded-md border border-input bg-background px-3 flex items-center">
-            <span className="text-sm text-muted-foreground">Select an option...</span>
+            <span className="text-sm text-muted-foreground">
+              {parsedOpts.length > 0 ? parsedOpts[0].label : 'Select an option...'}
+            </span>
             <ChevronDown className="ml-auto h-4 w-4 text-muted-foreground" />
           </div>
         </div>
       );
+    }
     case 'CHECKBOX':
-    case 'MULTI_SELECT':
+    case 'MULTI_SELECT': {
+      const parsedOpts = parseJson<KeyValue[]>(options) ?? [];
+      const items = parsedOpts.length > 0
+        ? parsedOpts
+        : [{ label: 'Option 1', value: '1' }, { label: 'Option 2', value: '2' }, { label: 'Option 3', value: '3' }];
       return (
         <div className="space-y-1.5">
           <p className="text-sm font-medium">
@@ -95,16 +106,21 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
             {required && <span className="text-destructive ml-0.5">*</span>}
           </p>
           <div className="space-y-2">
-            {['Option 1', 'Option 2', 'Option 3'].map((opt) => (
-              <label key={opt} className="flex items-center gap-2">
+            {items.map((opt, i) => (
+              <label key={`${opt.value}-${i}`} className="flex items-center gap-2">
                 <div className="h-4 w-4 rounded border border-input" />
-                <span className="text-sm text-muted-foreground">{opt}</span>
+                <span className="text-sm text-muted-foreground">{opt.label || `Option ${i + 1}`}</span>
               </label>
             ))}
           </div>
         </div>
       );
-    case 'RADIO':
+    }
+    case 'RADIO': {
+      const parsedOpts = parseJson<KeyValue[]>(options) ?? [];
+      const items = parsedOpts.length > 0
+        ? parsedOpts
+        : [{ label: 'Option 1', value: '1' }, { label: 'Option 2', value: '2' }, { label: 'Option 3', value: '3' }];
       return (
         <div className="space-y-1.5">
           <p className="text-sm font-medium">
@@ -112,15 +128,16 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
             {required && <span className="text-destructive ml-0.5">*</span>}
           </p>
           <div className="space-y-2">
-            {['Option 1', 'Option 2', 'Option 3'].map((opt) => (
-              <label key={opt} className="flex items-center gap-2">
+            {items.map((opt, i) => (
+              <label key={`${opt.value}-${i}`} className="flex items-center gap-2">
                 <div className="h-4 w-4 rounded-full border border-input" />
-                <span className="text-sm text-muted-foreground">{opt}</span>
+                <span className="text-sm text-muted-foreground">{opt.label || `Option ${i + 1}`}</span>
               </label>
             ))}
           </div>
         </div>
       );
+    }
     case 'FILE_UPLOAD':
       return (
         <div className="space-y-1.5">
@@ -228,7 +245,11 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
         </div>
       );
     }
-    case 'RANKING':
+    case 'RANKING': {
+      const parsedOpts = parseJson<KeyValue[]>(options) ?? [];
+      const items = parsedOpts.length > 0
+        ? parsedOpts
+        : [{ label: 'Option 1', value: '1' }, { label: 'Option 2', value: '2' }, { label: 'Option 3', value: '3' }];
       return (
         <div className="space-y-1.5">
           <p className="text-sm font-medium">
@@ -236,16 +257,17 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
             {required && <span className="text-destructive ml-0.5">*</span>}
           </p>
           <div className="space-y-1">
-            {['Option 1', 'Option 2', 'Option 3'].map((opt, i) => (
-              <div key={opt} className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5">
+            {items.map((opt, i) => (
+              <div key={`${opt.value}-${i}`} className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5">
                 <span className="text-xs text-muted-foreground w-4">{i + 1}.</span>
                 <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">{opt}</span>
+                <span className="text-sm text-muted-foreground">{opt.label || `Option ${i + 1}`}</span>
               </div>
             ))}
           </div>
         </div>
       );
+    }
     case 'SIGNATURE':
       return (
         <div className="space-y-1.5">
@@ -429,8 +451,10 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
   }
 }
 
-export function FormBlockRenderer({ node, deleteNode }: NodeViewProps) {
+export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeViewProps) {
   const { selectedFieldId, onSelectField, validationErrorIds } = useEditorSelection();
+  const [insertOpen, setInsertOpen] = useState(false);
+
   const attrs = node.attrs;
   const fieldId = attrs.fieldId as string;
   const fieldType = attrs.fieldType as FieldType;
@@ -440,8 +464,20 @@ export function FormBlockRenderer({ node, deleteNode }: NodeViewProps) {
   const isSelected = selectedFieldId === fieldId;
   const hasError = validationErrorIds.has(fieldId);
 
+  function handleInsertAfter(type: FieldType) {
+    const insertConfig = FIELD_TYPE_CONFIG[type];
+    if (!insertConfig) return;
+    // getPos() is the start of this node; adding nodeSize puts us right after it
+    const pos = (getPos() ?? 0) + node.nodeSize;
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(pos, buildInsertPayload(type, insertConfig.label))
+      .run();
+  }
+
   return (
-    <NodeViewWrapper className="my-2">
+    <NodeViewWrapper className="my-2 relative">
       <div
         onClick={() => onSelectField(fieldId)}
         className={cn(
@@ -455,25 +491,40 @@ export function FormBlockRenderer({ node, deleteNode }: NodeViewProps) {
       >
         {/* Field type badge + actions */}
         <div className="flex items-center gap-1.5 mb-3">
-          <div
-            className="cursor-grab active:cursor-grabbing p-0.5 rounded hover:bg-muted opacity-0 group-hover:opacity-60 transition-opacity"
-            data-drag-handle
-          >
-            <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-          </div>
           <Icon className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-xs text-muted-foreground font-medium">{config?.label}</span>
           {hasError && (
-            <span className="text-sm text-destructive font-medium ml-auto">Needs attention</span>
+            <span className="text-sm text-destructive font-medium ml-2">Needs attention</span>
           )}
-          <button
-            type="button"
-            onClick={(e) => { e.stopPropagation(); deleteNode(); }}
-            className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity ml-auto"
-            aria-label="Delete field"
-          >
-            <Trash2 className="h-3.5 w-3.5" />
-          </button>
+
+          {/* Action group — trash, plus, drag (matches Tally style) */}
+          <div className="ml-auto flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); deleteNode(); }}
+              className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+              aria-label="Delete field"
+              title="Delete"
+            >
+              <Trash2 className="h-3.5 w-3.5" />
+            </button>
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setInsertOpen(true); }}
+              className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-primary"
+              aria-label="Insert block after"
+              title="Insert block"
+            >
+              <Plus className="h-3.5 w-3.5" />
+            </button>
+            <div
+              className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted text-muted-foreground"
+              data-drag-handle
+              title="Drag to reorder"
+            >
+              <GripVertical className="h-3.5 w-3.5" />
+            </div>
+          </div>
         </div>
 
         {/* Field preview */}
@@ -485,6 +536,12 @@ export function FormBlockRenderer({ node, deleteNode }: NodeViewProps) {
           options={attrs.options as string | null}
         />
       </div>
+
+      <InsertBlockDialog
+        open={insertOpen}
+        onOpenChange={setInsertOpen}
+        onSelect={handleInsertAfter}
+      />
     </NodeViewWrapper>
   );
 }

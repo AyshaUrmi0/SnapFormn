@@ -49,7 +49,7 @@ export const useFormBySlug = (slug: string) => {
 
 export const useForms = (params: ListFormsKeys) => {
   return useQuery<Form[], Error>({
-    queryKey: queryKeys.forms.list(params.workspaceId),
+    queryKey: queryKeys.forms.list(params.workspaceId, params.params?.status),
     queryFn: () => listForms(params),
     enabled: !!params.workspaceId,
   });
