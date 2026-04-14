@@ -189,18 +189,6 @@ export function InsertBlockDialog({ open, onOpenChange, onSelect }: InsertBlockD
           ))}
         </div>
 
-        {/* Footer keyboard hints */}
-        <div className="flex items-center gap-3 border-t px-4 py-2">
-          <span className="text-[11px] text-muted-foreground">
-            <kbd className="rounded border bg-muted px-1 py-0.5 text-[10px]">↑↓</kbd> navigate
-          </span>
-          <span className="text-[11px] text-muted-foreground">
-            <kbd className="rounded border bg-muted px-1 py-0.5 text-[10px]">↵</kbd> select
-          </span>
-          <span className="text-[11px] text-muted-foreground">
-            <kbd className="rounded border bg-muted px-1 py-0.5 text-[10px]">esc</kbd> close
-          </span>
-        </div>
       </DialogContent>
     </Dialog>
   );
