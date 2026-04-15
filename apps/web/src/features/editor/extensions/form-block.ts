@@ -6,7 +6,7 @@ export const FormBlock = Node.create({
   name: 'formBlock',
   group: 'block',
   atom: true,
-  draggable: true,
+  draggable: false,
 
   addAttributes() {
     return {
