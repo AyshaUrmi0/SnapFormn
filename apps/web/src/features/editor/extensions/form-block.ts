@@ -17,6 +17,7 @@ export const FormBlock = Node.create({
       placeholder: { default: null },
       required: { default: false },
       options: { default: '[]' },
+      validations: { default: 'null' },
     };
   },
 

@@ -11,6 +11,7 @@ import {
   GripVertical, Trash2, Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useDetectedCountry } from '@/lib/detect-country';
 import { FIELD_TYPE_CONFIG } from '@/constants/field-types';
 import { FIELD_ICON_MAP } from '@/constants/icon-map';
 import { useEditorSelection } from '../editor-selection-context';
@@ -25,6 +26,24 @@ interface MediaShape { src?: string }
 function parseJson<T>(json: unknown): T | null {
   if (typeof json !== 'string' || !json) return null;
   try { return JSON.parse(json) as T; } catch { return null; }
+}
+
+function CountryPreview({ displayLabel }: { displayLabel: string }) {
+  const country = useDetectedCountry();
+  return (
+    <div className="space-y-1.5">
+      <p className="text-sm font-medium">{displayLabel}</p>
+      <div className="h-10 rounded-md border border-input bg-muted/20 px-3 flex items-center gap-2 select-none pointer-events-none">
+        <Globe className="h-4 w-4 text-muted-foreground" />
+        <span className="text-sm text-muted-foreground">
+          {country ?? 'Detecting your country…'}
+        </span>
+      </div>
+      <p className="text-[11px] text-muted-foreground">
+        Auto-detected from respondent&apos;s IP. Read-only.
+      </p>
+    </div>
+  );
 }
 
 function FieldPreview({ fieldType, label, placeholder, required, options }: {
@@ -426,18 +445,7 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
         </div>
       );
     case 'COUNTRY':
-      return (
-        <div className="space-y-1.5">
-          <p className="text-sm font-medium">
-            {displayLabel}
-            {required && <span className="text-destructive ml-0.5">*</span>}
-          </p>
-          <div className="h-10 rounded-md border border-input bg-muted/20 px-3 flex items-center gap-2">
-            <Globe className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">Auto-detected from IP</span>
-          </div>
-        </div>
-      );
+      return <CountryPreview displayLabel={displayLabel} />;
 
     default:
       return (

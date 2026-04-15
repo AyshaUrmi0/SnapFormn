@@ -5,6 +5,7 @@ import { submissionRepository } from './submission.repository';
 import { formRepository } from '../forms/form.repository';
 import { uploadService } from '../uploads/upload.service';
 import { extractSchedule, getScheduleStatus } from '../forms/schedule';
+import { detectCountryFromIp } from './detect-country';
 import type { SubmitFormInput, FormAnalytics } from './submission.types';
 
 // Media field value shape stored in SubmissionField.value
@@ -74,8 +75,11 @@ export const submissionService = {
       }
     }
 
-    // Validate that all required fields are present
-    const requiredFieldIds = form.fields.filter((f) => f.required).map((f) => f.id);
+    // Validate that all required fields are present. COUNTRY fields are
+    // populated server-side below, so they never need to come from the client.
+    const requiredFieldIds = form.fields
+      .filter((f) => f.required && f.type !== 'COUNTRY')
+      .map((f) => f.id);
     const submittedFieldIds = input.fields.map((f) => f.fieldId);
 
     const missingRequired = requiredFieldIds.filter((id) => !submittedFieldIds.includes(id));
@@ -93,11 +97,28 @@ export const submissionService = {
       throw AppError.badRequest('Submission contains invalid field IDs');
     }
 
+    // Resolve respondent's country from their IP for every COUNTRY field in
+    // this form. Done server-side so the client can't spoof the value. If
+    // the lookup fails the field is simply left out.
+    const countryFieldIds = form.fields
+      .filter((f) => f.type === 'COUNTRY')
+      .map((f) => f.id);
+
+    let fieldsWithCountry = input.fields.filter((f) => !countryFieldIds.includes(f.fieldId));
+    if (countryFieldIds.length > 0) {
+      const country = await detectCountryFromIp(ip);
+      if (country) {
+        for (const id of countryFieldIds) {
+          fieldsWithCountry.push({ fieldId: id, value: country });
+        }
+      }
+    }
+
     return submissionRepository.create({
       formId: form.id,
       respondentIp: ip,
       userAgent,
-      fields: input.fields,
+      fields: fieldsWithCountry,
     });
   },
 
