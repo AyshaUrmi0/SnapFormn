@@ -35,7 +35,6 @@ export default function WorkspaceSettingsPage() {
     resolver: zodResolver(updateWorkspaceSchema),
     defaultValues: {
       name: workspace.name,
-      slug: workspace.slug,
     },
   });
 
@@ -79,19 +78,6 @@ export default function WorkspaceSettingsPage() {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Workspace name</FormLabel>
-                    <FormControl>
-                      <Input {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="slug"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Slug</FormLabel>
                     <FormControl>
                       <Input {...field} />
                     </FormControl>

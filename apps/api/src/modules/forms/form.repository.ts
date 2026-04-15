@@ -26,6 +26,12 @@ export const formRepository = {
     });
   },
 
+  findByTitle(workspaceId: string, title: string) {
+    return prisma.form.findFirst({
+      where: { workspaceId, title, deletedAt: null },
+    });
+  },
+
   findPublicBySlug(slug: string) {
     return prisma.form.findFirst({
       where: { slug, status: 'PUBLISHED', deletedAt: null },

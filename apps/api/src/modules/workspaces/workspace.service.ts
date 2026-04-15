@@ -23,15 +23,26 @@ export const workspaceService = {
       );
     }
 
-    const slug = input.slug || slugify(input.name);
+    const name = input.name.trim();
 
-    const existing = await workspaceRepository.findBySlug(slug);
-    if (existing) throw AppError.conflict('Workspace slug already taken');
+    const duplicate = await workspaceRepository.findOwnedByUserAndName(userId, name);
+    if (duplicate) {
+      throw AppError.conflict(
+        `You already have a workspace named "${name}". Please choose a different name.`,
+      );
+    }
 
-    // Create workspace and add creator as OWNER in a transaction
+    const baseSlug = input.slug || slugify(name);
+    let slug = baseSlug;
+    let counter = 2;
+    while (await workspaceRepository.findBySlug(slug)) {
+      slug = `${baseSlug}-${counter}`;
+      counter++;
+    }
+
     const workspace = await prisma.$transaction(async (tx) => {
       const ws = await tx.workspace.create({
-        data: { name: input.name, slug },
+        data: { name, slug },
       });
       await tx.workspaceMember.create({
         data: { workspaceId: ws.id, userId, role: 'OWNER' },
@@ -83,14 +94,25 @@ export const workspaceService = {
     return workspace;
   },
 
-  async update(workspaceId: string, input: UpdateWorkspaceInput) {
+  async update(workspaceId: string, userId: string, input: UpdateWorkspaceInput) {
     const workspace = await workspaceRepository.findById(workspaceId);
     if (!workspace) throw AppError.notFound('Workspace not found');
+
+    if (input.name && input.name.trim() !== workspace.name) {
+      const name = input.name.trim();
+      const duplicate = await workspaceRepository.findOwnedByUserAndName(userId, name);
+      if (duplicate && duplicate.workspaceId !== workspaceId) {
+        throw AppError.conflict(
+          `You already have a workspace named "${name}". Please choose a different name.`,
+        );
+      }
+      input = { ...input, name };
+    }
 
     if (input.slug) {
       const existing = await workspaceRepository.findBySlug(input.slug);
       if (existing && existing.id !== workspaceId) {
-        throw AppError.conflict('Workspace slug already taken');
+        throw AppError.conflict('Workspace name already taken');
       }
     }
 

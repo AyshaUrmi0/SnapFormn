@@ -17,6 +17,13 @@ export const workspaceRepository = {
     return prisma.workspace.findUnique({ where: { slug } });
   },
 
+  findOwnedByUserAndName(userId: string, name: string) {
+    return prisma.workspaceMember.findFirst({
+      where: { userId, role: 'OWNER', workspace: { name } },
+      include: { workspace: true },
+    });
+  },
+
   findByUserId(userId: string) {
     return prisma.workspaceMember.findMany({
       where: { userId },
