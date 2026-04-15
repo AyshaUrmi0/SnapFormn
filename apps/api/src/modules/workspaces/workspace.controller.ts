@@ -27,7 +27,12 @@ export const workspaceController = {
   },
 
   async update(req: Request, res: Response) {
-    const workspace = await workspaceService.update(req.params.workspaceId as string, req.body);
+    const userId = req.user!.sub;
+    const workspace = await workspaceService.update(
+      req.params.workspaceId as string,
+      userId,
+      req.body,
+    );
     sendSuccess(res, workspace, 'Workspace updated');
   },
 

@@ -27,7 +27,16 @@ export const formService = {
   async create(workspaceId: string, userId: string, input: CreateFormInput) {
     await enforceFormLimit(workspaceId);
 
-    const baseSlug = input.slug || slugify(input.title);
+    const title = input.title.trim();
+
+    const duplicate = await formRepository.findByTitle(workspaceId, title);
+    if (duplicate) {
+      throw AppError.conflict(
+        `A form titled "${title}" already exists in this workspace. Please choose a different title.`,
+      );
+    }
+
+    const baseSlug = input.slug || slugify(title);
     let slug = baseSlug;
     let counter = 2;
     while (await formRepository.findBySlug(workspaceId, slug)) {
@@ -38,7 +47,7 @@ export const formService = {
     return formRepository.create({
       workspace: { connect: { id: workspaceId } },
       createdBy: { connect: { id: userId } },
-      title: input.title,
+      title,
       slug,
       description: input.description,
     });
@@ -71,8 +80,22 @@ export const formService = {
     const form = await formRepository.findById(formId);
     if (!form) throw AppError.notFound('Form not found');
 
+    let nextTitle: string | undefined;
+    if (input.title) {
+      const title = input.title.trim();
+      if (title !== form.title) {
+        const duplicate = await formRepository.findByTitle(form.workspaceId, title);
+        if (duplicate && duplicate.id !== formId) {
+          throw AppError.conflict(
+            `A form titled "${title}" already exists in this workspace. Please choose a different title.`,
+          );
+        }
+        nextTitle = title;
+      }
+    }
+
     return formRepository.update(formId, {
-      ...(input.title && { title: input.title }),
+      ...(nextTitle && { title: nextTitle }),
       ...(input.description !== undefined && { description: input.description }),
       ...(input.settings && { settings: input.settings as object }),
     });
@@ -108,21 +131,25 @@ export const formService = {
     const form = await formRepository.findById(formId);
     if (!form) throw AppError.notFound('Form not found');
 
-    const baseTitle = `${form.title} (Copy)`;
-    const baseSlug = slugify(baseTitle);
+    let title = `${form.title} (Copy)`;
+    let titleCounter = 2;
+    while (await formRepository.findByTitle(workspaceId, title)) {
+      title = `${form.title} (Copy ${titleCounter})`;
+      titleCounter++;
+    }
 
-    // Ensure unique slug
+    const baseSlug = slugify(title);
     let slug = baseSlug;
-    let counter = 1;
+    let slugCounter = 2;
     while (await formRepository.findBySlug(workspaceId, slug)) {
-      slug = `${baseSlug}-${counter}`;
-      counter++;
+      slug = `${baseSlug}-${slugCounter}`;
+      slugCounter++;
     }
 
     const newForm = await formRepository.create({
       workspace: { connect: { id: workspaceId } },
       createdBy: { connect: { id: userId } },
-      title: baseTitle,
+      title,
       slug,
       description: form.description,
     });

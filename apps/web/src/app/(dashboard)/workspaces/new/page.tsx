@@ -1,11 +1,9 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { slugify } from '@snapform/shared';
 import { ArrowLeft } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -27,37 +24,26 @@ import { redirectOnPlanLimit } from '@/lib/plan-gate';
 export default function NewWorkspacePage() {
   const router = useRouter();
   const createWorkspace = useCreateWorkspace();
-  const slugManuallyEdited = useRef(false);
 
   const form = useForm<CreateWorkspaceValues>({
     resolver: zodResolver(createWorkspaceSchema),
     defaultValues: {
       name: '',
-      slug: '',
     },
   });
 
-  const nameValue = form.watch('name');
-
-  useEffect(() => {
-    if (!slugManuallyEdited.current && nameValue) {
-      form.setValue('slug', slugify(nameValue));
-    }
-  }, [nameValue, form]);
-
   function onSubmit(values: CreateWorkspaceValues) {
-    const data = {
-      name: values.name,
-      ...(values.slug ? { slug: values.slug } : {}),
-    };
-    createWorkspace.mutate(data, {
-      onSuccess: (workspace) => {
-        router.push(ROUTES.workspace(workspace.id).FORMS);
+    createWorkspace.mutate(
+      { name: values.name },
+      {
+        onSuccess: (workspace) => {
+          router.push(ROUTES.workspace(workspace.id).FORMS);
+        },
+        onError: (error) => {
+          redirectOnPlanLimit(error, router, null, 'workspaces');
+        },
       },
-      onError: (error) => {
-        redirectOnPlanLimit(error, router, null, 'workspaces');
-      },
-    });
+    );
   }
 
   return (
@@ -89,29 +75,6 @@ export default function NewWorkspacePage() {
                     <FormControl>
                       <Input placeholder="My Workspace" {...field} />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="slug"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Slug</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="my-workspace"
-                        {...field}
-                        onChange={(e) => {
-                          slugManuallyEdited.current = true;
-                          field.onChange(e);
-                        }}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      URL-friendly identifier. Auto-generated from name.
-                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -32,7 +32,7 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-base truncate">{workspace.name}</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
-            {workspace.role.toLowerCase()} · /{workspace.slug}
+            {workspace.role.toLowerCase()}
           </p>
         </div>
         <Badge className={cn('text-[10px] shrink-0', PLAN_BADGE_CLASS[workspace.plan])}>

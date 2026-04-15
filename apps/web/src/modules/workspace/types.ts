@@ -31,12 +31,11 @@ export type WorkspaceWithMembers = Workspace & { members: WorkspaceMember[] };
 // Service input types (Keys)
 export interface CreateWorkspaceKeys {
   name: string;
-  slug?: string;
 }
 
 export interface UpdateWorkspaceKeys {
   id: string;
-  data: { name?: string; slug?: string };
+  data: { name?: string };
 }
 
 export interface DeleteWorkspaceKeys {
