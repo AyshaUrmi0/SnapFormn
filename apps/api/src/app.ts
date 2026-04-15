@@ -15,6 +15,11 @@ import v1Router from './routes/v1';
 
 const app = express();
 
+// Behind a reverse proxy (Render, Vercel, etc.) — trust the first proxy hop
+// so req.ip reflects the real client IP from X-Forwarded-For. Required for
+// submission IP capture and geo-based COUNTRY resolution.
+app.set('trust proxy', 1);
+
 // Global middleware (order matters)
 app.use(requestIdMiddleware as RequestHandler);
 app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/v1/health' } }) as RequestHandler);

@@ -1,18 +1,25 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   Star, Upload, ChevronDown, Clock, Loader2, X, CheckCircle2,
-  Image as ImageIcon, Video, Music, Code, Globe,
+  Image as ImageIcon, Video, Music, Code,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { slugify } from '@snapform/shared';
 import { cn } from '@/lib/utils';
 import { uploadToCloudinary, type UploadResult } from '@/lib/cloudinary-upload';
 import { SignaturePad } from './signature-pad';
 import type { FormField, FieldType } from '@/modules/form/types';
+
+function getPrefillKey(field: FormField): string {
+  const v = field.validations as { prefillKey?: string } | null | undefined;
+  if (v?.prefillKey && v.prefillKey.trim()) return v.prefillKey.trim();
+  return slugify(field.label || '');
+}
 
 /**
  * Context passed to upload components so they call the right signing endpoint.
@@ -583,23 +590,9 @@ function FormFieldRenderer({ field, value, onChange, error, uploadContext }: For
     case 'CALCULATED':
     case 'HIDDEN':
     case 'RECAPTCHA':
+    case 'COUNTRY':
       // These blocks are not visible to respondents — they run logic silently
       return null;
-
-    case 'COUNTRY':
-      return (
-        <div className="space-y-2">
-          {labelEl}
-          {descEl}
-          <div className="h-10 rounded-md border border-input bg-muted/20 px-3 flex items-center gap-2">
-            <Globe className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {(value as string) || 'Auto-detected from IP'}
-            </span>
-          </div>
-          {errorEl}
-        </div>
-      );
 
     default:
       return (
@@ -661,14 +654,54 @@ export function FormRenderer({
     'PAGE_BREAK', 'STATEMENT', 'THANK_YOU_PAGE',
     'HEADING_1', 'HEADING_2', 'HEADING_3', 'DIVIDER', 'TITLE', 'LABEL',
     'IMAGE', 'VIDEO', 'AUDIO', 'EMBED',
-    'CONDITIONAL_LOGIC', 'CALCULATED', 'HIDDEN', 'RECAPTCHA',
+    'CONDITIONAL_LOGIC', 'CALCULATED', 'HIDDEN', 'RECAPTCHA', 'COUNTRY',
   ];
 
   const interactiveFields = fields
     .filter((f) => !NON_INTERACTIVE_TYPES.includes(f.type))
     .sort((a, b) => a.order - b.order);
 
+  const hiddenFields = fields.filter((f) => f.type === 'HIDDEN');
   const allFields = fields.sort((a, b) => a.order - b.order);
+
+  // On mount, seed values from the URL query string:
+  //   1. HIDDEN fields match by their configured `paramName`.
+  //   2. Visible/interactive fields match by their `prefillKey` (either the
+  //      creator's custom key stored in `validations.prefillKey`, or the
+  //      slugified field label as a default).
+  // Skipped in preview mode so the editor's preview stays deterministic.
+  useEffect(() => {
+    if (previewMode) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.toString() === '' && hiddenFields.length === 0) return;
+
+    setValues((prev) => {
+      const next = { ...prev };
+
+      for (const field of hiddenFields) {
+        const opts = (field.options ?? {}) as { paramName?: string; defaultValue?: string };
+        if (!opts.paramName) continue;
+        const fromUrl = params.get(opts.paramName);
+        next[field.id] = fromUrl ?? opts.defaultValue ?? '';
+      }
+
+      for (const field of interactiveFields) {
+        const key = getPrefillKey(field);
+        if (!key) continue;
+        const fromUrl = params.get(key);
+        if (fromUrl != null && next[field.id] === undefined) {
+          next[field.id] = fromUrl;
+        }
+      }
+
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fields.length, previewMode]);
+
+  // COUNTRY fields are resolved server-side at submission time (from the
+  // respondent's real request IP). No client-side fetch here — the client
+  // can't be trusted for geo data, and Tally uses the same pattern.
 
   function validate(): boolean {
     const newErrors: Record<string, string> = {};
@@ -701,12 +734,18 @@ export function FormRenderer({
     e.preventDefault();
     if (!validate()) return;
 
-    // Build submission payload — only interactive fields with values
+    // Build submission payload — interactive fields with values, plus every
+    // hidden field (always send, including empty strings). COUNTRY fields
+    // are resolved server-side and injected by the API, so we don't send
+    // them at all from the client.
     const submissionValues: Record<string, unknown> = {};
     for (const field of interactiveFields) {
       if (values[field.id] !== undefined && values[field.id] !== '' && values[field.id] !== null) {
         submissionValues[field.id] = values[field.id];
       }
+    }
+    for (const field of hiddenFields) {
+      submissionValues[field.id] = values[field.id] ?? '';
     }
 
     // In preview mode, show the thank-you page locally without calling the API

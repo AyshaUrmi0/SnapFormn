@@ -92,6 +92,7 @@ export default function FormEditorPage() {
       if ('placeholder' in updates) tiptapUpdates.placeholder = updates.placeholder;
       if ('required' in updates) tiptapUpdates.required = updates.required;
       if ('options' in updates) tiptapUpdates.options = JSON.stringify(updates.options ?? []);
+      if ('validations' in updates) tiptapUpdates.validations = JSON.stringify(updates.validations ?? null);
       editorRef.current.updateField(selectedFieldId, tiptapUpdates);
     }
   }, [selectedFieldId, markDirty]);

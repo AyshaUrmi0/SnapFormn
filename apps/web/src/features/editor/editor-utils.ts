@@ -21,6 +21,7 @@ export function editorFieldsToDoc(fields: EditorField[]): JSONContent {
       placeholder: field.placeholder,
       required: field.required,
       options: JSON.stringify(field.options ?? []),
+      validations: JSON.stringify(field.validations ?? null),
     },
   }));
 
@@ -55,6 +56,21 @@ export function docToEditorFields(doc: JSONContent): EditorField[] {
         options = [];
       }
 
+      let validations: Record<string, unknown> | null = null;
+      const rawValidations = node.attrs.validations;
+      if (typeof rawValidations === 'string' && rawValidations && rawValidations !== 'null') {
+        try {
+          const parsed = JSON.parse(rawValidations);
+          if (parsed && typeof parsed === 'object') {
+            validations = parsed as Record<string, unknown>;
+          }
+        } catch {
+          validations = null;
+        }
+      } else if (rawValidations && typeof rawValidations === 'object') {
+        validations = rawValidations as Record<string, unknown>;
+      }
+
       fields.push({
         id: node.attrs.fieldId as string,
         type: fieldType,
@@ -64,7 +80,7 @@ export function docToEditorFields(doc: JSONContent): EditorField[] {
         required: (node.attrs.required as boolean) ?? false,
         order,
         options,
-        validations: null,
+        validations,
         conditionals: null,
       });
       order++;

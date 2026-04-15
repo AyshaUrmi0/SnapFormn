@@ -12,6 +12,7 @@ import { useSubmissions } from '@/modules/submission/submission.queries';
 import { OverviewCards } from '@/features/analytics/overview-cards';
 import { SubmissionTimelineChart } from '@/features/analytics/submission-timeline-chart';
 import { FieldResponseChart } from '@/features/analytics/field-response-chart';
+import { ResponsesTable } from '@/features/analytics/responses-table';
 import { ROUTES } from '@/constants/routes';
 import type { FormAnalytics } from '@/modules/submission/types';
 
@@ -161,10 +162,18 @@ export default function AnalyticsPage({
           </div>
         </div>
       ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          <SubmissionTimelineChart data={data.timeline} />
-          <FieldResponseChart data={data.fieldStats} />
-        </div>
+        <>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <SubmissionTimelineChart data={data.timeline} />
+            <FieldResponseChart data={data.fieldStats} />
+          </div>
+
+          <ResponsesTable
+            formTitle={form?.title ?? 'form'}
+            fields={form?.fields ?? []}
+            submissions={submissions ?? []}
+          />
+        </>
       )}
     </div>
   );
