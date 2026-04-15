@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   Type, Calendar, ChevronDown, Upload, Star, Clock, PenLine,
   CheckCircle2, Image as ImageIcon, Video, Music, Code,
@@ -196,7 +198,6 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
         </div>
       );
 
-    // ─── New question blocks ───────────────────────────────
     case 'TIME':
       return (
         <div className="space-y-1.5">
@@ -284,7 +285,6 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
         </div>
       );
 
-    // ─── Layout blocks ─────────────────────────────────────
     case 'THANK_YOU_PAGE':
       return (
         <div className="flex items-center gap-3 py-3 rounded-md bg-primary/5 border border-primary/20 px-4">
@@ -312,7 +312,6 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
         </p>
       );
 
-    // ─── Embed blocks ──────────────────────────────────────
     case 'IMAGE': {
       const media = parseJson<MediaShape>(options);
       return (
@@ -373,7 +372,6 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
       );
     }
 
-    // ─── Advanced blocks ───────────────────────────────────
     case 'CONDITIONAL_LOGIC': {
       const parsed = parseJson<{ rules?: unknown[] }>(options);
       const ruleCount = parsed?.rules?.length ?? 0;
@@ -464,10 +462,24 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
   const isSelected = selectedFieldId === fieldId;
   const hasError = validationErrorIds.has(fieldId);
 
+  const {
+    setNodeRef,
+    listeners,
+    attributes: sortableAttributes,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: fieldId });
+
+  const sortableStyle = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
   function handleInsertAfter(type: FieldType) {
     const insertConfig = FIELD_TYPE_CONFIG[type];
     if (!insertConfig) return;
-    // getPos() is the start of this node; adding nodeSize puts us right after it
     const pos = (getPos() ?? 0) + node.nodeSize;
     editor
       .chain()
@@ -477,7 +489,7 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
   }
 
   return (
-    <NodeViewWrapper className="my-2 relative">
+    <NodeViewWrapper className="my-2 relative" ref={setNodeRef} style={sortableStyle} {...sortableAttributes}>
       <div
         onClick={() => onSelectField(fieldId)}
         className={cn(
@@ -489,7 +501,6 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
               : 'border-transparent hover:border-border',
         )}
       >
-        {/* Field type badge + actions */}
         <div className="flex items-center gap-1.5 mb-3">
           <Icon className="h-3.5 w-3.5 text-muted-foreground" />
           <span className="text-xs text-muted-foreground font-medium">{config?.label}</span>
@@ -497,8 +508,12 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
             <span className="text-sm text-destructive font-medium ml-2">Needs attention</span>
           )}
 
-          {/* Action group — trash, plus, drag (matches Tally style) */}
-          <div className="ml-auto flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+          <div
+            className={cn(
+              'ml-auto flex items-center gap-0.5',
+              isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100',
+            )}
+          >
             <button
               type="button"
               onClick={(e) => { e.stopPropagation(); deleteNode(); }}
@@ -517,17 +532,19 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
             >
               <Plus className="h-3.5 w-3.5" />
             </button>
-            <div
-              className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted text-muted-foreground"
-              data-drag-handle
+            <button
+              type="button"
+              {...listeners}
+              onClick={(e) => e.stopPropagation()}
+              className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted text-muted-foreground touch-none"
+              aria-label="Drag to reorder"
               title="Drag to reorder"
             >
               <GripVertical className="h-3.5 w-3.5" />
-            </div>
+            </button>
           </div>
         </div>
 
-        {/* Field preview */}
         <FieldPreview
           fieldType={fieldType}
           label={attrs.label as string}

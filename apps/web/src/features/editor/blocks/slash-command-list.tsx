@@ -55,10 +55,6 @@ function defaultOptionsForType(type: FieldType): string {
   return '[]';
 }
 
-/**
- * Build the insert-content payload for a given field type. Exported so the
- * InsertBlockDialog can reuse the same insert logic without duplicating.
- */
 export function buildInsertPayload(type: FieldType, label: string) {
   return [
     {
@@ -73,9 +69,6 @@ export function buildInsertPayload(type: FieldType, label: string) {
         options: defaultOptionsForType(type),
       },
     },
-    // Trailing paragraph — gives the user an immediate place to keep typing
-    // or trigger the slash command again. Without this, TipTap leaves a gap
-    // cursor (visible as an underscore) and Enter has no target.
     { type: 'paragraph' },
   ];
 }

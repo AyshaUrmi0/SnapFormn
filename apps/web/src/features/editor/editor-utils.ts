@@ -3,10 +3,6 @@ import type { EditorField, EditorFieldOptions } from './types';
 import { CHOICE_FIELD_TYPES } from './types';
 import type { FieldType } from '@/modules/form/types';
 
-/**
- * Convert an array of EditorField to a TipTap document JSON.
- * Each field becomes a formBlock node; empty spaces between become paragraphs.
- */
 export function editorFieldsToDoc(fields: EditorField[]): JSONContent {
   if (fields.length === 0) {
     return {
@@ -28,16 +24,11 @@ export function editorFieldsToDoc(fields: EditorField[]): JSONContent {
     },
   }));
 
-  // Add a trailing paragraph so the user can type after the last block
   content.push({ type: 'paragraph' });
 
   return { type: 'doc', content };
 }
 
-/**
- * Extract EditorField[] from a TipTap document JSON.
- * Walks all top-level nodes and picks out formBlock nodes.
- */
 export function docToEditorFields(doc: JSONContent): EditorField[] {
   const nodes = doc.content ?? [];
   const fields: EditorField[] = [];
@@ -49,12 +40,10 @@ export function docToEditorFields(doc: JSONContent): EditorField[] {
       try {
         const parsed = JSON.parse((node.attrs.options as string) || 'null');
         if (Array.isArray(parsed)) {
-          // Choice / ranking fields — array of { label, value }
           options = parsed.filter(
             (o: any) => typeof o === 'object' && o !== null && typeof o.label === 'string' && typeof o.value === 'string',
           );
         } else if (parsed && typeof parsed === 'object') {
-          // Media / matrix / hidden / etc. object shapes
           options = parsed as Record<string, unknown>;
         }
       } catch {

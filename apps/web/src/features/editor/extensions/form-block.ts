@@ -6,7 +6,7 @@ export const FormBlock = Node.create({
   name: 'formBlock',
   group: 'block',
   atom: true,
-  draggable: true,
+  draggable: false,
 
   addAttributes() {
     return {
@@ -32,9 +32,6 @@ export const FormBlock = Node.create({
     return ReactNodeViewRenderer(FormBlockRenderer);
   },
 
-  // When a formBlock is the current selection and user presses Enter, insert
-  // a fresh paragraph after it so they can start typing or trigger the slash
-  // command. Without this, Enter on an atom node does nothing.
   addKeyboardShortcuts() {
     return {
       Enter: () => {
@@ -47,8 +44,6 @@ export const FormBlock = Node.create({
           return false;
         }
 
-        // Insert a new empty paragraph after the current position and move
-        // the cursor into it.
         return editor.chain().focus().insertContentAt(selection.to, { type: 'paragraph' }).run();
       },
     };
