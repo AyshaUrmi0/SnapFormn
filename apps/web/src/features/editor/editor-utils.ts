@@ -11,22 +11,20 @@ export function editorFieldsToDoc(fields: EditorField[]): JSONContent {
     };
   }
 
-  const content: JSONContent[] = [];
-  for (const field of fields) {
-    content.push({
-      type: 'formBlock',
-      attrs: {
-        fieldId: field.id,
-        fieldType: field.type,
-        label: field.label,
-        description: field.description,
-        placeholder: field.placeholder,
-        required: field.required,
-        options: JSON.stringify(field.options ?? []),
-      },
-    });
-    content.push({ type: 'paragraph' });
-  }
+  const content: JSONContent[] = fields.map((field) => ({
+    type: 'formBlock',
+    attrs: {
+      fieldId: field.id,
+      fieldType: field.type,
+      label: field.label,
+      description: field.description,
+      placeholder: field.placeholder,
+      required: field.required,
+      options: JSON.stringify(field.options ?? []),
+    },
+  }));
+
+  content.push({ type: 'paragraph' });
 
   return { type: 'doc', content };
 }

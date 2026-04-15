@@ -4,6 +4,21 @@ import { useState, useRef, forwardRef, useImperativeHandle } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import {
+  DndContext,
+  PointerSensor,
+  KeyboardSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import { FormBlock } from './extensions/form-block';
 import { SlashCommand } from './extensions/slash-command';
 import {
@@ -155,16 +170,35 @@ export const DocumentEditor = forwardRef<DocumentEditorRef, DocumentEditorProps>
               tr.setNodeAttribute(pos, key, value);
             }
             editor.view.dispatch(tr);
-            return false; // stop traversal
+            return false;
           }
         });
         isUpdatingFromSidebar.current = false;
       },
     }), [editor]);
 
+    const sensors = useSensors(
+      useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+      useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+    );
+
+    function handleDragEnd(event: DragEndEvent) {
+      const { active, over } = event;
+      if (!editor || !over || active.id === over.id) return;
+      const oldIndex = fields.findIndex((f) => f.id === active.id);
+      const newIndex = fields.findIndex((f) => f.id === over.id);
+      if (oldIndex === -1 || newIndex === -1) return;
+      const reordered = arrayMove(fields, oldIndex, newIndex);
+      editor.commands.setContent(editorFieldsToDoc(reordered));
+    }
+
     return (
       <div className="w-full max-w-2xl mx-auto">
-        <EditorContent editor={editor} />
+        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+          <SortableContext items={fields.map((f) => f.id)} strategy={verticalListSortingStrategy}>
+            <EditorContent editor={editor} />
+          </SortableContext>
+        </DndContext>
       </div>
     );
   },

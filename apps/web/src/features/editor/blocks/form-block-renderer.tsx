@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   Type, Calendar, ChevronDown, Upload, Star, Clock, PenLine,
   CheckCircle2, Image as ImageIcon, Video, Music, Code,
@@ -460,6 +462,21 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
   const isSelected = selectedFieldId === fieldId;
   const hasError = validationErrorIds.has(fieldId);
 
+  const {
+    setNodeRef,
+    listeners,
+    attributes: sortableAttributes,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: fieldId });
+
+  const sortableStyle = {
+    transform: CSS.Translate.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  };
+
   function handleInsertAfter(type: FieldType) {
     const insertConfig = FIELD_TYPE_CONFIG[type];
     if (!insertConfig) return;
@@ -472,7 +489,7 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
   }
 
   return (
-    <NodeViewWrapper className="my-2 relative">
+    <NodeViewWrapper className="my-2 relative" ref={setNodeRef} style={sortableStyle} {...sortableAttributes}>
       <div
         onClick={() => onSelectField(fieldId)}
         className={cn(
@@ -515,16 +532,16 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
             >
               <Plus className="h-3.5 w-3.5" />
             </button>
-            <div
-              className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted text-muted-foreground"
-              data-drag-handle
-              draggable="true"
-              onMouseDown={(e) => e.stopPropagation()}
+            <button
+              type="button"
+              {...listeners}
               onClick={(e) => e.stopPropagation()}
+              className="cursor-grab active:cursor-grabbing p-1 rounded hover:bg-muted text-muted-foreground touch-none"
+              aria-label="Drag to reorder"
               title="Drag to reorder"
             >
               <GripVertical className="h-3.5 w-3.5" />
-            </div>
+            </button>
           </div>
         </div>
 
