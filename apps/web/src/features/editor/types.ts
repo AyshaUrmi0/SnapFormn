@@ -12,6 +12,15 @@ export interface MediaOptions {
   resourceType?: 'image' | 'video' | 'raw' | 'auto';
 }
 
+// Shape for SCALE blocks. Both endpoints get an optional descriptive label
+// (e.g. 1 = "Strongly disagree", 5 = "Strongly agree").
+export interface ScaleOptions {
+  min: number;
+  max: number;
+  minLabel?: string;
+  maxLabel?: string;
+}
+
 /**
  * Block options are polymorphic depending on field type:
  * - choice fields → `FieldOption[]`
@@ -52,6 +61,29 @@ export function getMediaOptions(field: EditorField): MediaOptions {
     return field.options as MediaOptions;
   }
   return {};
+}
+
+/**
+ * Read SCALE options with a defensive fallback. Legacy fields with no
+ * options stored still render as the previous hardcoded 1–10 range so
+ * existing forms don't silently change.
+ */
+export function getScaleOptions(field: { options: unknown }): ScaleOptions {
+  const opts = field.options;
+  if (opts && !Array.isArray(opts) && typeof opts === 'object') {
+    const o = opts as Record<string, unknown>;
+    const min = typeof o.min === 'number' ? o.min : null;
+    const max = typeof o.max === 'number' ? o.max : null;
+    if (min !== null && max !== null && max > min) {
+      return {
+        min,
+        max,
+        minLabel: typeof o.minLabel === 'string' ? o.minLabel : undefined,
+        maxLabel: typeof o.maxLabel === 'string' ? o.maxLabel : undefined,
+      };
+    }
+  }
+  return { min: 1, max: 10 };
 }
 
 export function toEditorField(field: FormField): EditorField {

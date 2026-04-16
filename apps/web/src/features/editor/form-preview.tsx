@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { FIELD_TYPE_CONFIG } from '@/constants/field-types';
-import { getChoiceOptions } from './types';
+import { getChoiceOptions, getScaleOptions } from './types';
 import type { EditorField } from './types';
 import type { FieldType } from '@/modules/form/types';
 
@@ -163,7 +163,10 @@ function PreviewField({ field }: { field: EditorField }) {
         </div>
       );
 
-    case 'SCALE':
+    case 'SCALE': {
+      const scale = getScaleOptions(field);
+      const steps: number[] = [];
+      for (let n = scale.min; n <= scale.max; n++) steps.push(n);
       return (
         <div className="space-y-2">
           <Label>
@@ -171,20 +174,29 @@ function PreviewField({ field }: { field: EditorField }) {
             {field.required && <span className="text-destructive ml-0.5">*</span>}
           </Label>
           {field.description && <p className="text-sm text-muted-foreground">{field.description}</p>}
-          <div className="flex gap-2">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-              <button
-                key={n}
-                type="button"
-                disabled
-                className="h-10 w-10 rounded-lg border border-input flex items-center justify-center text-sm hover:bg-primary hover:text-primary-foreground transition-colors disabled:cursor-not-allowed"
-              >
-                {n}
-              </button>
-            ))}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 sm:flex-nowrap">
+            {scale.minLabel && (
+              <span className="text-xs text-muted-foreground sm:max-w-[25%] sm:shrink-0">
+                {scale.minLabel}
+              </span>
+            )}
+            <div className="flex min-w-0 flex-1 items-start justify-around gap-2">
+              {steps.map((n) => (
+                <div key={n} className="flex flex-col items-center gap-1.5 p-1">
+                  <span className="text-xs text-muted-foreground">{n}</span>
+                  <span className="h-7 w-7 rounded-full border-2 border-input" />
+                </div>
+              ))}
+            </div>
+            {scale.maxLabel && (
+              <span className="text-xs text-muted-foreground sm:max-w-[25%] sm:shrink-0">
+                {scale.maxLabel}
+              </span>
+            )}
           </div>
         </div>
       );
+    }
 
     case 'STATEMENT':
       return (
