@@ -4,10 +4,6 @@ import { sendSuccess, sendCreated, sendPaginated, sendNoContent } from '../../ut
 import { logger } from '../../lib/logger';
 
 function extractClientIp(req: Request): string | undefined {
-  // X-Forwarded-For is "client, proxy1, proxy2" — the first entry is the
-  // real client. We read it ourselves rather than relying solely on req.ip
-  // because Render's proxy chain depth can vary and we want a deterministic
-  // result for server-side geo lookup.
   const xff = req.headers['x-forwarded-for'];
   if (typeof xff === 'string' && xff.length > 0) {
     const first = xff.split(',')[0]?.trim();
@@ -24,13 +20,22 @@ export const submissionController = {
       { ip, xff: req.headers['x-forwarded-for'], reqIp: req.ip },
       'submission.submit ip resolution',
     );
-    const submission = await submissionService.submit(req.params.slug as string, req.body, ip, userAgent);
+    const submission = await submissionService.submit(
+      req.params.slug as string,
+      req.body,
+      ip,
+      userAgent,
+    );
     sendCreated(res, { submissionId: submission.id }, 'Submission received');
   },
 
   async list(req: Request, res: Response) {
     const { page, limit } = req.query as Record<string, string>;
-    const { submissions, meta } = await submissionService.list(req.params.formId as string, Number(page), Number(limit));
+    const { submissions, meta } = await submissionService.list(
+      req.params.formId as string,
+      Number(page),
+      Number(limit),
+    );
     sendPaginated(res, submissions, meta);
   },
 
