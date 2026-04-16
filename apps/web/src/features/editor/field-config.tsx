@@ -10,8 +10,17 @@ import { FIELD_TYPE_CONFIG } from '@/constants/field-types';
 import { FieldOptionsEditor } from './field-options-editor';
 import { MediaUploader } from './media-uploader';
 import { LogicBlockEditor, blockFromField } from './logic-block-editor';
-import { CHOICE_FIELD_TYPES, MEDIA_FIELD_TYPES, getChoiceOptions, getMediaOptions } from './types';
-import type { EditorField, FieldOption, MediaOptions } from './types';
+import {
+  CHOICE_FIELD_TYPES,
+  MEDIA_FIELD_TYPES,
+  getChoiceOptions,
+  getMediaOptions,
+  getScaleOptions,
+} from './types';
+import type { EditorField, FieldOption, MediaOptions, ScaleOptions } from './types';
+
+const SCALE_MIN_CHOICES = [0, 1];
+const SCALE_MAX_CHOICES = [2, 3, 4, 5, 6, 7, 8, 9, 10];
 import type { LogicBlock, CalculatedOptions } from './logic-engine';
 import type { ResourceType } from '@/lib/cloudinary-upload';
 
@@ -20,6 +29,7 @@ const PREFILL_EXCLUDED_TYPES: string[] = [
   'HEADING_1', 'HEADING_2', 'HEADING_3', 'DIVIDER', 'TITLE', 'LABEL',
   'IMAGE', 'VIDEO', 'AUDIO', 'EMBED',
   'CONDITIONAL_LOGIC', 'CALCULATED', 'HIDDEN', 'RECAPTCHA', 'COUNTRY',
+  'SCALE',
 ];
 
 interface FieldConfigProps {
@@ -74,6 +84,8 @@ export function FieldConfig({ field, allFields, onChange, onClose, errors }: Fie
   const showCalculatedInputs = field.type === 'CALCULATED';
   const calculatedOptions = showCalculatedInputs ? getCalculatedOptions(field) : {};
   const showLogicEditor = field.type === 'CONDITIONAL_LOGIC';
+  const showScaleInputs = field.type === 'SCALE';
+  const scaleOptions: ScaleOptions = showScaleInputs ? getScaleOptions(field) : { min: 1, max: 5 };
 
   const showPrefillKey = !PREFILL_EXCLUDED_TYPES.includes(field.type);
   const currentPrefillKey = (field.validations as { prefillKey?: string } | null)?.prefillKey ?? '';
@@ -213,6 +225,102 @@ export function FieldConfig({ field, allFields, onChange, onClose, errors }: Fie
             {hasOptionsError && (
               <p className="text-sm text-destructive mt-1">At least one option is required</p>
             )}
+          </div>
+        </>
+      )}
+
+      {showScaleInputs && (
+        <>
+          <Separator />
+          <div className="space-y-3">
+            <div>
+              <h4 className="text-sm font-medium">Scale</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Choose the numeric range and (optionally) describe each end.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="scale-min">Start at</Label>
+                <select
+                  id="scale-min"
+                  value={scaleOptions.min}
+                  onChange={(e) => {
+                    const min = Number((e.target as HTMLSelectElement).value);
+                    const max = scaleOptions.max > min ? scaleOptions.max : min + 1;
+                    onChange({
+                      options: {
+                        ...scaleOptions,
+                        min,
+                        max,
+                      } as Record<string, unknown>,
+                    });
+                  }}
+                  className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                >
+                  {SCALE_MIN_CHOICES.map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="scale-max">End at</Label>
+                <select
+                  id="scale-max"
+                  value={scaleOptions.max}
+                  onChange={(e) => {
+                    const max = Number((e.target as HTMLSelectElement).value);
+                    onChange({
+                      options: {
+                        ...scaleOptions,
+                        max,
+                      } as Record<string, unknown>,
+                    });
+                  }}
+                  className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                >
+                  {SCALE_MAX_CHOICES
+                    .filter((n) => n > scaleOptions.min)
+                    .map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                </select>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="scale-min-label">Label for {scaleOptions.min}</Label>
+                <Input
+                  id="scale-min-label"
+                  value={scaleOptions.minLabel ?? ''}
+                  onChange={(e) =>
+                    onChange({
+                      options: {
+                        ...scaleOptions,
+                        minLabel: (e.target as HTMLInputElement).value,
+                      } as Record<string, unknown>,
+                    })
+                  }
+                  placeholder="e.g. Strongly disagree"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="scale-max-label">Label for {scaleOptions.max}</Label>
+                <Input
+                  id="scale-max-label"
+                  value={scaleOptions.maxLabel ?? ''}
+                  onChange={(e) =>
+                    onChange({
+                      options: {
+                        ...scaleOptions,
+                        maxLabel: (e.target as HTMLInputElement).value,
+                      } as Record<string, unknown>,
+                    })
+                  }
+                  placeholder="e.g. Strongly agree"
+                />
+              </div>
+            </div>
           </div>
         </>
       )}

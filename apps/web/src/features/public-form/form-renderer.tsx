@@ -13,6 +13,7 @@ import { slugify } from '@snapform/shared';
 import { cn } from '@/lib/utils';
 import { uploadToCloudinary, type UploadResult } from '@/lib/cloudinary-upload';
 import { runLogic } from '@/features/editor/logic-engine';
+import { getScaleOptions } from '@/features/editor/types';
 import { expandMentions } from '@/lib/answer-piping';
 import { SignaturePad } from './signature-pad';
 import { RecaptchaWidget } from './recaptcha-widget';
@@ -367,27 +368,57 @@ function FormFieldRenderer({
     }
 
     case 'SCALE': {
-      const scaleVal = (value as number) ?? 0;
+      const scaleVal = typeof value === 'number' ? value : null;
+      const scale = getScaleOptions(field);
+      const steps: number[] = [];
+      for (let n = scale.min; n <= scale.max; n++) steps.push(n);
       return (
         <div className="space-y-2">
           {labelEl}
           {descEl}
-          <div className="flex gap-2 flex-wrap">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-              <button
-                key={n}
-                type="button"
-                onClick={() => onChange(n === scaleVal ? 0 : n)}
-                className={cn(
-                  'h-10 w-10 rounded-lg border flex items-center justify-center text-sm transition-colors',
-                  n === scaleVal
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'border-input hover:bg-primary/10',
-                )}
-              >
-                {n}
-              </button>
-            ))}
+          <div
+            role="radiogroup"
+            aria-label={displayLabel}
+            className="flex flex-wrap items-center gap-x-4 gap-y-3 sm:flex-nowrap"
+          >
+            {scale.minLabel && (
+              <span className="text-xs text-muted-foreground sm:max-w-[25%] sm:shrink-0">
+                {scale.minLabel}
+              </span>
+            )}
+            <div className="flex min-w-0 flex-1 items-start justify-around gap-2 overflow-x-auto">
+              {steps.map((n) => {
+                const selected = n === scaleVal;
+                return (
+                  <button
+                    key={n}
+                    type="button"
+                    aria-pressed={selected}
+                    onClick={() => onChange(selected ? null : n)}
+                    className="flex flex-col items-center gap-1.5 rounded-md p-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <span className="text-xs text-muted-foreground">{n}</span>
+                    <span
+                      className={cn(
+                        'flex h-7 w-7 items-center justify-center rounded-full border-2 transition-colors',
+                        selected
+                          ? 'border-primary bg-primary'
+                          : 'border-input hover:border-primary',
+                      )}
+                    >
+                      {selected && (
+                        <span className="h-2.5 w-2.5 rounded-full bg-primary-foreground" />
+                      )}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+            {scale.maxLabel && (
+              <span className="text-xs text-muted-foreground sm:max-w-[25%] sm:shrink-0">
+                {scale.maxLabel}
+              </span>
+            )}
           </div>
           {errorEl}
         </div>

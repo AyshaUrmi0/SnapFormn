@@ -251,25 +251,41 @@ function FieldPreview({
           </div>
         </div>
       );
-    case 'SCALE':
+    case 'SCALE': {
+      const parsed = parseJson<{ min?: number; max?: number; minLabel?: string; maxLabel?: string }>(options);
+      const min = typeof parsed?.min === 'number' ? parsed.min : 1;
+      const max = typeof parsed?.max === 'number' && parsed.max > min ? parsed.max : 10;
+      const steps: number[] = [];
+      for (let n = min; n <= max; n++) steps.push(n);
       return (
         <div className="space-y-1.5">
           <p className="text-sm font-medium">
             {displayLabel}
             {required && <span className="text-destructive ml-0.5">*</span>}
           </p>
-          <div className="flex gap-2">
-            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-              <div
-                key={n}
-                className="h-9 w-9 rounded-md border border-input flex items-center justify-center text-sm text-muted-foreground"
-              >
-                {n}
-              </div>
-            ))}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-3 sm:flex-nowrap">
+            {parsed?.minLabel && (
+              <span className="text-[11px] text-muted-foreground sm:max-w-[25%] sm:shrink-0">
+                {parsed.minLabel}
+              </span>
+            )}
+            <div className="flex min-w-0 flex-1 items-start justify-around gap-2">
+              {steps.map((n) => (
+                <div key={n} className="flex flex-col items-center gap-1.5 p-1">
+                  <span className="text-[11px] text-muted-foreground">{n}</span>
+                  <span className="h-7 w-7 rounded-full border-2 border-input" />
+                </div>
+              ))}
+            </div>
+            {parsed?.maxLabel && (
+              <span className="text-[11px] text-muted-foreground sm:max-w-[25%] sm:shrink-0">
+                {parsed.maxLabel}
+              </span>
+            )}
           </div>
         </div>
       );
+    }
     case 'STATEMENT':
       return (
         <div className="py-2">
