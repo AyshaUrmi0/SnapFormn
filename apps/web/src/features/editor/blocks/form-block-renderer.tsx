@@ -5,10 +5,26 @@ import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import {
-  Type, Calendar, ChevronDown, Upload, Star, Clock, PenLine,
-  CheckCircle2, Image as ImageIcon, Video, Music, Code,
-  GitBranch, Calculator, EyeOff, Shield, Globe,
-  GripVertical, Trash2, Plus,
+  Type,
+  Calendar,
+  ChevronDown,
+  Upload,
+  Star,
+  Clock,
+  PenLine,
+  CheckCircle2,
+  Image as ImageIcon,
+  Video,
+  Music,
+  Code,
+  GitBranch,
+  Calculator,
+  EyeOff,
+  Shield,
+  Globe,
+  GripVertical,
+  Trash2,
+  Plus,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDetectedCountry } from '@/lib/detect-country';
@@ -19,13 +35,25 @@ import { InsertBlockDialog } from '../insert-block-dialog';
 import { buildInsertPayload } from './slash-command-list';
 import type { FieldType } from '@/modules/form/types';
 
-interface KeyValue { label: string; value: string }
-interface MatrixShape { rows?: KeyValue[]; columns?: KeyValue[] }
-interface MediaShape { src?: string }
+interface KeyValue {
+  label: string;
+  value: string;
+}
+interface MatrixShape {
+  rows?: KeyValue[];
+  columns?: KeyValue[];
+}
+interface MediaShape {
+  src?: string;
+}
 
 function parseJson<T>(json: unknown): T | null {
   if (typeof json !== 'string' || !json) return null;
-  try { return JSON.parse(json) as T; } catch { return null; }
+  try {
+    return JSON.parse(json) as T;
+  } catch {
+    return null;
+  }
 }
 
 function CountryPreview({ displayLabel }: { displayLabel: string }) {
@@ -40,7 +68,7 @@ function CountryPreview({ displayLabel }: { displayLabel: string }) {
   const displayText = country
     ? country
     : showFallback
-      ? 'Country detection unavailable here — will work when respondents submit.'
+      ? 'Country detection will work when respondents submit.'
       : 'Detecting your country…';
 
   return (
@@ -57,7 +85,13 @@ function CountryPreview({ displayLabel }: { displayLabel: string }) {
   );
 }
 
-function FieldPreview({ fieldType, label, placeholder, required, options }: {
+function FieldPreview({
+  fieldType,
+  label,
+  placeholder,
+  required,
+  options,
+}: {
   fieldType: FieldType;
   label: string;
   placeholder: string | null;
@@ -79,7 +113,9 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
             {required && <span className="text-destructive ml-0.5">*</span>}
           </p>
           <div className="h-10 rounded-md border border-input bg-background px-3 flex items-center">
-            <span className="text-sm text-muted-foreground">{placeholder || `Enter ${displayLabel.toLowerCase()}...`}</span>
+            <span className="text-sm text-muted-foreground">
+              {placeholder || `Enter ${displayLabel.toLowerCase()}...`}
+            </span>
           </div>
         </div>
       );
@@ -91,7 +127,9 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
             {required && <span className="text-destructive ml-0.5">*</span>}
           </p>
           <div className="h-24 rounded-md border border-input bg-background px-3 py-2">
-            <span className="text-sm text-muted-foreground">{placeholder || 'Type your answer...'}</span>
+            <span className="text-sm text-muted-foreground">
+              {placeholder || 'Type your answer...'}
+            </span>
           </div>
         </div>
       );
@@ -128,9 +166,14 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
     case 'CHECKBOX':
     case 'MULTI_SELECT': {
       const parsedOpts = parseJson<KeyValue[]>(options) ?? [];
-      const items = parsedOpts.length > 0
-        ? parsedOpts
-        : [{ label: 'Option 1', value: '1' }, { label: 'Option 2', value: '2' }, { label: 'Option 3', value: '3' }];
+      const items =
+        parsedOpts.length > 0
+          ? parsedOpts
+          : [
+              { label: 'Option 1', value: '1' },
+              { label: 'Option 2', value: '2' },
+              { label: 'Option 3', value: '3' },
+            ];
       return (
         <div className="space-y-1.5">
           <p className="text-sm font-medium">
@@ -141,7 +184,9 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
             {items.map((opt, i) => (
               <label key={`${opt.value}-${i}`} className="flex items-center gap-2">
                 <div className="h-4 w-4 rounded border border-input" />
-                <span className="text-sm text-muted-foreground">{opt.label || `Option ${i + 1}`}</span>
+                <span className="text-sm text-muted-foreground">
+                  {opt.label || `Option ${i + 1}`}
+                </span>
               </label>
             ))}
           </div>
@@ -150,9 +195,14 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
     }
     case 'RADIO': {
       const parsedOpts = parseJson<KeyValue[]>(options) ?? [];
-      const items = parsedOpts.length > 0
-        ? parsedOpts
-        : [{ label: 'Option 1', value: '1' }, { label: 'Option 2', value: '2' }, { label: 'Option 3', value: '3' }];
+      const items =
+        parsedOpts.length > 0
+          ? parsedOpts
+          : [
+              { label: 'Option 1', value: '1' },
+              { label: 'Option 2', value: '2' },
+              { label: 'Option 3', value: '3' },
+            ];
       return (
         <div className="space-y-1.5">
           <p className="text-sm font-medium">
@@ -163,7 +213,9 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
             {items.map((opt, i) => (
               <label key={`${opt.value}-${i}`} className="flex items-center gap-2">
                 <div className="h-4 w-4 rounded-full border border-input" />
-                <span className="text-sm text-muted-foreground">{opt.label || `Option ${i + 1}`}</span>
+                <span className="text-sm text-muted-foreground">
+                  {opt.label || `Option ${i + 1}`}
+                </span>
               </label>
             ))}
           </div>
@@ -206,7 +258,10 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
           </p>
           <div className="flex gap-2">
             {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-              <div key={n} className="h-9 w-9 rounded-md border border-input flex items-center justify-center text-sm text-muted-foreground">
+              <div
+                key={n}
+                className="h-9 w-9 rounded-md border border-input flex items-center justify-center text-sm text-muted-foreground"
+              >
                 {n}
               </div>
             ))}
@@ -223,7 +278,9 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
       return (
         <div className="flex items-center gap-3 py-2">
           <div className="h-px flex-1 bg-border" />
-          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">New page</span>
+          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
+            New page
+          </span>
           <div className="h-px flex-1 bg-border" />
         </div>
       );
@@ -243,8 +300,14 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
       );
     case 'MATRIX': {
       const parsed = parseJson<MatrixShape>(options);
-      const rows = parsed?.rows ?? [{ label: 'Row 1', value: 'r1' }, { label: 'Row 2', value: 'r2' }];
-      const cols = parsed?.columns ?? [{ label: 'Col 1', value: 'c1' }, { label: 'Col 2', value: 'c2' }];
+      const rows = parsed?.rows ?? [
+        { label: 'Row 1', value: 'r1' },
+        { label: 'Row 2', value: 'r2' },
+      ];
+      const cols = parsed?.columns ?? [
+        { label: 'Col 1', value: 'c1' },
+        { label: 'Col 2', value: 'c2' },
+      ];
       return (
         <div className="space-y-1.5">
           <p className="text-sm font-medium">
@@ -256,7 +319,11 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
               <thead>
                 <tr>
                   <th className="p-1.5" />
-                  {cols.map((c) => <th key={c.value} className="p-1.5 font-normal text-muted-foreground">{c.label}</th>)}
+                  {cols.map((c) => (
+                    <th key={c.value} className="p-1.5 font-normal text-muted-foreground">
+                      {c.label}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody>
@@ -278,9 +345,14 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
     }
     case 'RANKING': {
       const parsedOpts = parseJson<KeyValue[]>(options) ?? [];
-      const items = parsedOpts.length > 0
-        ? parsedOpts
-        : [{ label: 'Option 1', value: '1' }, { label: 'Option 2', value: '2' }, { label: 'Option 3', value: '3' }];
+      const items =
+        parsedOpts.length > 0
+          ? parsedOpts
+          : [
+              { label: 'Option 1', value: '1' },
+              { label: 'Option 2', value: '2' },
+              { label: 'Option 3', value: '3' },
+            ];
       return (
         <div className="space-y-1.5">
           <p className="text-sm font-medium">
@@ -289,10 +361,15 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
           </p>
           <div className="space-y-1">
             {items.map((opt, i) => (
-              <div key={`${opt.value}-${i}`} className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5">
+              <div
+                key={`${opt.value}-${i}`}
+                className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5"
+              >
                 <span className="text-xs text-muted-foreground w-4">{i + 1}.</span>
                 <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">{opt.label || `Option ${i + 1}`}</span>
+                <span className="text-sm text-muted-foreground">
+                  {opt.label || `Option ${i + 1}`}
+                </span>
               </div>
             ))}
           </div>
@@ -321,7 +398,9 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
           <CheckCircle2 className="h-5 w-5 text-primary shrink-0" />
           <div>
             <p className="text-sm font-medium">{displayLabel}</p>
-            <p className="text-xs text-muted-foreground">Shown after a respondent submits the form</p>
+            <p className="text-xs text-muted-foreground">
+              Shown after a respondent submits the form
+            </p>
           </div>
         </div>
       );
@@ -411,7 +490,9 @@ function FieldPreview({ fieldType, label, placeholder, required, options }: {
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium">{displayLabel}</p>
             <p className="text-xs text-muted-foreground">
-              {ruleCount === 0 ? 'No rules configured' : `${ruleCount} rule${ruleCount !== 1 ? 's' : ''}`}
+              {ruleCount === 0
+                ? 'No rules configured'
+                : `${ruleCount} rule${ruleCount !== 1 ? 's' : ''}`}
             </p>
           </div>
         </div>
@@ -500,15 +581,16 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
     const insertConfig = FIELD_TYPE_CONFIG[type];
     if (!insertConfig) return;
     const pos = (getPos() ?? 0) + node.nodeSize;
-    editor
-      .chain()
-      .focus()
-      .insertContentAt(pos, buildInsertPayload(type, insertConfig.label))
-      .run();
+    editor.chain().focus().insertContentAt(pos, buildInsertPayload(type, insertConfig.label)).run();
   }
 
   return (
-    <NodeViewWrapper className="my-2 relative" ref={setNodeRef} style={sortableStyle} {...sortableAttributes}>
+    <NodeViewWrapper
+      className="my-2 relative"
+      ref={setNodeRef}
+      style={sortableStyle}
+      {...sortableAttributes}
+    >
       <div
         onClick={() => onSelectField(fieldId)}
         className={cn(
@@ -535,7 +617,10 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
           >
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); deleteNode(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                deleteNode();
+              }}
               className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
               aria-label="Delete field"
               title="Delete"
@@ -544,7 +629,10 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
             </button>
             <button
               type="button"
-              onClick={(e) => { e.stopPropagation(); setInsertOpen(true); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                setInsertOpen(true);
+              }}
               className="p-1 rounded-md hover:bg-muted text-muted-foreground hover:text-primary"
               aria-label="Insert block after"
               title="Insert block"
