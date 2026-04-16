@@ -15,6 +15,7 @@ import type {
   RestoreFormKeys,
   PermanentDeleteFormKeys,
   EmptyTrashKeys,
+  ToggleFavoriteKeys,
 } from './types';
 
 const { GET, POST, PUT, PATCH, DELETE } = methodsEnums;
@@ -73,6 +74,14 @@ function updateFormStatusRequest({ workspaceId, formId, data }: UpdateFormStatus
 
 export const updateFormStatus = createApi<UpdateFormStatusKeys, Form>({
   request: updateFormStatusRequest,
+});
+
+function toggleFavoriteRequest({ workspaceId, formId }: ToggleFavoriteKeys) {
+  return { url: `/forms/workspace/${workspaceId}/${formId}/favorite`, method: PATCH };
+}
+
+export const toggleFavorite = createApi<ToggleFavoriteKeys, Form>({
+  request: toggleFavoriteRequest,
 });
 
 function stripNulls(obj: Record<string, unknown>): Record<string, unknown> {
