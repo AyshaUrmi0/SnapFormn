@@ -22,16 +22,11 @@ import type {
 
 // ─── Queries ─────────────────────────────────────────────────
 
-// Poll every 15 seconds so analytics dashboards stay up to date without
-// a manual refresh. Only runs while the tab is visible (refetchIntervalInBackground: false).
-const ANALYTICS_REFETCH_INTERVAL = 15_000;
-
 export const useSubmissions = (params: ListSubmissionsKeys) => {
   return useQuery<Submission[], Error>({
     queryKey: queryKeys.submissions.list(params.workspaceId, params.formId),
     queryFn: () => listSubmissions(params),
     enabled: !!params.workspaceId && !!params.formId,
-    refetchInterval: ANALYTICS_REFETCH_INTERVAL,
     refetchOnWindowFocus: true,
   });
 };
@@ -49,7 +44,6 @@ export const useFormAnalytics = (workspaceId: string, formId: string, days = 30)
     queryKey: queryKeys.submissions.analytics(workspaceId, formId),
     queryFn: () => getAnalytics({ workspaceId, formId, days }),
     enabled: !!workspaceId && !!formId,
-    refetchInterval: ANALYTICS_REFETCH_INTERVAL,
     refetchOnWindowFocus: true,
   });
 };
@@ -76,6 +70,9 @@ export const useDeleteSubmission = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: queryKeys.submissions.list(variables.workspaceId, variables.formId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.submissions.analytics(variables.workspaceId, variables.formId),
       });
       toast.success('Submission deleted.');
     },
