@@ -6,7 +6,6 @@ import { formRepository } from '../forms/form.repository';
 import { uploadService } from '../uploads/upload.service';
 import { extractSchedule, getScheduleStatus } from '../forms/schedule';
 import { detectCountryFromIp } from './detect-country';
-import { verifyRecaptchaToken } from './recaptcha-verify';
 import type { SubmitFormInput, FormAnalytics } from './submission.types';
 
 // Media field value shape stored in SubmissionField.value
@@ -76,15 +75,15 @@ export const submissionService = {
       }
     }
 
-    // If the form contains a RECAPTCHA block, require and verify the token
-    // before doing anything else. This is the cheapest defence against
-    // automated spam submissions.
+    // If the form contains a RECAPTCHA block, require a non-empty confirmation
+    // token. Frontend sets this when the respondent ticks the checkbox.
+    // NOTE: This is UX-only — any non-empty value passes. Not real bot
+    // protection. Swap in real verification (Google/hCaptcha) when needed.
     const hasRecaptcha = form.fields.some((f) => f.type === 'RECAPTCHA');
     if (hasRecaptcha) {
-      const ok = await verifyRecaptchaToken(input.recaptchaToken, ip);
-      if (!ok) {
+      if (!input.recaptchaToken || input.recaptchaToken.trim().length === 0) {
         throw AppError.forbidden(
-          'reCAPTCHA verification failed. Please complete the challenge and try again.',
+          'Please confirm you are not a robot before submitting.',
         );
       }
     }
