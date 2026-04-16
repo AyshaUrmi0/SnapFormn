@@ -76,9 +76,10 @@ export const submissionService = {
     }
 
     // Validate that all required fields are present. COUNTRY fields are
-    // populated server-side below, so they never need to come from the client.
+    // populated server-side below; CALCULATED fields are driven by logic
+    // blocks; neither needs to come from the client as a "required" input.
     const requiredFieldIds = form.fields
-      .filter((f) => f.required && f.type !== 'COUNTRY')
+      .filter((f) => f.required && f.type !== 'COUNTRY' && f.type !== 'CALCULATED')
       .map((f) => f.id);
     const submittedFieldIds = input.fields.map((f) => f.fieldId);
 
