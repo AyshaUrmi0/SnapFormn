@@ -687,12 +687,12 @@ export function FormRenderer({
   const calculatedFields = fields.filter((f) => f.type === 'CALCULATED');
   const allFields = fields.sort((a, b) => a.order - b.order);
 
-  // Re-compute CALCULATED fields on every value change by running all LOGIC
-  // blocks top-to-bottom. Pure and memoized so it's cheap.
-  const derivedValues = useMemo(
-    () => runLogic(fields, values),
-    [fields, values],
-  );
+  // Re-run all LOGIC blocks on every value change. `values` gets CALCULATED
+  // fields resolved; `hiddenFieldIds` is the set of field IDs explicitly
+  // hidden by a logic action. Pure and memoized so it's cheap.
+  const logicResult = useMemo(() => runLogic(fields, values), [fields, values]);
+  const derivedValues = logicResult.values;
+  const hiddenByLogic = logicResult.hiddenFieldIds;
 
   // On mount, seed values from the URL query string:
   //   1. HIDDEN fields match by their configured `paramName`.
@@ -747,6 +747,8 @@ export function FormRenderer({
 
     for (const field of interactiveFields) {
       if (!field.required) continue;
+      // A field hidden by logic never needs to be filled in.
+      if (hiddenByLogic.has(field.id)) continue;
 
       const val = values[field.id];
 
@@ -777,9 +779,11 @@ export function FormRenderer({
     // hidden and calculated field (always send, including empty / initial
     // values so the creator sees them in analytics). COUNTRY fields are
     // resolved server-side and injected by the API, so we don't send them
-    // at all from the client.
+    // at all from the client. Fields hidden by a LOGIC block are dropped —
+    // an unanswered hidden question shouldn't leak into the submission.
     const submissionValues: Record<string, unknown> = {};
     for (const field of interactiveFields) {
+      if (hiddenByLogic.has(field.id)) continue;
       if (values[field.id] !== undefined && values[field.id] !== '' && values[field.id] !== null) {
         submissionValues[field.id] = values[field.id];
       }
@@ -848,29 +852,31 @@ export function FormRenderer({
         {description && <p className="text-muted-foreground">{description}</p>}
       </div>
 
-      {/* Fields */}
+      {/* Fields — skip any field hidden by a logic block */}
       <div className="space-y-6">
-        {allFields.map((field) => (
-          <FormFieldRenderer
-            key={field.id}
-            uploadContext={uploadContext}
-            field={field}
-            value={values[field.id]}
-            onChange={(val) => {
-              setValues((prev) => ({ ...prev, [field.id]: val }));
-              if (errors[field.id]) {
-                setErrors((prev) => {
-                  const next = { ...prev };
-                  delete next[field.id];
-                  return next;
-                });
-              }
-            }}
-            error={errors[field.id]}
-            allFields={allFields}
-            derivedValues={derivedValues}
-          />
-        ))}
+        {allFields
+          .filter((field) => !hiddenByLogic.has(field.id))
+          .map((field) => (
+            <FormFieldRenderer
+              key={field.id}
+              uploadContext={uploadContext}
+              field={field}
+              value={values[field.id]}
+              onChange={(val) => {
+                setValues((prev) => ({ ...prev, [field.id]: val }));
+                if (errors[field.id]) {
+                  setErrors((prev) => {
+                    const next = { ...prev };
+                    delete next[field.id];
+                    return next;
+                  });
+                }
+              }}
+              error={errors[field.id]}
+              allFields={allFields}
+              derivedValues={derivedValues}
+            />
+          ))}
       </div>
 
       {/* Submit button */}

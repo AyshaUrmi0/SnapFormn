@@ -49,7 +49,14 @@ export interface CalculateAction {
   value: number;
 }
 
-export type LogicAction = CalculateAction;
+export interface VisibilityAction {
+  type: 'show' | 'hide';
+  targetFieldId: string;
+}
+
+export type LogicAction = CalculateAction | VisibilityAction;
+
+export type ActionType = LogicAction['type'];
 
 export interface LogicBlock {
   combinator: 'and' | 'or';
@@ -59,7 +66,14 @@ export interface LogicBlock {
 
 export interface CalculatedOptions {
   valueType?: 'number' | 'text';
+  /** Literal initial value. Ignored when initialValueFieldId is set. */
   initialValue?: number | string;
+  /**
+   * If set, the initial value is read from this field's submitted value
+   * before logic runs. Lets creators seed a calculated from another input
+   * (e.g. base score = respondent's "Starting points" question).
+   */
+  initialValueFieldId?: string | null;
 }
 
 function toNumber(value: unknown): number | null {
@@ -178,30 +192,58 @@ export function parseLogicBlock(options: unknown): LogicBlock | null {
       ) as LogicCondition[])
     : [];
   const actions = Array.isArray(raw.actions)
-    ? (raw.actions.filter(
-        (a): a is LogicAction =>
-          !!a && typeof a === 'object' && (a as LogicAction).type === 'calculate',
-      ) as LogicAction[])
+    ? (raw.actions.filter((a): a is LogicAction => {
+        if (!a || typeof a !== 'object') return false;
+        const t = (a as LogicAction).type;
+        return t === 'calculate' || t === 'show' || t === 'hide';
+      }) as LogicAction[])
     : [];
   return { combinator, conditions, actions };
 }
 
+export interface LogicResult {
+  /** Values map with CALCULATED fields resolved. */
+  values: Record<string, unknown>;
+  /** Field IDs explicitly hidden by a hide action. */
+  hiddenFieldIds: Set<string>;
+  /** Field IDs explicitly shown by a show action. Defaults to visible. */
+  shownFieldIds: Set<string>;
+}
+
 /**
- * Run all logic blocks and return a values map with CALCULATED fields
- * resolved. The returned object is the respondent's `values` augmented —
- * CALCULATED fields are reset to their initial and then mutated in order.
+ * Run all logic blocks and return the computed values, visibility decisions.
+ * CALCULATED fields are reset to their initial then mutated in order.
+ * Visibility actions (show/hide) are collected; last-matching-action-wins
+ * semantics — a later block's `show` overrides an earlier block's `hide`.
  */
 export function runLogic(
   fields: FormField[],
   baseValues: Record<string, unknown>,
-): Record<string, unknown> {
+): LogicResult {
   let values: Record<string, unknown> = { ...baseValues };
+  const hiddenFieldIds = new Set<string>();
+  const shownFieldIds = new Set<string>();
 
-  // Reset every CALCULATED field to its configured initial value.
+  // Reset every CALCULATED field to its configured initial value. If the
+  // creator chose to source the initial from another field, read that
+  // field's value from the respondent's raw baseValues (never from already-
+  // reset calculated fields, to avoid cyclic reads).
   for (const f of fields) {
     if (f.type !== 'CALCULATED') continue;
     const opts = (f.options ?? {}) as CalculatedOptions;
-    const initial = opts.initialValue ?? (opts.valueType === 'text' ? '' : 0);
+    const fallback = opts.valueType === 'text' ? '' : 0;
+    let initial: number | string = opts.initialValue ?? fallback;
+    if (opts.initialValueFieldId) {
+      const referenced = baseValues[opts.initialValueFieldId];
+      if (referenced !== undefined && referenced !== null && referenced !== '') {
+        if (opts.valueType === 'number') {
+          const n = toNumber(referenced);
+          initial = n ?? fallback;
+        } else {
+          initial = typeof referenced === 'string' ? referenced : String(referenced);
+        }
+      }
+    }
     values[f.id] = initial;
   }
 
@@ -217,11 +259,17 @@ export function runLogic(
     for (const action of block.actions) {
       if (action.type === 'calculate') {
         values = applyCalculate(values, action);
+      } else if (action.type === 'hide' && action.targetFieldId) {
+        shownFieldIds.delete(action.targetFieldId);
+        hiddenFieldIds.add(action.targetFieldId);
+      } else if (action.type === 'show' && action.targetFieldId) {
+        hiddenFieldIds.delete(action.targetFieldId);
+        shownFieldIds.add(action.targetFieldId);
       }
     }
   }
 
-  return values;
+  return { values, hiddenFieldIds, shownFieldIds };
 }
 
 /**

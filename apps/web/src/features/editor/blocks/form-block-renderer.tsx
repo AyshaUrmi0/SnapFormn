@@ -512,9 +512,17 @@ function FieldPreview({
       );
     }
     case 'CALCULATED': {
-      const parsed = parseJson<{ valueType?: 'number' | 'text'; initialValue?: number | string }>(options);
+      const parsed = parseJson<{
+        valueType?: 'number' | 'text';
+        initialValue?: number | string;
+        initialValueFieldId?: string | null;
+      }>(options);
       const valueType = parsed?.valueType ?? 'number';
       const initial = parsed?.initialValue ?? (valueType === 'text' ? '' : 0);
+      const sourceFieldId = parsed?.initialValueFieldId;
+      const initialLabel = sourceFieldId
+        ? `from field ↗`
+        : valueType === 'text' ? `"${initial}"` : String(initial);
       return (
         <div className="flex items-center gap-3 rounded-md border border-dashed border-input p-3 bg-muted/10">
           <Calculator className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -526,7 +534,7 @@ function FieldPreview({
               </span>
             </p>
             <p className="text-xs font-mono text-muted-foreground truncate">
-              initial = {valueType === 'text' ? `"${initial}"` : String(initial)} · invisible to respondents
+              initial = {initialLabel} · invisible to respondents
             </p>
           </div>
         </div>
