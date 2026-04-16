@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -91,12 +91,14 @@ function FieldPreview({
   placeholder,
   required,
   options,
+  pageIndex,
 }: {
   fieldType: FieldType;
   label: string;
   placeholder: string | null;
   required: boolean;
   options: string | null;
+  pageIndex?: number;
 }) {
   const displayLabel = label || FIELD_TYPE_CONFIG[fieldType]?.label || 'Untitled field';
 
@@ -274,16 +276,27 @@ function FieldPreview({
           <p className="text-base text-foreground">{displayLabel}</p>
         </div>
       );
-    case 'PAGE_BREAK':
+    case 'PAGE_BREAK': {
+      // pageIndex is 0-based position among PAGE_BREAK blocks.
+      // The block marks the end of page (index+1) and start of (index+2).
+      const fromPage = (pageIndex ?? 0) + 1;
+      const toPage = fromPage + 1;
       return (
-        <div className="flex items-center gap-3 py-2">
+        <div className="flex items-center gap-3 py-1">
           <div className="h-px flex-1 bg-border" />
-          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">
-            New page
-          </span>
+          <div className="flex items-center gap-2 rounded-full border border-dashed border-border bg-muted/40 px-3 py-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Page {fromPage}
+            </span>
+            <span className="text-muted-foreground">→</span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-primary">
+              Page {toPage}
+            </span>
+          </div>
           <div className="h-px flex-1 bg-border" />
         </div>
       );
+    }
 
     case 'TIME':
       return (
@@ -610,6 +623,32 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
     isDragging,
   } = useSortable({ id: fieldId });
 
+  // PAGE_BREAK labels need to show their position among all page breaks in
+  // the document, so they must re-render when siblings change. Other block
+  // types already re-render on their own attr changes via the NodeView.
+  const [docTick, setDocTick] = useState(0);
+  useEffect(() => {
+    if (fieldType !== 'PAGE_BREAK') return;
+    const handler = () => setDocTick((t) => t + 1);
+    editor.on('update', handler);
+    return () => {
+      editor.off('update', handler);
+    };
+  }, [editor, fieldType]);
+
+  const pageIndex = useMemo(() => {
+    if (fieldType !== 'PAGE_BREAK') return undefined;
+    const pos = getPos() ?? 0;
+    let count = 0;
+    editor.state.doc.descendants((n, p) => {
+      if (p >= pos) return false;
+      if (n.type.name === 'formBlock' && n.attrs.fieldType === 'PAGE_BREAK') count++;
+      return false;
+    });
+    return count;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editor, getPos, fieldType, docTick]);
+
   const sortableStyle = {
     transform: CSS.Translate.toString(transform),
     transition,
@@ -697,6 +736,7 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
           placeholder={attrs.placeholder as string | null}
           required={attrs.required as boolean}
           options={attrs.options as string | null}
+          pageIndex={pageIndex}
         />
       </div>
 

@@ -403,13 +403,10 @@ function FormFieldRenderer({
       );
 
     case 'PAGE_BREAK':
-      return (
-        <div className="flex items-center gap-4 py-4">
-          <div className="h-px flex-1 bg-border" />
-          <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Next page</span>
-          <div className="h-px flex-1 bg-border" />
-        </div>
-      );
+      // At runtime, PAGE_BREAK is a structural separator — it splits the
+      // form into pages. The splitter below removes it before rendering,
+      // so this branch should never fire for a respondent.
+      return null;
 
     case 'TIME':
       return (
@@ -681,6 +678,7 @@ export function FormRenderer({
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
 
   const NON_INTERACTIVE_TYPES: FieldType[] = [
     'PAGE_BREAK', 'STATEMENT', 'THANK_YOU_PAGE',
@@ -753,10 +751,35 @@ export function FormRenderer({
   // respondent's real request IP). No client-side fetch here — the client
   // can't be trusted for geo data, and Tally uses the same pattern.
 
-  function validate(): boolean {
+  // Split the form into pages using PAGE_BREAK blocks as separators. Runs
+  // on the already-visible set so pages where every field is hidden by a
+  // logic block collapse away (the respondent never sees a blank page).
+  const pages = useMemo(() => {
+    const visibleAll = allFields.filter(
+      (f) => f.type !== 'THANK_YOU_PAGE' && !hiddenByLogic.has(f.id),
+    );
+    const result: FormField[][] = [[]];
+    for (const f of visibleAll) {
+      if (f.type === 'PAGE_BREAK') {
+        result.push([]);
+      } else {
+        result[result.length - 1].push(f);
+      }
+    }
+    const nonEmpty = result.filter((p) => p.length > 0);
+    return nonEmpty.length === 0 ? [[]] : nonEmpty;
+  }, [allFields, hiddenByLogic]);
+
+  const activePage = Math.min(currentPage, pages.length - 1);
+  const isFirstPage = activePage === 0;
+  const isLastPage = activePage === pages.length - 1;
+  const currentPageFields = pages[activePage] ?? [];
+
+  function validate(scopeFields: FormField[]): boolean {
     const newErrors: Record<string, string> = {};
 
-    for (const field of interactiveFields) {
+    for (const field of scopeFields) {
+      if (NON_INTERACTIVE_TYPES.includes(field.type)) continue;
       if (!field.required) continue;
       // A field hidden by logic never needs to be filled in.
       if (hiddenByLogic.has(field.id)) continue;
@@ -782,9 +805,20 @@ export function FormRenderer({
     return Object.keys(newErrors).length === 0;
   }
 
+  function handleNextPage() {
+    if (!validate(currentPageFields)) return;
+    setCurrentPage((p) => p + 1);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function handlePrevPage() {
+    setCurrentPage((p) => Math.max(0, p - 1));
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!validate()) return;
+    if (!validate(interactiveFields)) return;
 
     // If the form has a reCAPTCHA block, require the token before
     // submitting. The backend also verifies it; this is just UX.
@@ -863,6 +897,7 @@ export function FormRenderer({
             setSubmitted(false);
             setValues({});
             setErrors({});
+            setCurrentPage(0);
           }}
         >
           Fill out again
@@ -871,45 +906,84 @@ export function FormRenderer({
     );
   }
 
+  const isMultiPage = pages.length > 1;
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Form header */}
-      <div className="space-y-2">
-        <h1 className="text-3xl font-bold">{title}</h1>
-        {description && <p className="text-muted-foreground">{description}</p>}
-      </div>
+      {/* Form header — title and description only render on the first page
+          so respondents focus on the question at hand on later pages. */}
+      {isFirstPage && (
+        <div className="space-y-2">
+          <h1 className="text-3xl font-bold">{title}</h1>
+          {description && <p className="text-muted-foreground">{description}</p>}
+        </div>
+      )}
 
-      {/* Fields — skip any field hidden by a logic block */}
-      <div className="space-y-6">
-        {allFields
-          .filter((field) => !hiddenByLogic.has(field.id))
-          .map((field) => (
-            <FormFieldRenderer
-              key={field.id}
-              uploadContext={uploadContext}
-              field={field}
-              value={values[field.id]}
-              onChange={(val) => {
-                setValues((prev) => ({ ...prev, [field.id]: val }));
-                if (errors[field.id]) {
-                  setErrors((prev) => {
-                    const next = { ...prev };
-                    delete next[field.id];
-                    return next;
-                  });
-                }
-              }}
-              error={errors[field.id]}
-              allFields={allFields}
-              derivedValues={derivedValues}
+      {isMultiPage && (
+        <div className="flex items-center justify-between text-xs font-medium text-muted-foreground">
+          <span>Page {activePage + 1} of {pages.length}</span>
+          <div className="flex-1 ml-3 h-1 rounded-full bg-muted overflow-hidden">
+            <div
+              className="h-full bg-primary transition-all"
+              style={{ width: `${((activePage + 1) / pages.length) * 100}%` }}
             />
-          ))}
+          </div>
+        </div>
+      )}
+
+      {/* Only fields for the current page are mounted */}
+      <div className="space-y-6">
+        {currentPageFields.map((field) => (
+          <FormFieldRenderer
+            key={field.id}
+            uploadContext={uploadContext}
+            field={field}
+            value={values[field.id]}
+            onChange={(val) => {
+              setValues((prev) => ({ ...prev, [field.id]: val }));
+              if (errors[field.id]) {
+                setErrors((prev) => {
+                  const next = { ...prev };
+                  delete next[field.id];
+                  return next;
+                });
+              }
+            }}
+            error={errors[field.id]}
+            allFields={allFields}
+            derivedValues={derivedValues}
+          />
+        ))}
       </div>
 
-      {/* Submit button */}
-      <Button type="submit" className="w-full" size="lg" disabled={isSubmitting}>
-        {isSubmitting ? 'Submitting...' : 'Submit'}
-      </Button>
+      <div className="flex items-center gap-3 pt-2">
+        {!isFirstPage && (
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="flex-1"
+            onClick={handlePrevPage}
+            disabled={isSubmitting}
+          >
+            Back
+          </Button>
+        )}
+        {!isLastPage ? (
+          <Button
+            type="button"
+            size="lg"
+            className="flex-1"
+            onClick={handleNextPage}
+          >
+            Next
+          </Button>
+        ) : (
+          <Button type="submit" className="flex-1" size="lg" disabled={isSubmitting}>
+            {isSubmitting ? 'Submitting...' : 'Submit'}
+          </Button>
+        )}
+      </div>
     </form>
   );
 }
