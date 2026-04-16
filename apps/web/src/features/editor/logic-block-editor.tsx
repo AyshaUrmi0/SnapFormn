@@ -12,8 +12,10 @@ import {
   parseLogicBlock,
   type LogicBlock,
   type LogicCondition,
+  type LogicAction,
   type CalculateAction,
   type Operator,
+  type ActionType,
 } from './logic-engine';
 import { getChoiceOptions } from './types';
 import type { EditorField } from './types';
@@ -51,9 +53,23 @@ export function LogicBlockEditor({
     onChange({ ...value, conditions: next });
   }
 
-  function updateActions(next: CalculateAction[]) {
+  function updateActions(next: LogicAction[]) {
     onChange({ ...value, actions: next });
   }
+
+  // Fields that can be targets for show/hide actions: anything answerable
+  // or visible to respondents. Excludes the current logic block, other
+  // logic blocks, and blocks that are always invisible (HIDDEN/CALCULATED/
+  // RECAPTCHA/COUNTRY).
+  const visibilityTargetFields = allFields.filter(
+    (f) =>
+      f.id !== selfFieldId &&
+      f.type !== 'CONDITIONAL_LOGIC' &&
+      f.type !== 'HIDDEN' &&
+      f.type !== 'CALCULATED' &&
+      f.type !== 'RECAPTCHA' &&
+      f.type !== 'COUNTRY',
+  );
 
   function addCondition() {
     const first = sourceFields[0];
@@ -75,10 +91,20 @@ export function LogicBlockEditor({
   }
 
   function addAction() {
-    const firstTarget = targetFields[0];
+    // Default to show/hide when no CALCULATED field exists yet, so the
+    // "+ Add action" button is always useful.
+    if (targetFields.length > 0) {
+      const firstTarget = targetFields[0];
+      updateActions([
+        ...value.actions,
+        { type: 'calculate', targetFieldId: firstTarget.id, op: '+', value: 0 },
+      ]);
+      return;
+    }
+    const firstVisTarget = visibilityTargetFields[0];
     updateActions([
       ...value.actions,
-      { type: 'calculate', targetFieldId: firstTarget?.id ?? '', op: '+', value: 0 },
+      { type: 'show', targetFieldId: firstVisTarget?.id ?? '' },
     ]);
   }
 
@@ -86,10 +112,32 @@ export function LogicBlockEditor({
     updateActions(value.actions.filter((_, idx) => idx !== i));
   }
 
-  function patchAction(i: number, patch: Partial<CalculateAction>) {
+  function patchAction(i: number, patch: Partial<LogicAction>) {
     updateActions(
-      value.actions.map((a, idx) => (idx === i ? { ...a, ...patch } : a)),
+      value.actions.map((a, idx) => (idx === i ? ({ ...a, ...patch } as LogicAction) : a)),
     );
+  }
+
+  function changeActionType(i: number, nextType: ActionType) {
+    const current = value.actions[i];
+    let next: LogicAction;
+    if (nextType === 'calculate') {
+      const firstTarget = targetFields[0];
+      next = {
+        type: 'calculate',
+        targetFieldId: firstTarget?.id ?? '',
+        op: '+',
+        value: 0,
+      };
+    } else {
+      const existingTarget = (current as LogicAction).targetFieldId;
+      const stillValid = visibilityTargetFields.some((f) => f.id === existingTarget);
+      next = {
+        type: nextType,
+        targetFieldId: stillValid ? existingTarget : visibilityTargetFields[0]?.id ?? '',
+      };
+    }
+    updateActions(value.actions.map((a, idx) => (idx === i ? next : a)));
   }
 
   return (
@@ -262,69 +310,94 @@ export function LogicBlockEditor({
           <p className="text-xs text-muted-foreground italic">No actions yet.</p>
         )}
 
-        {value.actions.map((action, i) => (
-          <div key={i} className="flex flex-col gap-1.5 rounded-md border p-2 bg-background">
-            <div className="flex gap-1.5">
-              <span className="h-8 flex items-center rounded-md bg-muted px-2 text-xs text-muted-foreground">
-                Calculate
-              </span>
-              <select
-                value={action.targetFieldId}
-                onChange={(e) =>
-                  patchAction(i, { targetFieldId: (e.target as HTMLSelectElement).value })
-                }
-                className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs min-w-0"
-              >
-                {targetFields.length === 0 && (
-                  <option value="">Add a Calculated field first</option>
-                )}
-                {targetFields.map((f) => (
-                  <option key={f.id} value={f.id}>
-                    {f.label || '(unnamed)'}
-                  </option>
-                ))}
-              </select>
-              <button
-                type="button"
-                onClick={() => removeAction(i)}
-                className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
-                aria-label="Remove action"
-              >
-                <Trash2 className="h-3.5 w-3.5" />
-              </button>
+        {value.actions.map((action, i) => {
+          const isCalc = action.type === 'calculate';
+          const options = isCalc ? targetFields : visibilityTargetFields;
+          return (
+            <div key={i} className="flex flex-col gap-1.5 rounded-md border p-2 bg-background">
+              <div className="flex gap-1.5">
+                <select
+                  value={action.type}
+                  onChange={(e) =>
+                    changeActionType(i, (e.target as HTMLSelectElement).value as ActionType)
+                  }
+                  className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                >
+                  <option value="show">Show</option>
+                  <option value="hide">Hide</option>
+                  <option value="calculate">Calculate</option>
+                </select>
+                <select
+                  value={action.targetFieldId}
+                  onChange={(e) =>
+                    patchAction(i, { targetFieldId: (e.target as HTMLSelectElement).value })
+                  }
+                  className="flex-1 h-8 rounded-md border border-input bg-background px-2 text-xs min-w-0"
+                >
+                  {options.length === 0 && (
+                    <option value="">
+                      {isCalc ? 'Add a Calculated field first' : 'No target fields available'}
+                    </option>
+                  )}
+                  {options.map((f) => (
+                    <option key={f.id} value={f.id}>
+                      {f.label || `(${f.type})`}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => removeAction(i)}
+                  className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive"
+                  aria-label="Remove action"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+
+              {isCalc && (
+                <div className="flex gap-1.5">
+                  <select
+                    value={(action as CalculateAction).op}
+                    onChange={(e) =>
+                      patchAction(i, {
+                        op: (e.target as HTMLSelectElement).value as CalculateAction['op'],
+                      })
+                    }
+                    className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                  >
+                    <option value="+">Add (+)</option>
+                    <option value="-">Subtract (−)</option>
+                    <option value="*">Multiply (×)</option>
+                    <option value="/">Divide (÷)</option>
+                  </select>
+                  <Input
+                    type="number"
+                    value={
+                      Number.isFinite((action as CalculateAction).value)
+                        ? (action as CalculateAction).value
+                        : 0
+                    }
+                    onChange={(e) =>
+                      patchAction(i, {
+                        value: Number((e.target as HTMLInputElement).value) || 0,
+                      })
+                    }
+                    className="flex-1 h-8 text-xs"
+                    placeholder="0"
+                  />
+                </div>
+              )}
             </div>
-            <div className="flex gap-1.5">
-              <select
-                value={action.op}
-                onChange={(e) =>
-                  patchAction(i, { op: (e.target as HTMLSelectElement).value as CalculateAction['op'] })
-                }
-                className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-              >
-                <option value="+">Add (+)</option>
-                <option value="-">Subtract (−)</option>
-                <option value="*">Multiply (×)</option>
-                <option value="/">Divide (÷)</option>
-              </select>
-              <Input
-                type="number"
-                value={Number.isFinite(action.value) ? action.value : 0}
-                onChange={(e) =>
-                  patchAction(i, { value: Number((e.target as HTMLInputElement).value) || 0 })
-                }
-                className="flex-1 h-8 text-xs"
-                placeholder="0"
-              />
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={addAction}
-          disabled={targetFields.length === 0}
+          disabled={targetFields.length === 0 && visibilityTargetFields.length === 0}
           className="w-full border-dashed h-7 text-xs"
         >
           <Plus className="h-3 w-3 mr-1" /> Add action
@@ -332,7 +405,8 @@ export function LogicBlockEditor({
 
         {targetFields.length === 0 && (
           <p className="text-[11px] text-muted-foreground">
-            Actions need a Calculated field to target. Insert one with <code>/calculated field</code>.
+            Show / Hide actions target any question in your form. To add a
+            Calculate action, insert a <code>/calculated field</code> first.
           </p>
         )}
       </div>
