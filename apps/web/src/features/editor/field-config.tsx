@@ -12,7 +12,7 @@ import { MediaUploader } from './media-uploader';
 import { LogicBlockEditor, blockFromField } from './logic-block-editor';
 import { CHOICE_FIELD_TYPES, MEDIA_FIELD_TYPES, getChoiceOptions, getMediaOptions } from './types';
 import type { EditorField, FieldOption, MediaOptions } from './types';
-import type { LogicBlock } from './logic-engine';
+import type { LogicBlock, CalculatedOptions } from './logic-engine';
 import type { ResourceType } from '@/lib/cloudinary-upload';
 
 const PREFILL_EXCLUDED_TYPES: string[] = [
@@ -54,11 +54,6 @@ function getHiddenOptions(field: EditorField): HiddenOptions {
     return field.options as HiddenOptions;
   }
   return {};
-}
-
-interface CalculatedOptions {
-  valueType?: 'number' | 'text';
-  initialValue?: number | string;
 }
 
 function getCalculatedOptions(field: EditorField): CalculatedOptions {
@@ -333,28 +328,100 @@ export function FieldConfig({ field, allFields, onChange, onClose, errors }: Fie
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="calc-initial-value">Initial value</Label>
-              <Input
-                id="calc-initial-value"
-                type={calculatedOptions.valueType === 'text' ? 'text' : 'number'}
-                value={
-                  calculatedOptions.initialValue === undefined
-                    ? ''
-                    : String(calculatedOptions.initialValue)
-                }
+              <Label>Initial value</Label>
+              <select
+                value={calculatedOptions.initialValueFieldId ? 'field' : 'literal'}
                 onChange={(e) => {
-                  const raw = (e.target as HTMLInputElement).value;
-                  const parsed =
-                    calculatedOptions.valueType === 'text' ? raw : (raw === '' ? 0 : Number(raw));
-                  onChange({
-                    options: {
-                      ...calculatedOptions,
-                      initialValue: parsed,
-                    } as Record<string, unknown>,
-                  });
+                  const next = (e.target as HTMLSelectElement).value;
+                  if (next === 'literal') {
+                    onChange({
+                      options: {
+                        ...calculatedOptions,
+                        initialValueFieldId: null,
+                      } as Record<string, unknown>,
+                    });
+                  } else {
+                    const firstPickable = allFields.find(
+                      (f) =>
+                        f.id !== field.id &&
+                        f.type !== 'CALCULATED' &&
+                        f.type !== 'CONDITIONAL_LOGIC' &&
+                        !['STATEMENT','PAGE_BREAK','THANK_YOU_PAGE','HEADING_1','HEADING_2','HEADING_3','DIVIDER','TITLE','LABEL','IMAGE','VIDEO','AUDIO','EMBED','RECAPTCHA'].includes(f.type),
+                    );
+                    onChange({
+                      options: {
+                        ...calculatedOptions,
+                        initialValueFieldId: firstPickable?.id ?? '',
+                      } as Record<string, unknown>,
+                    });
+                  }
                 }}
-                placeholder={calculatedOptions.valueType === 'text' ? '' : '0'}
-              />
+                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              >
+                <option value="literal">Write a value</option>
+                <option value="field">Use another field's answer</option>
+              </select>
+
+              {!calculatedOptions.initialValueFieldId && (
+                <Input
+                  id="calc-initial-value"
+                  type={calculatedOptions.valueType === 'text' ? 'text' : 'number'}
+                  value={
+                    calculatedOptions.initialValue === undefined
+                      ? ''
+                      : String(calculatedOptions.initialValue)
+                  }
+                  onChange={(e) => {
+                    const raw = (e.target as HTMLInputElement).value;
+                    const parsed =
+                      calculatedOptions.valueType === 'text' ? raw : (raw === '' ? 0 : Number(raw));
+                    onChange({
+                      options: {
+                        ...calculatedOptions,
+                        initialValue: parsed,
+                      } as Record<string, unknown>,
+                    });
+                  }}
+                  placeholder={calculatedOptions.valueType === 'text' ? '' : '0'}
+                />
+              )}
+
+              {calculatedOptions.initialValueFieldId !== null &&
+                calculatedOptions.initialValueFieldId !== undefined && (
+                  <select
+                    value={calculatedOptions.initialValueFieldId ?? ''}
+                    onChange={(e) =>
+                      onChange({
+                        options: {
+                          ...calculatedOptions,
+                          initialValueFieldId: (e.target as HTMLSelectElement).value,
+                        } as Record<string, unknown>,
+                      })
+                    }
+                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                  >
+                    <option value="">Pick a field…</option>
+                    {allFields
+                      .filter(
+                        (f) =>
+                          f.id !== field.id &&
+                          f.type !== 'CALCULATED' &&
+                          f.type !== 'CONDITIONAL_LOGIC' &&
+                          ![
+                            'STATEMENT','PAGE_BREAK','THANK_YOU_PAGE',
+                            'HEADING_1','HEADING_2','HEADING_3',
+                            'DIVIDER','TITLE','LABEL',
+                            'IMAGE','VIDEO','AUDIO','EMBED','RECAPTCHA',
+                          ].includes(f.type),
+                      )
+                      .map((f) => (
+                        <option key={f.id} value={f.id}>
+                          {f.label || `(${f.type})`}
+                        </option>
+                      ))}
+                  </select>
+                )}
+
               <p className="text-xs text-muted-foreground">
                 Logic blocks reset the field to this value before each recalculation.
               </p>
