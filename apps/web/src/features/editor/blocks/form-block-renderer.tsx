@@ -502,8 +502,8 @@ function FieldPreview({
                 </p>
               ) : (
                 <p className="text-xs text-muted-foreground">
-                  If {combinator} of {conditionCount} condition{conditionCount !== 1 ? 's' : ''} match →{' '}
-                  {actionCount} action{actionCount !== 1 ? 's' : ''}
+                  If {combinator} of {conditionCount} condition{conditionCount !== 1 ? 's' : ''}{' '}
+                  match → {actionCount} action{actionCount !== 1 ? 's' : ''}
                 </p>
               )}
             </div>
@@ -522,7 +522,9 @@ function FieldPreview({
       const sourceFieldId = parsed?.initialValueFieldId;
       const initialLabel = sourceFieldId
         ? `from field ↗`
-        : valueType === 'text' ? `"${initial}"` : String(initial);
+        : valueType === 'text'
+          ? `"${initial}"`
+          : String(initial);
       return (
         <div className="flex items-center gap-3 rounded-md border border-dashed border-input p-3 bg-muted/10">
           <Calculator className="h-4 w-4 text-muted-foreground shrink-0" />
@@ -556,11 +558,20 @@ function FieldPreview({
     }
     case 'RECAPTCHA':
       return (
-        <div className="flex items-center gap-3 rounded-md border border-dashed border-input p-3">
-          <Shield className="h-4 w-4 text-muted-foreground shrink-0" />
-          <div>
-            <p className="text-sm font-medium">{displayLabel}</p>
-            <p className="text-xs text-muted-foreground">Google reCAPTCHA v3</p>
+        <div className="rounded-md border border-dashed border-input p-3 bg-muted/10 space-y-2">
+          <div className="flex items-center gap-3">
+            {/* <Shield className="h-4 w-4 text-muted-foreground shrink-0" /> */}
+            {/* <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">reCAPTCHA</p>
+              <p className="text-xs text-muted-foreground">
+                Google v2 &ldquo;I&apos;m not a robot&rdquo; checkbox. Blocks spam submissions.
+              </p>
+            </div> */}
+          </div>
+          <div className="h-[78px] w-[304px] rounded border bg-background flex items-center px-3 gap-2 text-xs text-muted-foreground select-none pointer-events-none">
+            <div className="h-6 w-6 border border-input rounded bg-background" />
+            <span>I&apos;m not a robot</span>
+            <span className="ml-auto text-[10px] opacity-50">reCAPTCHA</span>
           </div>
         </div>
       );

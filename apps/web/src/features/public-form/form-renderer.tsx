@@ -15,6 +15,7 @@ import { uploadToCloudinary, type UploadResult } from '@/lib/cloudinary-upload';
 import { runLogic } from '@/features/editor/logic-engine';
 import { expandMentions } from '@/lib/answer-piping';
 import { SignaturePad } from './signature-pad';
+import { RecaptchaWidget } from './recaptcha-widget';
 import type { FormField, FieldType } from '@/modules/form/types';
 
 function getPrefillKey(field: FormField): string {
@@ -611,10 +612,16 @@ function FormFieldRenderer({
     case 'CONDITIONAL_LOGIC':
     case 'CALCULATED':
     case 'HIDDEN':
-    case 'RECAPTCHA':
     case 'COUNTRY':
       // These blocks are not visible to respondents — they run logic silently
       return null;
+
+    case 'RECAPTCHA':
+      // Renders Google's v2 "I'm not a robot" checkbox. The token is tracked
+      // in the parent via onChange and sent with the submission payload.
+      return (
+        <RecaptchaWidget onChange={(token) => onChange(token)} />
+      );
 
     default:
       return (
@@ -648,7 +655,10 @@ interface FormRendererProps {
   uploadContext: UploadContext;
   fields: FormField[];
   isSubmitting: boolean;
-  onSubmit: (values: Record<string, unknown>) => void;
+  onSubmit: (
+    values: Record<string, unknown>,
+    extras: { recaptchaToken?: string },
+  ) => void;
   /**
    * When true, form submissions render the thank-you page inline without
    * calling `onSubmit`. Used by the editor "Preview" mode.
@@ -685,6 +695,7 @@ export function FormRenderer({
 
   const hiddenFields = fields.filter((f) => f.type === 'HIDDEN');
   const calculatedFields = fields.filter((f) => f.type === 'CALCULATED');
+  const recaptchaFields = fields.filter((f) => f.type === 'RECAPTCHA');
   const allFields = fields.sort((a, b) => a.order - b.order);
 
   // Re-run all LOGIC blocks on every value change. `values` gets CALCULATED
@@ -775,6 +786,22 @@ export function FormRenderer({
     e.preventDefault();
     if (!validate()) return;
 
+    // If the form has a reCAPTCHA block, require the token before
+    // submitting. The backend also verifies it; this is just UX.
+    let recaptchaToken: string | undefined;
+    if (recaptchaFields.length > 0 && !previewMode) {
+      const first = recaptchaFields[0];
+      const token = values[first.id];
+      if (typeof token !== 'string' || token.length === 0) {
+        setErrors((prev) => ({
+          ...prev,
+          [first.id]: 'Please complete the reCAPTCHA before submitting.',
+        }));
+        return;
+      }
+      recaptchaToken = token;
+    }
+
     // Build submission payload — interactive fields with values, plus every
     // hidden and calculated field (always send, including empty / initial
     // values so the creator sees them in analytics). COUNTRY fields are
@@ -805,7 +832,7 @@ export function FormRenderer({
       return;
     }
 
-    onSubmit(submissionValues);
+    onSubmit(submissionValues, { recaptchaToken });
   }
 
   // Resolve the thank-you content. Priority:

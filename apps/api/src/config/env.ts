@@ -38,6 +38,8 @@ const envSchema = z.object({
   CLOUDINARY_API_SECRET: z.string().default(''),
   CLOUDINARY_UPLOAD_FOLDER: z.string().default('snapform'),
 
+  RECAPTCHA_SECRET_KEY: z.string().default(''),
+
   FRONTEND_URL: z.string().default('http://localhost:3000'),
 
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace']).default('info'),

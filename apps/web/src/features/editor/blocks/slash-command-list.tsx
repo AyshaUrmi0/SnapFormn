@@ -47,7 +47,9 @@ function defaultOptionsForType(type: FieldType): string {
     return JSON.stringify({ valueType: 'number', initialValue: 0 });
   }
   if (type === 'RECAPTCHA') {
-    return JSON.stringify({ siteKey: '' });
+    // No per-field config — the site key is a deployment-level env var
+    // (NEXT_PUBLIC_RECAPTCHA_SITE_KEY) so creators never touch it.
+    return JSON.stringify({});
   }
   if (type === 'CONDITIONAL_LOGIC') {
     return JSON.stringify({ combinator: 'and', conditions: [], actions: [] });

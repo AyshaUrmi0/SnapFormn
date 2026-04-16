@@ -3,6 +3,7 @@ export interface SubmitFormInput {
     fieldId: string;
     value: unknown;
   }>;
+  recaptchaToken?: string;
 }
 
 export interface FormAnalytics {

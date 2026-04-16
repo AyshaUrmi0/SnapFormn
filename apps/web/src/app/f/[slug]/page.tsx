@@ -138,14 +138,23 @@ export default function PublicFormPage({
     );
   }
 
-  function handleSubmit(values: Record<string, unknown>) {
+  function handleSubmit(
+    values: Record<string, unknown>,
+    extras: { recaptchaToken?: string } = {},
+  ) {
     const fields = Object.entries(values).map(([fieldId, value]) => ({
       fieldId,
       value,
     }));
 
     submitForm.mutate(
-      { slug, data: { fields } },
+      {
+        slug,
+        data: {
+          fields,
+          ...(extras.recaptchaToken ? { recaptchaToken: extras.recaptchaToken } : {}),
+        },
+      },
       {
         onSuccess: () => {
           // Check for redirect URL in settings
