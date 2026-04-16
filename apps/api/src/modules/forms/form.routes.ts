@@ -312,6 +312,14 @@ router.patch(
   asyncHandler(formController.updateStatus),
 );
 
+router.patch(
+  '/workspace/:workspaceId/:formId/favorite',
+  authenticate,
+  validate(formParamsSchema),
+  requirePermission(PERMISSIONS.FORM_EDIT),
+  asyncHandler(formController.toggleFavorite),
+);
+
 /**
  * @swagger
  * /forms/workspace/{workspaceId}/{formId}/fields:

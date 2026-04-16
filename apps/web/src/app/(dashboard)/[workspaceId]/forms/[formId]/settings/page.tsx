@@ -1,20 +1,18 @@
 'use client';
 
 import { use, useState, useEffect } from 'react';
-import Link from 'next/link';
-import { ArrowLeft, Check, Copy } from 'lucide-react';
+import { Check, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Separator } from '@/components/ui/separator';
 import { LoadingState } from '@/components/shared/loading-state';
 import { ErrorState } from '@/components/shared/error-state';
 import { useWorkspaceContext } from '@/providers/workspace-provider';
-import { useForm as useFormQuery, useUpdateForm } from '@/modules/form/form.queries';
-import { ROUTES } from '@/constants/routes';
+import { useForm as useFormQuery, useUpdateForm, useToggleFavorite } from '@/modules/form/form.queries';
+import { EditorTopbar } from '@/features/editor/editor-topbar';
 import {
   DEFAULT_SUCCESS_CONFIG,
   DEFAULT_SHARE_CONFIG,
@@ -36,6 +34,7 @@ export default function FormSettingsPage({
   const { workspace } = useWorkspaceContext();
   const { data: form, isLoading, isError, error, refetch } = useFormQuery(workspaceId, formId);
   const updateForm = useUpdateForm();
+  const toggleFavorite = useToggleFavorite();
 
   const [successConfig, setSuccessConfig] = useState<FormSuccessConfig>(DEFAULT_SUCCESS_CONFIG);
   const [shareConfig, setShareConfig] = useState<FormShareConfig>(DEFAULT_SHARE_CONFIG);
@@ -95,22 +94,26 @@ export default function FormSettingsPage({
   const embedCode = `<iframe src="${formUrl}?embedded=true" width="100%" height="${embedConfig.embedHeight}" frameborder="0" style="border:none;"></iframe>`;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Link
-          href={ROUTES.workspace(workspaceId).form(formId).EDIT}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold truncate">{form.title} — Settings</h1>
-        </div>
-        <Button size="sm" onClick={handleSave} disabled={!isDirty || updateForm.isPending}>
-          {updateForm.isPending ? 'Saving...' : 'Save changes'}
-        </Button>
-      </div>
+    <div className="-m-6 flex flex-col h-[calc(100vh-3.5rem)]">
+      <EditorTopbar
+        workspaceId={workspaceId}
+        formId={formId}
+        workspaceName={workspace.name}
+        title={form.title}
+        slug={form.slug}
+        status={form.status}
+        isFavorite={form.isFavorite}
+        onToggleFavorite={() => toggleFavorite.mutate({ workspaceId, formId })}
+      />
+
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="mx-auto max-w-2xl space-y-6">
+          {/* Save bar */}
+          <div className="flex items-center justify-end">
+            <Button size="sm" onClick={handleSave} disabled={!isDirty || updateForm.isPending}>
+              {updateForm.isPending ? 'Saving...' : 'Save changes'}
+            </Button>
+          </div>
 
       {/* Share Link */}
       <Card>
@@ -351,6 +354,8 @@ export default function FormSettingsPage({
           )}
         </CardContent>
       </Card>
+        </div>
+      </div>
     </div>
   );
 }

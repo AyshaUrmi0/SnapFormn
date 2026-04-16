@@ -40,6 +40,11 @@ export const formController = {
     sendSuccess(res, form, 'Form status updated');
   },
 
+  async toggleFavorite(req: Request, res: Response) {
+    const form = await formService.toggleFavorite(req.params.formId as string);
+    sendSuccess(res, form, 'Form favorite toggled');
+  },
+
   async replaceFields(req: Request, res: Response) {
     const fields = await formService.replaceFields(req.params.formId as string, req.body.fields);
     sendSuccess(res, fields, 'Form fields updated');

@@ -2,17 +2,18 @@
 
 import { use, useMemo } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Inbox } from 'lucide-react';
+import { Inbox } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LoadingState } from '@/components/shared/loading-state';
 import { useWorkspaceContext } from '@/providers/workspace-provider';
-import { useForm as useFormQuery } from '@/modules/form/form.queries';
+import { useForm as useFormQuery, useToggleFavorite } from '@/modules/form/form.queries';
 import { useFormAnalytics } from '@/modules/submission/submission.queries';
 import { useSubmissions } from '@/modules/submission/submission.queries';
 import { OverviewCards } from '@/features/analytics/overview-cards';
 import { SubmissionTimelineChart } from '@/features/analytics/submission-timeline-chart';
 import { FieldResponseChart } from '@/features/analytics/field-response-chart';
 import { ResponsesTable } from '@/features/analytics/responses-table';
+import { EditorTopbar } from '@/features/editor/editor-topbar';
 import { ROUTES } from '@/constants/routes';
 import type { FormAnalytics } from '@/modules/submission/types';
 
@@ -80,6 +81,7 @@ export default function AnalyticsPage({
 }) {
   const { workspaceId, formId } = use(params);
   const { workspace } = useWorkspaceContext();
+  const toggleFavorite = useToggleFavorite();
 
   const { data: form, isLoading: formLoading } = useFormQuery(workspaceId, formId);
   const { data: serverAnalytics, isLoading: analyticsLoading, isError: analyticsError } = useFormAnalytics(workspaceId, formId);
@@ -123,58 +125,64 @@ export default function AnalyticsPage({
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Link
-          href={ROUTES.workspace(workspaceId).form(formId).SUBMISSIONS}
-          className="p-1.5 rounded-md hover:bg-muted text-muted-foreground hover:text-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Link>
-        <div className="flex-1 min-w-0">
-          <h1 className="text-xl font-semibold truncate">
-            {form?.title ?? 'Form'} — Analytics
-          </h1>
-          <p className="text-sm text-muted-foreground">Last 30 days</p>
-        </div>
-        <Link href={ROUTES.workspace(workspaceId).form(formId).SUBMISSIONS}>
-          <Button variant="outline" size="sm">
-            View submissions
-          </Button>
-        </Link>
-      </div>
-
-      {/* Overview cards */}
-      <OverviewCards overview={data.overview} />
-
-      {/* Charts */}
-      {data.overview.totalSubmissions === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-12 text-center">
-          <div className="rounded-full bg-muted p-3">
-            <Inbox className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <div>
-            <p className="font-medium">No submissions yet</p>
-            <p className="text-sm text-muted-foreground mt-1">
-              Share your form to start collecting responses and see analytics.
-            </p>
-          </div>
-        </div>
-      ) : (
-        <>
-          <div className="grid gap-6 lg:grid-cols-2">
-            <SubmissionTimelineChart data={data.timeline} />
-            <FieldResponseChart data={data.fieldStats} />
-          </div>
-
-          <ResponsesTable
-            formTitle={form?.title ?? 'form'}
-            fields={form?.fields ?? []}
-            submissions={submissions ?? []}
-          />
-        </>
+    <div className="-m-6 flex flex-col h-[calc(100vh-3.5rem)]">
+      {form && (
+        <EditorTopbar
+          workspaceId={workspaceId}
+          formId={formId}
+          workspaceName={workspace.name}
+          title={form.title}
+          slug={form.slug}
+          status={form.status}
+          isFavorite={form.isFavorite}
+          onToggleFavorite={() => toggleFavorite.mutate({ workspaceId, formId })}
+        />
       )}
+
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="space-y-6">
+          {/* Sub-header */}
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">Last 30 days</p>
+            <Link href={ROUTES.workspace(workspaceId).form(formId).SUBMISSIONS}>
+              <Button variant="outline" size="sm">
+                View submissions
+              </Button>
+            </Link>
+          </div>
+
+          {/* Overview cards */}
+          <OverviewCards overview={data.overview} />
+
+          {/* Charts */}
+          {data.overview.totalSubmissions === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-12 text-center">
+              <div className="rounded-full bg-muted p-3">
+                <Inbox className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="font-medium">No submissions yet</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Share your form to start collecting responses and see analytics.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-6 lg:grid-cols-2">
+                <SubmissionTimelineChart data={data.timeline} />
+                <FieldResponseChart data={data.fieldStats} />
+              </div>
+
+              <ResponsesTable
+                formTitle={form?.title ?? 'form'}
+                fields={form?.fields ?? []}
+                submissions={submissions ?? []}
+              />
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

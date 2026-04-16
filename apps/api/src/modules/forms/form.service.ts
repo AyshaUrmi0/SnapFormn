@@ -101,6 +101,13 @@ export const formService = {
     });
   },
 
+  async toggleFavorite(formId: string) {
+    const form = await formRepository.findById(formId);
+    if (!form) throw AppError.notFound('Form not found');
+
+    return formRepository.update(formId, { isFavorite: !form.isFavorite });
+  },
+
   async updateStatus(formId: string, status: FormStatus) {
     const form = await formRepository.findById(formId);
     if (!form) throw AppError.notFound('Form not found');

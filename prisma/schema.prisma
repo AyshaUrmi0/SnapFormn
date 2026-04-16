@@ -236,6 +236,7 @@ model Form {
   description String?
   status      FormStatus @default(DRAFT)
   settings    Json       @default("{}")
+  isFavorite  Boolean    @default(false)
   closedAt    DateTime?
   deletedAt   DateTime?
   createdAt   DateTime   @default(now())
