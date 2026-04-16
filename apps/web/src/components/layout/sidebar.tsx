@@ -64,7 +64,7 @@ function getNavSections(workspaceId: string | null, options?: { onSearchClick?: 
   const ws = workspaceId ? ROUTES.workspace(workspaceId) : null;
 
   const mainNav: NavItemDef[] = [
-    { label: 'Home', href: ws?.ROOT ?? ROUTES.WORKSPACES, icon: Home, exact: true },
+    { label: 'Home', href: ROUTES.WORKSPACES, icon: Home, exact: true },
     { label: 'Search', href: '#', icon: Search, action: options?.onSearchClick },
     { label: 'Members', href: ws?.MEMBERS ?? ROUTES.MEMBERS, icon: Users },
     { label: 'Domains', href: ROUTES.DOMAINS, icon: Globe },
