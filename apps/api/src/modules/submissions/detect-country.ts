@@ -1,11 +1,8 @@
+import geoip from 'fast-geoip';
 import { logger } from '../../lib/logger';
 
-const IPAPI_TIMEOUT_MS = 5000;
+const REGION_DISPLAY = new Intl.DisplayNames(['en'], { type: 'region' });
 
-// Only the narrow loopback range — not private ranges, since a real client
-// behind NAT could legitimately come through as 10.x if trust proxy isn't
-// peeling enough hops. Better to try ipapi and let it return an error than
-// to reject preemptively.
 function isLoopbackIp(ip: string): boolean {
   if (!ip) return true;
   if (ip === '::1') return true;
@@ -14,45 +11,44 @@ function isLoopbackIp(ip: string): boolean {
   return false;
 }
 
+function normalizeIp(ip: string): string {
+  // IPv4-mapped IPv6 addresses arrive as "::ffff:1.2.3.4"; strip the prefix
+  // so the IPv4 database lookup succeeds.
+  if (ip.startsWith('::ffff:')) return ip.slice('::ffff:'.length);
+  return ip;
+}
+
 export async function detectCountryFromIp(ip: string | undefined): Promise<string | null> {
   if (!ip) {
     logger.info('detectCountryFromIp called with no IP');
     return null;
   }
-  if (isLoopbackIp(ip)) {
-    logger.info({ ip }, 'detectCountryFromIp skipping loopback IP');
+  const normalized = normalizeIp(ip);
+  if (isLoopbackIp(normalized)) {
+    logger.info({ ip: normalized }, 'detectCountryFromIp skipping loopback IP');
     return null;
   }
 
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), IPAPI_TIMEOUT_MS);
-
   try {
-    const url = `https://ipapi.co/${encodeURIComponent(ip)}/json/`;
-    logger.info({ ip, url }, 'detectCountryFromIp calling ipapi');
-    const res = await fetch(url, {
-      signal: controller.signal,
-      headers: { 'User-Agent': 'Snapform/1.0' },
-    });
-    if (!res.ok) {
-      logger.warn({ ip, status: res.status }, 'ipapi returned non-200 for geo lookup');
+    const geo = await geoip.lookup(normalized);
+    if (!geo?.country) {
+      logger.warn({ ip: normalized }, 'fast-geoip returned no country for IP');
       return null;
     }
-    const data = (await res.json()) as { country_name?: string; error?: boolean; reason?: string };
-    if (data.error) {
-      logger.warn({ ip, reason: data.reason }, 'ipapi reported an error for geo lookup');
-      return null;
+    try {
+      const name = REGION_DISPLAY.of(geo.country);
+      if (name) {
+        logger.info({ ip: normalized, code: geo.country, name }, 'detectCountryFromIp resolved');
+        return name;
+      }
+    } catch {
+      // Intl.DisplayNames may throw for unknown region codes; fall through.
     }
-    if (typeof data.country_name === 'string' && data.country_name.length > 0) {
-      logger.info({ ip, country: data.country_name }, 'detectCountryFromIp resolved');
-      return data.country_name;
-    }
-    logger.warn({ ip, data }, 'ipapi returned no country_name');
-    return null;
+    // Fall back to the raw country code if we can't translate it.
+    logger.info({ ip: normalized, code: geo.country }, 'detectCountryFromIp resolved (code only)');
+    return geo.country;
   } catch (err) {
-    logger.warn({ err, ip }, 'Failed to detect country from IP');
+    logger.warn({ err, ip: normalized }, 'Failed to detect country from IP');
     return null;
-  } finally {
-    clearTimeout(timer);
   }
 }
