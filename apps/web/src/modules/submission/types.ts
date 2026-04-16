@@ -22,7 +22,10 @@ export interface Submission {
 // Service input types (Keys)
 export interface SubmitFormKeys {
   slug: string;
-  data: { fields: Array<{ fieldId: string; value: unknown }> };
+  data: {
+    fields: Array<{ fieldId: string; value: unknown }>;
+    recaptchaToken?: string;
+  };
 }
 
 export interface ListSubmissionsKeys {

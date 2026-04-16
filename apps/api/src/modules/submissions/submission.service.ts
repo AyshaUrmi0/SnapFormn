@@ -6,6 +6,7 @@ import { formRepository } from '../forms/form.repository';
 import { uploadService } from '../uploads/upload.service';
 import { extractSchedule, getScheduleStatus } from '../forms/schedule';
 import { detectCountryFromIp } from './detect-country';
+import { verifyRecaptchaToken } from './recaptcha-verify';
 import type { SubmitFormInput, FormAnalytics } from './submission.types';
 
 // Media field value shape stored in SubmissionField.value
@@ -72,6 +73,19 @@ export const submissionService = {
             'This form has reached its monthly submission limit. Please try again later.',
           );
         }
+      }
+    }
+
+    // If the form contains a RECAPTCHA block, require and verify the token
+    // before doing anything else. This is the cheapest defence against
+    // automated spam submissions.
+    const hasRecaptcha = form.fields.some((f) => f.type === 'RECAPTCHA');
+    if (hasRecaptcha) {
+      const ok = await verifyRecaptchaToken(input.recaptchaToken, ip);
+      if (!ok) {
+        throw AppError.forbidden(
+          'reCAPTCHA verification failed. Please complete the challenge and try again.',
+        );
       }
     }
 

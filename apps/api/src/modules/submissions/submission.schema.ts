@@ -11,6 +11,9 @@ export const submitFormSchema = z.object({
         value: z.unknown(),
       }),
     ),
+    // Only present when the form contains a RECAPTCHA block. The backend
+    // verifies this token with Google before accepting the submission.
+    recaptchaToken: z.string().optional(),
   }),
 });
 
