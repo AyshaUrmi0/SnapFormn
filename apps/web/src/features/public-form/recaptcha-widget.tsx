@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Check } from 'lucide-react';
+import { Check, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Self-contained "I'm not a robot" checkbox styled to resemble Google's
@@ -40,9 +40,12 @@ export function RecaptchaWidget({ onChange }: RecaptchaWidgetProps) {
         {checked && <Check className="h-4 w-4" strokeWidth={3} />}
       </button>
       <span className="text-sm text-foreground select-none">I&apos;m not a robot</span>
-      <div className="ml-auto flex flex-col items-end text-[9px] leading-tight text-muted-foreground select-none">
-        <span className="font-semibold text-muted-foreground/80">Snapform</span>
-        <span>anti-bot</span>
+      <div className="ml-auto flex flex-col items-center gap-0.5 select-none">
+        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-b from-blue-400 to-blue-600">
+          <Shield className="h-4 w-4 text-white" strokeWidth={2.5} />
+        </div>
+        <span className="text-[9px] font-medium text-muted-foreground leading-none">reCAPTCHA</span>
+        <span className="text-[7px] text-muted-foreground/70 leading-none">Privacy - Terms</span>
       </div>
     </div>
   );
