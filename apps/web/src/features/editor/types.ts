@@ -21,6 +21,13 @@ export interface ScaleOptions {
   maxLabel?: string;
 }
 
+// Shape for MATRIX blocks. Rows are the questions being asked; columns are
+// the answer choices, shared across every row.
+export interface MatrixOptions {
+  rows: FieldOption[];
+  columns: FieldOption[];
+}
+
 /**
  * Block options are polymorphic depending on field type:
  * - choice fields → `FieldOption[]`
@@ -61,6 +68,26 @@ export function getMediaOptions(field: EditorField): MediaOptions {
     return field.options as MediaOptions;
   }
   return {};
+}
+
+/** Safely read matrix options from a field. Returns empty rows/columns for malformed data. */
+export function getMatrixOptions(field: EditorField): MatrixOptions {
+  const empty: MatrixOptions = { rows: [], columns: [] };
+  const opts = field.options;
+  if (!opts || Array.isArray(opts) || typeof opts !== 'object') return empty;
+  const o = opts as Record<string, unknown>;
+  const parseList = (raw: unknown): FieldOption[] => {
+    if (!Array.isArray(raw)) return [];
+    return raw
+      .filter(
+        (x): x is FieldOption =>
+          typeof x === 'object' && x !== null &&
+          typeof (x as FieldOption).label === 'string' &&
+          typeof (x as FieldOption).value === 'string',
+      )
+      .map((x) => ({ label: x.label, value: x.value }));
+  };
+  return { rows: parseList(o.rows), columns: parseList(o.columns) };
 }
 
 /**

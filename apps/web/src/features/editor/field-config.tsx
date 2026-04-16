@@ -8,16 +8,18 @@ import { Separator } from '@/components/ui/separator';
 import { Switch } from '@/components/ui/switch';
 import { FIELD_TYPE_CONFIG } from '@/constants/field-types';
 import { FieldOptionsEditor } from './field-options-editor';
+import { MatrixAxisEditor } from './matrix-axis-editor';
 import { MediaUploader } from './media-uploader';
 import { LogicBlockEditor, blockFromField } from './logic-block-editor';
 import {
   CHOICE_FIELD_TYPES,
   MEDIA_FIELD_TYPES,
   getChoiceOptions,
+  getMatrixOptions,
   getMediaOptions,
   getScaleOptions,
 } from './types';
-import type { EditorField, FieldOption, MediaOptions, ScaleOptions } from './types';
+import type { EditorField, FieldOption, MatrixOptions, MediaOptions, ScaleOptions } from './types';
 
 const SCALE_MIN_CHOICES = [0, 1];
 const SCALE_MAX_CHOICES = [2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -86,6 +88,8 @@ export function FieldConfig({ field, allFields, onChange, onClose, errors }: Fie
   const showLogicEditor = field.type === 'CONDITIONAL_LOGIC';
   const showScaleInputs = field.type === 'SCALE';
   const scaleOptions: ScaleOptions = showScaleInputs ? getScaleOptions(field) : { min: 1, max: 5 };
+  const showMatrixInputs = field.type === 'MATRIX';
+  const matrixOptions: MatrixOptions = showMatrixInputs ? getMatrixOptions(field) : { rows: [], columns: [] };
 
   const showPrefillKey = !PREFILL_EXCLUDED_TYPES.includes(field.type);
   const currentPrefillKey = (field.validations as { prefillKey?: string } | null)?.prefillKey ?? '';
@@ -225,6 +229,42 @@ export function FieldConfig({ field, allFields, onChange, onClose, errors }: Fie
             {hasOptionsError && (
               <p className="text-sm text-destructive mt-1">At least one option is required</p>
             )}
+          </div>
+        </>
+      )}
+
+      {showMatrixInputs && (
+        <>
+          <Separator />
+          <div className="space-y-4">
+            <div>
+              <h4 className="text-sm font-medium">Matrix</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Rows are the items being rated. Columns are the shared answer choices.
+              </p>
+            </div>
+            <MatrixAxisEditor
+              label="Rows"
+              singular="Row"
+              valuePrefix="row"
+              items={matrixOptions.rows}
+              onChange={(rows) =>
+                onChange({
+                  options: { ...matrixOptions, rows } as Record<string, unknown>,
+                })
+              }
+            />
+            <MatrixAxisEditor
+              label="Columns"
+              singular="Column"
+              valuePrefix="col"
+              items={matrixOptions.columns}
+              onChange={(columns) =>
+                onChange({
+                  options: { ...matrixOptions, columns } as Record<string, unknown>,
+                })
+              }
+            />
           </div>
         </>
       )}
