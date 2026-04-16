@@ -1,89 +1,49 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
-import { env } from '@/lib/env';
+import { useState } from 'react';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-// Google's v2 test site key. Always passes verification on Google's side
-// AND always renders a working widget. Documented here:
-// https://developers.google.com/recaptcha/docs/faq#id-like-to-run-automated-tests-with-recaptcha
-const TEST_SITE_KEY = '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
-
-// Load Google's reCAPTCHA script once, shared across all widget instances.
-let scriptPromise: Promise<void> | null = null;
-function loadGoogleScript(): Promise<void> {
-  if (typeof window === 'undefined') return Promise.resolve();
-  if (scriptPromise) return scriptPromise;
-  scriptPromise = new Promise((resolve) => {
-    if ((window as unknown as { grecaptcha?: unknown }).grecaptcha) {
-      resolve();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => resolve();
-    document.head.appendChild(script);
-  });
-  return scriptPromise;
-}
-
-// Minimal typing for the grecaptcha API surface we use.
-interface Grecaptcha {
-  render: (
-    container: HTMLElement,
-    options: { sitekey: string; callback?: (token: string) => void; 'expired-callback'?: () => void },
-  ) => number;
-  reset: (widgetId?: number) => void;
-  ready: (cb: () => void) => void;
-}
-function getGrecaptcha(): Grecaptcha | null {
-  return (window as unknown as { grecaptcha?: Grecaptcha }).grecaptcha ?? null;
-}
+// Self-contained "I'm not a robot" checkbox styled to resemble Google's
+// reCAPTCHA v2 widget. No Google integration — ticking it flips local
+// state and emits a marker token. The form renderer requires the token
+// before allowing submission. This is UX-only, not actual bot protection.
+const CONFIRMED_TOKEN = 'user-confirmed';
 
 interface RecaptchaWidgetProps {
   onChange: (token: string | null) => void;
 }
 
 export function RecaptchaWidget({ onChange }: RecaptchaWidgetProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const widgetIdRef = useRef<number | null>(null);
+  const [checked, setChecked] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
-    const siteKey = env.RECAPTCHA_SITE_KEY || TEST_SITE_KEY;
-
-    loadGoogleScript().then(() => {
-      if (cancelled) return;
-      const grecaptcha = getGrecaptcha();
-      if (!grecaptcha || !containerRef.current) return;
-
-      grecaptcha.ready(() => {
-        if (cancelled || !containerRef.current) return;
-        // Guard against double-render in dev mode (React strict effects).
-        if (widgetIdRef.current !== null) return;
-        try {
-          widgetIdRef.current = grecaptcha.render(containerRef.current, {
-            sitekey: siteKey,
-            callback: (token: string) => onChange(token),
-            'expired-callback': () => onChange(null),
-          });
-        } catch {
-          // Render may throw if the container already has a widget (e.g. HMR).
-        }
-      });
-    });
-
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  function handleToggle() {
+    if (checked) return;
+    setChecked(true);
+    onChange(CONFIRMED_TOKEN);
+  }
 
   return (
-    <div className="flex flex-col gap-1">
-      <div ref={containerRef} />
+    <div className="h-[78px] w-full max-w-[304px] rounded border border-input bg-background flex items-center px-3 gap-3 shadow-sm">
+      <button
+        type="button"
+        onClick={handleToggle}
+        aria-pressed={checked}
+        aria-label="I'm not a robot"
+        className={cn(
+          'h-7 w-7 shrink-0 rounded border-2 flex items-center justify-center transition-colors',
+          checked
+            ? 'border-green-500 bg-green-500 text-white'
+            : 'border-input bg-background hover:border-muted-foreground cursor-pointer',
+        )}
+      >
+        {checked && <Check className="h-4 w-4" strokeWidth={3} />}
+      </button>
+      <span className="text-sm text-foreground select-none">I&apos;m not a robot</span>
+      <div className="ml-auto flex flex-col items-end text-[9px] leading-tight text-muted-foreground select-none">
+        <span className="font-semibold text-muted-foreground/80">Snapform</span>
+        <span>anti-bot</span>
+      </div>
     </div>
   );
 }
