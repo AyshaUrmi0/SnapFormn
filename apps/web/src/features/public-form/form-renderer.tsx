@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import {
   Star, Upload, ChevronDown, Clock, Loader2, X, CheckCircle2,
   Image as ImageIcon, Video, Music, Code,
@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button';
 import { slugify } from '@snapform/shared';
 import { cn } from '@/lib/utils';
 import { uploadToCloudinary, type UploadResult } from '@/lib/cloudinary-upload';
+import { runLogic } from '@/features/editor/logic-engine';
+import { expandMentions } from '@/lib/answer-piping';
 import { SignaturePad } from './signature-pad';
 import type { FormField, FieldType } from '@/modules/form/types';
 
@@ -148,11 +150,31 @@ interface FormFieldRendererProps {
   onChange: (value: unknown) => void;
   error?: string;
   uploadContext: UploadContext;
+  /** All form fields — needed to resolve @mention tokens in text blocks. */
+  allFields: FormField[];
+  /** Current values including logic-derived CALCULATED fields. */
+  derivedValues: Record<string, unknown>;
 }
 
-function FormFieldRenderer({ field, value, onChange, error, uploadContext }: FormFieldRendererProps) {
+function FormFieldRenderer({
+  field,
+  value,
+  onChange,
+  error,
+  uploadContext,
+  allFields,
+  derivedValues,
+}: FormFieldRendererProps) {
   const options = parseOptions(field.options);
-  const displayLabel = field.label || 'Untitled';
+  const rawLabel = field.label || 'Untitled';
+  // Text-only block types (statements, headings, titles, labels) expand
+  // @mentions in their label so creators can write "Your total is $@price".
+  const TEXT_BLOCKS: FieldType[] = [
+    'STATEMENT', 'HEADING_1', 'HEADING_2', 'HEADING_3', 'TITLE', 'LABEL',
+  ];
+  const displayLabel = TEXT_BLOCKS.includes(field.type)
+    ? expandMentions(rawLabel, allFields, derivedValues)
+    : rawLabel;
 
   const labelEl = (
     <Label className="text-sm font-medium">
@@ -662,7 +684,15 @@ export function FormRenderer({
     .sort((a, b) => a.order - b.order);
 
   const hiddenFields = fields.filter((f) => f.type === 'HIDDEN');
+  const calculatedFields = fields.filter((f) => f.type === 'CALCULATED');
   const allFields = fields.sort((a, b) => a.order - b.order);
+
+  // Re-compute CALCULATED fields on every value change by running all LOGIC
+  // blocks top-to-bottom. Pure and memoized so it's cheap.
+  const derivedValues = useMemo(
+    () => runLogic(fields, values),
+    [fields, values],
+  );
 
   // On mount, seed values from the URL query string:
   //   1. HIDDEN fields match by their configured `paramName`.
@@ -673,7 +703,7 @@ export function FormRenderer({
   useEffect(() => {
     if (previewMode) return;
     const params = new URLSearchParams(window.location.search);
-    if (params.toString() === '' && hiddenFields.length === 0) return;
+    if (params.toString() === '' && hiddenFields.length === 0 && calculatedFields.length === 0) return;
 
     setValues((prev) => {
       const next = { ...prev };
@@ -683,6 +713,15 @@ export function FormRenderer({
         if (!opts.paramName) continue;
         const fromUrl = params.get(opts.paramName);
         next[field.id] = fromUrl ?? opts.defaultValue ?? '';
+      }
+
+      // Seed CALCULATED fields with their configured initial value. Logic
+      // blocks will mutate these on every respondent answer change.
+      for (const field of calculatedFields) {
+        const opts = (field.options ?? {}) as { valueType?: 'number' | 'text'; initialValue?: number | string };
+        if (next[field.id] === undefined) {
+          next[field.id] = opts.initialValue ?? (opts.valueType === 'text' ? '' : 0);
+        }
       }
 
       for (const field of interactiveFields) {
@@ -735,9 +774,10 @@ export function FormRenderer({
     if (!validate()) return;
 
     // Build submission payload — interactive fields with values, plus every
-    // hidden field (always send, including empty strings). COUNTRY fields
-    // are resolved server-side and injected by the API, so we don't send
-    // them at all from the client.
+    // hidden and calculated field (always send, including empty / initial
+    // values so the creator sees them in analytics). COUNTRY fields are
+    // resolved server-side and injected by the API, so we don't send them
+    // at all from the client.
     const submissionValues: Record<string, unknown> = {};
     for (const field of interactiveFields) {
       if (values[field.id] !== undefined && values[field.id] !== '' && values[field.id] !== null) {
@@ -746,6 +786,13 @@ export function FormRenderer({
     }
     for (const field of hiddenFields) {
       submissionValues[field.id] = values[field.id] ?? '';
+    }
+    for (const field of calculatedFields) {
+      const opts = (field.options ?? {}) as { valueType?: 'number' | 'text'; initialValue?: number | string };
+      const fallback = opts.initialValue ?? (opts.valueType === 'text' ? '' : 0);
+      // Prefer the logic-engine-derived value; fall back to the initial if
+      // no logic blocks touched it.
+      submissionValues[field.id] = derivedValues[field.id] ?? fallback;
     }
 
     // In preview mode, show the thank-you page locally without calling the API
@@ -820,6 +867,8 @@ export function FormRenderer({
               }
             }}
             error={errors[field.id]}
+            allFields={allFields}
+            derivedValues={derivedValues}
           />
         ))}
       </div>

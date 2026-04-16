@@ -482,31 +482,51 @@ function FieldPreview({
     }
 
     case 'CONDITIONAL_LOGIC': {
-      const parsed = parseJson<{ rules?: unknown[] }>(options);
-      const ruleCount = parsed?.rules?.length ?? 0;
+      const parsed = parseJson<{
+        combinator?: 'and' | 'or';
+        conditions?: unknown[];
+        actions?: unknown[];
+      }>(options);
+      const conditionCount = parsed?.conditions?.length ?? 0;
+      const actionCount = parsed?.actions?.length ?? 0;
+      const combinator = parsed?.combinator === 'or' ? 'ANY' : 'ALL';
       return (
-        <div className="flex items-center gap-3 rounded-md border border-dashed border-input p-3">
-          <GitBranch className="h-4 w-4 text-muted-foreground shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">{displayLabel}</p>
-            <p className="text-xs text-muted-foreground">
-              {ruleCount === 0
-                ? 'No rules configured'
-                : `${ruleCount} rule${ruleCount !== 1 ? 's' : ''}`}
-            </p>
+        <div className="rounded-md border border-dashed border-input p-3 bg-muted/10">
+          <div className="flex items-center gap-3">
+            <GitBranch className="h-4 w-4 text-muted-foreground shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium">Logic</p>
+              {conditionCount === 0 && actionCount === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Configure IF / THEN rules in the sidebar. Invisible to respondents.
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  If {combinator} of {conditionCount} condition{conditionCount !== 1 ? 's' : ''} match →{' '}
+                  {actionCount} action{actionCount !== 1 ? 's' : ''}
+                </p>
+              )}
+            </div>
           </div>
         </div>
       );
     }
     case 'CALCULATED': {
-      const parsed = parseJson<{ formula?: string }>(options);
+      const parsed = parseJson<{ valueType?: 'number' | 'text'; initialValue?: number | string }>(options);
+      const valueType = parsed?.valueType ?? 'number';
+      const initial = parsed?.initialValue ?? (valueType === 'text' ? '' : 0);
       return (
-        <div className="flex items-center gap-3 rounded-md border border-dashed border-input p-3">
+        <div className="flex items-center gap-3 rounded-md border border-dashed border-input p-3 bg-muted/10">
           <Calculator className="h-4 w-4 text-muted-foreground shrink-0" />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium">{displayLabel}</p>
+            <p className="text-sm font-medium">
+              {displayLabel}
+              <span className="ml-2 text-[10px] uppercase tracking-wider text-muted-foreground/80">
+                calculated · {valueType}
+              </span>
+            </p>
             <p className="text-xs font-mono text-muted-foreground truncate">
-              {parsed?.formula || 'No formula set'}
+              initial = {valueType === 'text' ? `"${initial}"` : String(initial)} · invisible to respondents
             </p>
           </div>
         </div>

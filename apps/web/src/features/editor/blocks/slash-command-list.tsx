@@ -44,13 +44,13 @@ function defaultOptionsForType(type: FieldType): string {
     return JSON.stringify({ paramName: '', defaultValue: '' });
   }
   if (type === 'CALCULATED') {
-    return JSON.stringify({ formula: '' });
+    return JSON.stringify({ valueType: 'number', initialValue: 0 });
   }
   if (type === 'RECAPTCHA') {
     return JSON.stringify({ siteKey: '' });
   }
   if (type === 'CONDITIONAL_LOGIC') {
-    return JSON.stringify({ rules: [] });
+    return JSON.stringify({ combinator: 'and', conditions: [], actions: [] });
   }
   return '[]';
 }

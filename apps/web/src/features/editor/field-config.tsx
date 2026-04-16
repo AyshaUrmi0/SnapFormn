@@ -9,8 +9,10 @@ import { Switch } from '@/components/ui/switch';
 import { FIELD_TYPE_CONFIG } from '@/constants/field-types';
 import { FieldOptionsEditor } from './field-options-editor';
 import { MediaUploader } from './media-uploader';
+import { LogicBlockEditor, blockFromField } from './logic-block-editor';
 import { CHOICE_FIELD_TYPES, MEDIA_FIELD_TYPES, getChoiceOptions, getMediaOptions } from './types';
 import type { EditorField, FieldOption, MediaOptions } from './types';
+import type { LogicBlock } from './logic-engine';
 import type { ResourceType } from '@/lib/cloudinary-upload';
 
 const PREFILL_EXCLUDED_TYPES: string[] = [
@@ -22,6 +24,7 @@ const PREFILL_EXCLUDED_TYPES: string[] = [
 
 interface FieldConfigProps {
   field: EditorField;
+  allFields: EditorField[];
   onChange: (updates: Partial<EditorField>) => void;
   onClose: () => void;
   errors?: string[];
@@ -53,7 +56,19 @@ function getHiddenOptions(field: EditorField): HiddenOptions {
   return {};
 }
 
-export function FieldConfig({ field, onChange, onClose, errors }: FieldConfigProps) {
+interface CalculatedOptions {
+  valueType?: 'number' | 'text';
+  initialValue?: number | string;
+}
+
+function getCalculatedOptions(field: EditorField): CalculatedOptions {
+  if (field.options && !Array.isArray(field.options) && typeof field.options === 'object') {
+    return field.options as CalculatedOptions;
+  }
+  return {};
+}
+
+export function FieldConfig({ field, allFields, onChange, onClose, errors }: FieldConfigProps) {
   const config = FIELD_TYPE_CONFIG[field.type];
   const showPlaceholder = !NO_PLACEHOLDER_TYPES.includes(field.type);
   const showRequired = !NO_REQUIRED_TYPES.includes(field.type);
@@ -61,6 +76,9 @@ export function FieldConfig({ field, onChange, onClose, errors }: FieldConfigPro
   const showMediaUploader = MEDIA_FIELD_TYPES.includes(field.type);
   const showHiddenFieldInputs = field.type === 'HIDDEN';
   const hiddenOptions = showHiddenFieldInputs ? getHiddenOptions(field) : {};
+  const showCalculatedInputs = field.type === 'CALCULATED';
+  const calculatedOptions = showCalculatedInputs ? getCalculatedOptions(field) : {};
+  const showLogicEditor = field.type === 'CONDITIONAL_LOGIC';
 
   const showPrefillKey = !PREFILL_EXCLUDED_TYPES.includes(field.type);
   const currentPrefillKey = (field.validations as { prefillKey?: string } | null)?.prefillKey ?? '';
@@ -68,6 +86,15 @@ export function FieldConfig({ field, onChange, onClose, errors }: FieldConfigPro
 
   const hasLabelError = errors?.some((e) => e.toLowerCase().includes('label'));
   const hasOptionsError = errors?.some((e) => e.toLowerCase().includes('option'));
+
+  // Text-display blocks can pipe calculated field values via `@name`.
+  const TEXT_BLOCKS: string[] = [
+    'STATEMENT', 'HEADING_1', 'HEADING_2', 'HEADING_3', 'TITLE', 'LABEL',
+  ];
+  const showMentionHint = TEXT_BLOCKS.includes(field.type);
+  const calculatedFieldNames = allFields
+    .filter((f) => f.type === 'CALCULATED' && f.label.trim().length > 0)
+    .map((f) => f.label.trim());
 
   // Cloudinary resource type per block
   const resourceTypeFor: Record<string, ResourceType> = {
@@ -107,6 +134,30 @@ export function FieldConfig({ field, onChange, onClose, errors }: FieldConfigPro
           />
           {hasLabelError && (
             <p className="text-sm text-destructive">Label is required</p>
+          )}
+          {showMentionHint && calculatedFieldNames.length > 0 && (
+            <div className="text-[11px] text-muted-foreground space-y-1">
+              <p>Insert a live calculated value with:</p>
+              <div className="flex flex-wrap gap-1">
+                {calculatedFieldNames.map((name) => (
+                  <button
+                    key={name}
+                    type="button"
+                    onClick={() => {
+                      const token = `@${name}`;
+                      const current = field.label ?? '';
+                      const nextLabel = current
+                        ? (current.endsWith(' ') ? current + token : current + ' ' + token)
+                        : token;
+                      onChange({ label: nextLabel });
+                    }}
+                    className="rounded border bg-muted px-1.5 py-0.5 font-mono hover:bg-muted-foreground/10"
+                  >
+                    @{name}
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
         </div>
 
@@ -229,6 +280,84 @@ export function FieldConfig({ field, onChange, onClose, errors }: FieldConfigPro
                 }
                 placeholder="Used when the URL has no such parameter"
               />
+            </div>
+          </div>
+        </>
+      )}
+
+      {showLogicEditor && (
+        <>
+          <Separator />
+          <LogicBlockEditor
+            selfFieldId={field.id}
+            allFields={allFields}
+            value={blockFromField(field)}
+            onChange={(next: LogicBlock) =>
+              onChange({ options: next as unknown as Record<string, unknown> })
+            }
+          />
+        </>
+      )}
+
+      {showCalculatedInputs && (
+        <>
+          <Separator />
+          <div className="space-y-3">
+            <div>
+              <h4 className="text-sm font-medium">Calculated field</h4>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Invisible to respondents. Its value is driven by Logic blocks
+                and can be displayed in text with{' '}
+                <code className="text-[10px]">@{field.label || 'name'}</code>.
+              </p>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="calc-value-type">Value type</Label>
+              <select
+                id="calc-value-type"
+                value={calculatedOptions.valueType ?? 'number'}
+                onChange={(e) => {
+                  const next = (e.target as HTMLSelectElement).value as 'number' | 'text';
+                  onChange({
+                    options: {
+                      ...calculatedOptions,
+                      valueType: next,
+                      initialValue: next === 'number' ? 0 : '',
+                    } as Record<string, unknown>,
+                  });
+                }}
+                className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              >
+                <option value="number">Number (for math)</option>
+                <option value="text">Text (for labels)</option>
+              </select>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="calc-initial-value">Initial value</Label>
+              <Input
+                id="calc-initial-value"
+                type={calculatedOptions.valueType === 'text' ? 'text' : 'number'}
+                value={
+                  calculatedOptions.initialValue === undefined
+                    ? ''
+                    : String(calculatedOptions.initialValue)
+                }
+                onChange={(e) => {
+                  const raw = (e.target as HTMLInputElement).value;
+                  const parsed =
+                    calculatedOptions.valueType === 'text' ? raw : (raw === '' ? 0 : Number(raw));
+                  onChange({
+                    options: {
+                      ...calculatedOptions,
+                      initialValue: parsed,
+                    } as Record<string, unknown>,
+                  });
+                }}
+                placeholder={calculatedOptions.valueType === 'text' ? '' : '0'}
+              />
+              <p className="text-xs text-muted-foreground">
+                Logic blocks reset the field to this value before each recalculation.
+              </p>
             </div>
           </div>
         </>

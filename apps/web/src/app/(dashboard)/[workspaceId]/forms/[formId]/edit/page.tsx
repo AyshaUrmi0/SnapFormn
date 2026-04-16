@@ -320,6 +320,7 @@ export default function FormEditorPage() {
             <FieldConfig
               key={selectedField.id}
               field={selectedField}
+              allFields={fields}
               onChange={handleFieldUpdate}
               onClose={() => setSelectedFieldId(null)}
               errors={selectedFieldErrors}

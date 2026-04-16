@@ -47,6 +47,11 @@ function columnLabelFor(field: FormField): string {
     if (paramName) return paramName;
     return 'Hidden field';
   }
+  if (field.type === 'CALCULATED') {
+    // Strip the slash-menu default label; prefer the creator's @-mention name.
+    const customLabel = field.label && field.label !== 'Calculated fields' ? field.label : '';
+    return customLabel || 'Calculated';
+  }
   return field.label || '(untitled)';
 }
 
