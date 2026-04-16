@@ -18,6 +18,7 @@ import {
   restoreForm,
   permanentDeleteForm,
   emptyTrash,
+  toggleFavorite,
 } from './form.service';
 import type {
   Form,
@@ -35,6 +36,7 @@ import type {
   RestoreFormKeys,
   PermanentDeleteFormKeys,
   EmptyTrashKeys,
+  ToggleFavoriteKeys,
 } from './types';
 
 // ─── Queries ─────────────────────────────────────────────────
@@ -121,6 +123,40 @@ export const useUpdateFormStatus = () => {
     },
     onError: (error) => {
       toast.error(getErrorMessage(error));
+    },
+  });
+};
+
+export const useToggleFavorite = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<Form, Error, ToggleFavoriteKeys, { previous?: Form }>({
+    mutationFn: (params: ToggleFavoriteKeys) => toggleFavorite(params),
+    onMutate: async (variables) => {
+      const detailKey = queryKeys.forms.detail(variables.workspaceId, variables.formId);
+      await queryClient.cancelQueries({ queryKey: detailKey });
+      const previous = queryClient.getQueryData<Form>(detailKey);
+      if (previous) {
+        queryClient.setQueryData<Form>(detailKey, { ...previous, isFavorite: !previous.isFavorite });
+      }
+      return { previous };
+    },
+    onError: (error, variables, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(
+          queryKeys.forms.detail(variables.workspaceId, variables.formId),
+          context.previous,
+        );
+      }
+      toast.error(getErrorMessage(error));
+    },
+    onSettled: (_, __, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.forms.detail(variables.workspaceId, variables.formId),
+      });
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.forms.list(variables.workspaceId),
+      });
     },
   });
 };

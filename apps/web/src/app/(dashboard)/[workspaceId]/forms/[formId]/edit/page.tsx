@@ -8,7 +8,7 @@ import { ErrorState } from '@/components/shared/error-state';
 import { useModal } from '@/providers/modal-provider';
 import { useWorkspaceContext } from '@/providers/workspace-provider';
 import { useForm as useFormQuery } from '@/modules/form/form.queries';
-import { useUpdateForm, useUpdateFormFields, useUpdateFormStatus } from '@/modules/form/form.queries';
+import { useUpdateForm, useUpdateFormFields, useUpdateFormStatus, useToggleFavorite } from '@/modules/form/form.queries';
 import { EditorTopbar } from '@/features/editor/editor-topbar';
 import { DocumentEditor, type DocumentEditorRef } from '@/features/editor/document-editor';
 import { FormRenderer } from '@/features/public-form/form-renderer';
@@ -31,6 +31,7 @@ export default function FormEditorPage() {
   const updateForm = useUpdateForm();
   const updateFormFields = useUpdateFormFields();
   const updateFormStatus = useUpdateFormStatus();
+  const toggleFavorite = useToggleFavorite();
 
   const [fields, setFields] = useState<EditorField[]>([]);
   const [title, setTitle] = useState('');
@@ -236,10 +237,13 @@ export default function FormEditorPage() {
         formId={formId}
         workspaceName={workspace.name}
         title={title}
+        slug={form.slug}
         status={form.status}
+        isFavorite={form.isFavorite}
         isDirty={isDirty}
         isSaving={isSaving}
         isPreview={isPreview}
+        onToggleFavorite={() => toggleFavorite.mutate({ workspaceId, formId })}
         onSave={handleSave}
         onStatusChange={handleStatusChange}
         onTogglePreview={() => setIsPreview(!isPreview)}

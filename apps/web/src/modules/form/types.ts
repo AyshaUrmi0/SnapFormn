@@ -67,6 +67,7 @@ export interface Form {
   description: string | null;
   status: FormStatus;
   settings: Record<string, unknown>;
+  isFavorite: boolean;
   closedAt: string | null;
   deletedAt: string | null;
   createdAt: string;
@@ -107,6 +108,11 @@ export interface UpdateFormStatusKeys {
   workspaceId: string;
   formId: string;
   data: { status: FormStatus };
+}
+
+export interface ToggleFavoriteKeys {
+  workspaceId: string;
+  formId: string;
 }
 
 export type UpdateFormFieldData = Omit<FormField, 'id' | 'formId' | 'createdAt' | 'updatedAt'> & { id?: string };

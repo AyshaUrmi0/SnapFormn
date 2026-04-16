@@ -23,8 +23,11 @@ import { redirectOnPlanLimit } from '@/lib/plan-gate';
 import { useCreateFormHref } from '@/hooks/use-creation-hrefs';
 import type { Form, FormStatus } from '@/modules/form/types';
 
-const STATUS_FILTERS: { label: string; value: FormStatus | 'ALL' }[] = [
+type FilterValue = FormStatus | 'ALL' | 'FAVORITES';
+
+const STATUS_FILTERS: { label: string; value: FilterValue }[] = [
   { label: 'All', value: 'ALL' },
+  { label: 'Favorites', value: 'FAVORITES' },
   { label: 'Draft', value: 'DRAFT' },
   { label: 'Published', value: 'PUBLISHED' },
   { label: 'Closed', value: 'CLOSED' },
@@ -34,12 +37,13 @@ export default function WorkspaceFormsPage() {
   const router = useRouter();
   const { confirm } = useModal();
   const { workspace, currentUserPermissions } = useWorkspaceContext();
-  const [statusFilter, setStatusFilter] = useState<FormStatus | 'ALL'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<FilterValue>('ALL');
   const [formToRename, setFormToRename] = useState<Form | null>(null);
 
+  const isStatusFilter = statusFilter !== 'ALL' && statusFilter !== 'FAVORITES';
   const { data, isLoading, isError, error, refetch } = useForms({
     workspaceId: workspace.id,
-    params: { status: statusFilter === 'ALL' ? undefined : statusFilter },
+    params: { status: isStatusFilter ? statusFilter : undefined },
   });
 
   const deleteForm = useDeleteForm();
@@ -47,7 +51,8 @@ export default function WorkspaceFormsPage() {
   const duplicateForm = useDuplicateForm();
   const newFormHref = useCreateFormHref(workspace.id);
 
-  const forms = data ?? [];
+  const allForms = data ?? [];
+  const forms = statusFilter === 'FAVORITES' ? allForms.filter((f) => f.isFavorite) : allForms;
 
   async function handleDelete(form: Form) {
     const confirmed = await confirm({
@@ -121,8 +126,20 @@ export default function WorkspaceFormsPage() {
       {!isLoading && !isError && forms.length === 0 && (
         <EmptyState
           icon={FileText}
-          title={statusFilter === 'ALL' ? 'No forms yet' : `No ${statusFilter.toLowerCase()} forms`}
-          description={statusFilter === 'ALL' ? 'Create your first form to get started.' : undefined}
+          title={
+            statusFilter === 'ALL'
+              ? 'No forms yet'
+              : statusFilter === 'FAVORITES'
+                ? 'No favorite forms'
+                : `No ${statusFilter.toLowerCase()} forms`
+          }
+          description={
+            statusFilter === 'ALL'
+              ? 'Create your first form to get started.'
+              : statusFilter === 'FAVORITES'
+                ? 'Star a form from its editor to see it here.'
+                : undefined
+          }
           action={
             statusFilter === 'ALL' ? (
               <PermissionGate permissions={[PERMISSIONS.FORM_CREATE]} userPermissions={currentUserPermissions}>
