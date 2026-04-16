@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NodeViewWrapper, type NodeViewProps } from '@tiptap/react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
@@ -30,17 +30,28 @@ function parseJson<T>(json: unknown): T | null {
 
 function CountryPreview({ displayLabel }: { displayLabel: string }) {
   const country = useDetectedCountry();
+  const [showFallback, setShowFallback] = useState(false);
+  useEffect(() => {
+    if (country) return;
+    const t = setTimeout(() => setShowFallback(true), 4000);
+    return () => clearTimeout(t);
+  }, [country]);
+
+  const displayText = country
+    ? country
+    : showFallback
+      ? 'Country detection unavailable here — will work when respondents submit.'
+      : 'Detecting your country…';
+
   return (
     <div className="space-y-1.5">
       <p className="text-sm font-medium">{displayLabel}</p>
       <div className="h-10 rounded-md border border-input bg-muted/20 px-3 flex items-center gap-2 select-none pointer-events-none">
         <Globe className="h-4 w-4 text-muted-foreground" />
-        <span className="text-sm text-muted-foreground">
-          {country ?? 'Detecting your country…'}
-        </span>
+        <span className="text-sm text-muted-foreground truncate">{displayText}</span>
       </div>
       <p className="text-[11px] text-muted-foreground">
-        Auto-detected from respondent&apos;s IP. Read-only.
+        Auto-detected from respondent&apos;s IP at submission time. Read-only.
       </p>
     </div>
   );
