@@ -92,16 +92,16 @@ export const submissionRepository = {
     const since = new Date();
     since.setDate(since.getDate() - days);
 
-    const rows = await prisma.$queryRaw<Array<{ date: Date; count: bigint }>>`
-      SELECT DATE("createdAt") as date, COUNT(*)::bigint as count
+    const rows = await prisma.$queryRaw<Array<{ date: string; count: bigint }>>`
+      SELECT TO_CHAR("createdAt", 'YYYY-MM-DD') as date, COUNT(*)::bigint as count
       FROM "Submission"
       WHERE "formId" = ${formId} AND "createdAt" >= ${since}
-      GROUP BY DATE("createdAt")
+      GROUP BY TO_CHAR("createdAt", 'YYYY-MM-DD')
       ORDER BY date ASC
     `;
 
     return rows.map((r) => ({
-      date: r.date.toISOString().split('T')[0],
+      date: r.date,
       count: Number(r.count),
     }));
   },
