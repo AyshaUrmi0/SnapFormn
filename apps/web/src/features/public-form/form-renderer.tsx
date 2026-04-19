@@ -634,7 +634,14 @@ function FormFieldRenderer({
       // Renders Google's v2 "I'm not a robot" checkbox. The token is tracked
       // in the parent via onChange and sent with the submission payload.
       return (
-        <RecaptchaWidget onChange={(token) => onChange(token)} />
+        <div className="space-y-2">
+          <RecaptchaWidget
+            value={value as string | null}
+            error={error}
+            onChange={(token) => onChange(token)}
+          />
+          {errorEl}
+        </div>
       );
 
     default:
