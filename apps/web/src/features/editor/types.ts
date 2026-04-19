@@ -53,7 +53,7 @@ export interface EditorField {
   conditionals: Record<string, unknown> | null;
 }
 
-export const CHOICE_FIELD_TYPES: FieldType[] = ['DROPDOWN', 'MULTI_SELECT', 'CHECKBOX', 'RADIO'];
+export const CHOICE_FIELD_TYPES: FieldType[] = ['DROPDOWN', 'MULTI_SELECT', 'CHECKBOX', 'RADIO', 'RANKING'];
 export const MEDIA_FIELD_TYPES: FieldType[] = ['IMAGE', 'VIDEO', 'AUDIO', 'EMBED'];
 
 /** Safely read choice options from a field. Returns empty array for non-choice fields. */
