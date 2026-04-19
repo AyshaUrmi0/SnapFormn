@@ -1,40 +1,44 @@
 'use client';
 
-import { useState } from 'react';
 import { Check, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // Self-contained "I'm not a robot" checkbox styled to resemble Google's
-// reCAPTCHA v2 widget. No Google integration — ticking it flips local
-// state and emits a marker token. The form renderer requires the token
-// before allowing submission. This is UX-only, not actual bot protection.
+// reCAPTCHA v2 widget. No Google integration — ticking it emits a marker
+// token. The form renderer requires the token before allowing submission.
+// This is UX-only, not actual bot protection.
 const CONFIRMED_TOKEN = 'user-confirmed';
 
 interface RecaptchaWidgetProps {
+  value: string | null | undefined;
+  error?: string;
   onChange: (token: string | null) => void;
 }
 
-export function RecaptchaWidget({ onChange }: RecaptchaWidgetProps) {
-  const [checked, setChecked] = useState(false);
+export function RecaptchaWidget({ value, error, onChange }: RecaptchaWidgetProps) {
+  const checked = value === CONFIRMED_TOKEN;
 
   function handleToggle() {
-    if (checked) return;
-    setChecked(true);
-    onChange(CONFIRMED_TOKEN);
+    onChange(checked ? null : CONFIRMED_TOKEN);
   }
 
   return (
-    <div className="h-[78px] w-full max-w-[304px] rounded border border-input bg-background flex items-center px-3 gap-3 shadow-sm">
+    <div
+      className={cn(
+        'h-[78px] w-full max-w-[304px] rounded border bg-background flex items-center px-3 gap-3 shadow-sm',
+        error ? 'border-destructive' : 'border-input',
+      )}
+    >
       <button
         type="button"
         onClick={handleToggle}
         aria-pressed={checked}
         aria-label="I'm not a robot"
         className={cn(
-          'h-7 w-7 shrink-0 rounded border-2 flex items-center justify-center transition-colors',
+          'h-7 w-7 shrink-0 rounded border-2 flex items-center justify-center transition-colors cursor-pointer',
           checked
             ? 'border-green-500 bg-green-500 text-white'
-            : 'border-input bg-background hover:border-muted-foreground cursor-pointer',
+            : 'border-input bg-background hover:border-muted-foreground',
         )}
       >
         {checked && <Check className="h-4 w-4" strokeWidth={3} />}
