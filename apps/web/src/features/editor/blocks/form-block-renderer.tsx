@@ -30,6 +30,7 @@ import { cn } from '@/lib/utils';
 import { useDetectedCountry } from '@/lib/detect-country';
 import { FIELD_TYPE_CONFIG } from '@/constants/field-types';
 import { FIELD_ICON_MAP } from '@/constants/icon-map';
+import { InteractiveRankingPreview } from '@/features/public-form/ranking-field';
 import { useEditorSelection } from '../editor-selection-context';
 import { InsertBlockDialog } from '../insert-block-dialog';
 import { buildInsertPayload } from './slash-command-list';
@@ -388,20 +389,7 @@ function FieldPreview({
             {displayLabel}
             {required && <span className="text-destructive ml-0.5">*</span>}
           </p>
-          <div className="space-y-1">
-            {items.map((opt, i) => (
-              <div
-                key={`${opt.value}-${i}`}
-                className="flex items-center gap-2 rounded-md border border-input bg-background px-3 py-1.5"
-              >
-                <span className="text-xs text-muted-foreground w-4">{i + 1}.</span>
-                <GripVertical className="h-3.5 w-3.5 text-muted-foreground" />
-                <span className="text-sm text-muted-foreground">
-                  {opt.label || `Option ${i + 1}`}
-                </span>
-              </div>
-            ))}
-          </div>
+          <InteractiveRankingPreview options={items} />
         </div>
       );
     }
