@@ -17,6 +17,7 @@ import { getScaleOptions } from '@/features/editor/types';
 import { expandMentions } from '@/lib/answer-piping';
 import { SignaturePad } from './signature-pad';
 import { RecaptchaWidget } from './recaptcha-widget';
+import { RankingField } from './ranking-field';
 import type { FormField, FieldType } from '@/modules/form/types';
 
 function getPrefillKey(field: FormField): string {
@@ -500,32 +501,17 @@ function FormFieldRenderer({
     }
 
     case 'RANKING': {
-      const ordered = (value as string[]) ?? options.map((o) => o.value);
-      function move(index: number, dir: -1 | 1) {
-        const next = [...ordered];
-        const ni = index + dir;
-        if (ni < 0 || ni >= next.length) return;
-        [next[index], next[ni]] = [next[ni], next[index]];
-        onChange(next);
-      }
+      const ranked = Array.isArray(value) ? (value as string[]) : [];
       return (
         <div className="space-y-2">
           {labelEl}
           {descEl}
-          <div className="space-y-1.5">
-            {ordered.map((val, i) => {
-              const opt = options.find((o) => o.value === val);
-              if (!opt) return null;
-              return (
-                <div key={val} className="flex items-center gap-2 rounded-md border bg-background px-3 py-2">
-                  <span className="text-xs text-muted-foreground w-4">{i + 1}.</span>
-                  <span className="flex-1 text-sm">{opt.label}</span>
-                  <button type="button" onClick={() => move(i, -1)} disabled={i === 0} className="px-1.5 text-xs disabled:opacity-30">↑</button>
-                  <button type="button" onClick={() => move(i, 1)} disabled={i === ordered.length - 1} className="px-1.5 text-xs disabled:opacity-30">↓</button>
-                </div>
-              );
-            })}
-          </div>
+          <RankingField
+            options={options}
+            value={ranked}
+            error={error}
+            onChange={(next) => onChange(next)}
+          />
           {errorEl}
         </div>
       );
@@ -820,6 +806,14 @@ export function FormRenderer({
       if (val === undefined || val === null || val === '') {
         newErrors[field.id] = 'This field is required';
         continue;
+      }
+
+      if (field.type === 'RANKING') {
+        const opts = parseOptions(field.options);
+        if (!Array.isArray(val) || val.length < opts.length) {
+          newErrors[field.id] = 'Please rank all options before submitting';
+          continue;
+        }
       }
 
       if (Array.isArray(val) && val.length === 0) {

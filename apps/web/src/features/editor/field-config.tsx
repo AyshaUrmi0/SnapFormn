@@ -1,7 +1,6 @@
 'use client';
 
 import { X } from 'lucide-react';
-import { slugify } from '@snapform/shared';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -25,14 +24,6 @@ const SCALE_MIN_CHOICES = [0, 1];
 const SCALE_MAX_CHOICES = [2, 3, 4, 5, 6, 7, 8, 9, 10];
 import type { LogicBlock, CalculatedOptions } from './logic-engine';
 import type { ResourceType } from '@/lib/cloudinary-upload';
-
-const PREFILL_EXCLUDED_TYPES: string[] = [
-  'STATEMENT', 'PAGE_BREAK', 'THANK_YOU_PAGE',
-  'HEADING_1', 'HEADING_2', 'HEADING_3', 'DIVIDER', 'TITLE', 'LABEL',
-  'IMAGE', 'VIDEO', 'AUDIO', 'EMBED',
-  'CONDITIONAL_LOGIC', 'CALCULATED', 'HIDDEN', 'RECAPTCHA', 'COUNTRY',
-  'SCALE',
-];
 
 interface FieldConfigProps {
   field: EditorField;
@@ -90,10 +81,6 @@ export function FieldConfig({ field, allFields, onChange, onClose, errors }: Fie
   const scaleOptions: ScaleOptions = showScaleInputs ? getScaleOptions(field) : { min: 1, max: 5 };
   const showMatrixInputs = field.type === 'MATRIX';
   const matrixOptions: MatrixOptions = showMatrixInputs ? getMatrixOptions(field) : { rows: [], columns: [] };
-
-  const showPrefillKey = !PREFILL_EXCLUDED_TYPES.includes(field.type);
-  const currentPrefillKey = (field.validations as { prefillKey?: string } | null)?.prefillKey ?? '';
-  const derivedPrefillKey = slugify(field.label || '');
 
   const hasLabelError = errors?.some((e) => e.toLowerCase().includes('label'));
   const hasOptionsError = errors?.some((e) => e.toLowerCase().includes('option'));
@@ -195,27 +182,6 @@ export function FieldConfig({ field, allFields, onChange, onClose, errors }: Fie
           </div>
         )}
 
-        {showPrefillKey && (
-          <div className="space-y-1.5">
-            <Label htmlFor="field-prefill-key">URL pre-fill key (optional)</Label>
-            <Input
-              id="field-prefill-key"
-              value={currentPrefillKey}
-              onChange={(e) =>
-                onChange({
-                  validations: {
-                    ...(field.validations ?? {}),
-                    prefillKey: (e.target as HTMLInputElement).value,
-                  },
-                })
-              }
-              placeholder={derivedPrefillKey || 'auto-generated from label'}
-            />
-            <p className="text-xs text-muted-foreground">
-              Pre-fills this field from the URL. E.g. <code className="text-[10px]">?{currentPrefillKey || derivedPrefillKey || 'key'}=value</code>
-            </p>
-          </div>
-        )}
       </div>
 
       {showOptions && (
