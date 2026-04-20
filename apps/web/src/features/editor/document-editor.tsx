@@ -80,19 +80,37 @@ export const DocumentEditor = forwardRef<DocumentEditorRef, DocumentEditorProps>
               let reactRoot: ReactDOM.Root | null = null;
               let slashRef: SlashCommandListRef | null = null;
 
+              // Position the popup near the cursor, flipping above the caret
+              // when there isn't enough room below and clamping to the viewport.
+              // Uses rAF so the measurement runs after React commits its render.
+              function position(rect: DOMRect) {
+                if (!component) return;
+                requestAnimationFrame(() => {
+                  if (!component) return;
+                  const gap = 4;
+                  const { innerWidth: vw, innerHeight: vh } = window;
+                  const popupH = component.offsetHeight || 320;
+                  const popupW = component.offsetWidth || 256;
+
+                  const spaceBelow = vh - rect.bottom;
+                  const flip = spaceBelow < popupH + gap && rect.top > popupH + gap;
+                  const top = flip
+                    ? rect.top + window.scrollY - popupH - gap
+                    : rect.bottom + window.scrollY + gap;
+
+                  const rawLeft = rect.left + window.scrollX;
+                  const left = Math.max(gap, Math.min(rawLeft, vw - popupW - gap));
+
+                  component.style.top = `${top}px`;
+                  component.style.left = `${left}px`;
+                });
+              }
+
               return {
                 onStart: (props: SuggestionProps) => {
                   component = document.createElement('div');
                   component.style.position = 'absolute';
                   component.style.zIndex = '50';
-
-                  if (props.clientRect) {
-                    const rect = props.clientRect();
-                    if (rect) {
-                      component.style.top = `${rect.bottom + window.scrollY + 4}px`;
-                      component.style.left = `${rect.left + window.scrollX}px`;
-                    }
-                  }
 
                   document.body.appendChild(component);
                   reactRoot = ReactDOM.createRoot(component);
@@ -103,17 +121,14 @@ export const DocumentEditor = forwardRef<DocumentEditorRef, DocumentEditorProps>
                       ref={(r) => { slashRef = r; }}
                     />,
                   );
-                },
-                onUpdate: (props: SuggestionProps) => {
-                  if (!component || !reactRoot) return;
 
                   if (props.clientRect) {
                     const rect = props.clientRect();
-                    if (rect) {
-                      component.style.top = `${rect.bottom + window.scrollY + 4}px`;
-                      component.style.left = `${rect.left + window.scrollX}px`;
-                    }
+                    if (rect) position(rect);
                   }
+                },
+                onUpdate: (props: SuggestionProps) => {
+                  if (!component || !reactRoot) return;
 
                   reactRoot.render(
                     <SlashCommandList
@@ -122,6 +137,11 @@ export const DocumentEditor = forwardRef<DocumentEditorRef, DocumentEditorProps>
                       ref={(r) => { slashRef = r; }}
                     />,
                   );
+
+                  if (props.clientRect) {
+                    const rect = props.clientRect();
+                    if (rect) position(rect);
+                  }
                 },
                 onKeyDown: (props: { event: KeyboardEvent }) => {
                   if (props.event.key === 'Escape') {
