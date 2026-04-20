@@ -1,9 +1,20 @@
+import { randomBytes } from 'crypto';
 import { AppError, slugify, paginate, buildPaginationMeta } from '@snapform/shared';
 import type { FormStatus } from '@prisma/client';
 import { prisma } from '../../lib/prisma';
 import { PLAN_LIMITS } from '../../config/planLimits';
 import { formRepository } from './form.repository';
 import type { CreateFormInput, UpdateFormInput, FormFieldInput } from './form.types';
+
+async function generateUniqueSlug(title: string) {
+  const base = slugify(title);
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const candidate = `${base}-${randomBytes(3).toString('hex')}`;
+    const existing = await formRepository.findBySlugGlobal(candidate);
+    if (!existing) return candidate;
+  }
+  throw AppError.internal('Could not generate a unique form slug');
+}
 
 async function enforceFormLimit(workspaceId: string) {
   const workspace = await prisma.workspace.findUnique({
@@ -36,12 +47,17 @@ export const formService = {
       );
     }
 
-    const baseSlug = input.slug || slugify(title);
-    let slug = baseSlug;
-    let counter = 2;
-    while (await formRepository.findBySlug(workspaceId, slug)) {
-      slug = `${baseSlug}-${counter}`;
-      counter++;
+    let slug: string;
+    if (input.slug) {
+      const existing = await formRepository.findBySlugGlobal(input.slug);
+      if (existing) {
+        throw AppError.conflict(
+          `The slug "${input.slug}" is already taken. Please choose a different one.`,
+        );
+      }
+      slug = input.slug;
+    } else {
+      slug = await generateUniqueSlug(title);
     }
 
     return formRepository.create({
@@ -145,13 +161,7 @@ export const formService = {
       titleCounter++;
     }
 
-    const baseSlug = slugify(title);
-    let slug = baseSlug;
-    let slugCounter = 2;
-    while (await formRepository.findBySlug(workspaceId, slug)) {
-      slug = `${baseSlug}-${slugCounter}`;
-      slugCounter++;
-    }
+    const slug = await generateUniqueSlug(title);
 
     const newForm = await formRepository.create({
       workspace: { connect: { id: workspaceId } },
@@ -204,8 +214,8 @@ export const formService = {
     // Extract original slug by stripping the -deleted-{timestamp} suffix
     const originalSlug = form.slug.replace(/-deleted-\d+$/, '');
 
-    // Check if the original slug is taken
-    const conflict = await formRepository.findBySlug(workspaceId, originalSlug);
+    // Check if the original slug is taken globally
+    const conflict = await formRepository.findBySlugGlobal(originalSlug);
     const restoredSlug = conflict ? `${originalSlug}-restored-${Date.now()}` : originalSlug;
 
     return formRepository.restore(formId, restoredSlug);
