@@ -152,7 +152,7 @@ export function Sidebar() {
   const newWorkspaceHref = useCreateWorkspaceHref();
 
   return (
-    <aside className="flex flex-col w-56 border-r border-sidebar-border bg-sidebar text-sidebar-foreground h-screen overflow-y-auto shrink-0">
+    <aside className="flex flex-col w-56 border-r border-sidebar-border bg-sidebar text-sidebar-foreground h-screen shrink-0">
       {/* User menu at top */}
       <div className="p-3">
         <UserMenu showName sidebar />
@@ -161,7 +161,7 @@ export function Sidebar() {
       <Separator />
 
       {/* Main nav */}
-      <nav className="flex-1 overflow-y-auto py-1">
+      <nav className="flex-1 min-h-0 overflow-y-auto py-1">
         {sections.map((section, sIdx) => {
           if (section.label === 'Workspaces') {
             return (
