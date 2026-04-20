@@ -20,9 +20,9 @@ export const formRepository = {
     });
   },
 
-  findBySlug(workspaceId: string, slug: string) {
+  findBySlugGlobal(slug: string) {
     return prisma.form.findFirst({
-      where: { workspaceId, slug, deletedAt: null },
+      where: { slug, deletedAt: null },
     });
   },
 
