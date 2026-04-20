@@ -231,7 +231,7 @@ export default function FormEditorPage() {
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)]">
+    <div className="flex flex-col h-full min-h-0">
       <EditorTopbar
         workspaceId={workspaceId}
         formId={formId}
@@ -249,9 +249,9 @@ export default function FormEditorPage() {
         onTogglePreview={() => setIsPreview(!isPreview)}
       />
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex min-h-0 overflow-hidden">
         {/* Main editor / preview area */}
-        <div className="flex-1 overflow-y-auto bg-muted/20">
+        <div className="flex-1 min-w-0 overflow-y-auto bg-muted/20">
           {isPreview ? (
             <div className="max-w-xl mx-auto py-8 px-4">
               <div className="rounded-xl border bg-card p-6 sm:p-8 shadow-sm">
