@@ -61,7 +61,16 @@ export function TemplatePreviewDialog({ template, open, onOpenChange }: Template
   }, [template]);
 
   async function handleUseTemplate() {
-    if (!template || !workspaceId) return;
+    if (!template) return;
+
+    if (!workspaceId) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('snapform_pending_template', template.id);
+      }
+      onOpenChange(false);
+      router.push(`${ROUTES.REGISTER}?template=${template.id}`);
+      return;
+    }
 
     setIsCreating(true);
     try {
@@ -124,8 +133,8 @@ export function TemplatePreviewDialog({ template, open, onOpenChange }: Template
           <FormPreview title={template.title} fields={previewFields} />
         </div>
 
-        <DialogFooter>
-          {workspaces && workspaces.length > 1 && (
+        <DialogFooter className="flex items-center justify-between sm:justify-between w-full">
+          {workspaces && workspaces.length > 1 ? (
             <select
               value={workspaceId}
               onChange={(e) => setSelectedWorkspaceId(e.target.value)}
@@ -137,13 +146,15 @@ export function TemplatePreviewDialog({ template, open, onOpenChange }: Template
                 </option>
               ))}
             </select>
+          ) : (
+            <div />
           )}
           <Button
             onClick={handleUseTemplate}
-            disabled={isCreating || !workspaceId}
+            disabled={isCreating}
           >
             {isCreating && <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />}
-            Use this template
+            {workspaceId ? 'Use this template' : 'Use this template (Free)'}
           </Button>
         </DialogFooter>
       </DialogContent>
