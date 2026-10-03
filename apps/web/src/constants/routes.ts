@@ -13,6 +13,7 @@ export const ROUTES = {
   SEARCH: '/search',
   DOMAINS: '/domains',
   UPGRADE: '/upgrade',
+  PRICING: '/pricing',
   TEMPLATES: '/templates',
   WHATS_NEW: '/whats-new',
   ROADMAP: '/roadmap',
