@@ -49,4 +49,5 @@ export const ROUTES = {
   // Public
   publicForm: (slug: string) => `/f/${slug}`,
   publicFormSuccess: (slug: string) => `/f/${slug}/success`,
+  SANDBOX: '/sandbox',
 } as const;

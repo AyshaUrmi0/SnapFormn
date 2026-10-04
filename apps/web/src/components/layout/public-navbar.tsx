@@ -11,6 +11,7 @@ import { ROUTES } from '@/constants/routes';
 import { cn } from '@/lib/utils';
 
 const NAV_LINKS = [
+  { label: 'Sandbox', href: ROUTES.SANDBOX, icon: Sparkles },
   { label: 'Templates', href: ROUTES.TEMPLATES, icon: LayoutTemplate },
   { label: 'Pricing', href: '/pricing', icon: Sparkles },
   { label: 'Guides', href: ROUTES.GUIDES, icon: BookOpen },

@@ -54,22 +54,23 @@ export default function LandingPage() {
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
             <Link
-              href={ROUTES.TEMPLATES}
+              href={ROUTES.SANDBOX}
               className={cn(
                 buttonVariants({ size: 'lg' }),
-                'w-full sm:w-auto h-12 px-8 text-base shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2',
+                'w-full sm:w-auto h-12 px-8 text-base shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 font-semibold',
               )}
             >
-              Start with a Template <ArrowRight className="h-4 w-4" />
+              <Sparkles className="h-4 w-4" />
+              Try Live Sandbox (No Signup) <ArrowRight className="h-4 w-4" />
             </Link>
             <Link
-              href={ROUTES.REGISTER}
+              href={ROUTES.TEMPLATES}
               className={cn(
                 buttonVariants({ variant: 'outline', size: 'lg' }),
                 'w-full sm:w-auto h-12 px-8 text-base flex items-center justify-center',
               )}
             >
-              Create Free Account
+              Explore 10+ Templates
             </Link>
           </div>
 
@@ -103,6 +104,12 @@ export default function LandingPage() {
               </div>
               <div className="flex items-center gap-2">
                 <Badge variant="outline" className="text-[10px] text-primary border-primary/30">Live Respondent Preview</Badge>
+                <Link
+                  href={ROUTES.SANDBOX}
+                  className="text-xs text-primary font-medium hover:underline hidden sm:inline-flex items-center gap-1"
+                >
+                  Edit in Sandbox →
+                </Link>
               </div>
             </div>
 
