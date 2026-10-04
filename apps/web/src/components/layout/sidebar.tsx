@@ -32,7 +32,7 @@ import { useCreateWorkspaceHref } from '@/hooks/use-creation-hrefs';
 import { ROUTES } from '@/constants/routes';
 
 const NON_WORKSPACE_ROUTES = [
-  'workspaces', 'settings', 'search', 'domains', 'upgrade', 'pricing', 'members',
+  'workspaces', 'settings', 'search', 'domains', 'upgrade', 'pricing', 'sandbox', 'members',
   'templates', 'whats-new', 'roadmap', 'feature-requests', 'rewards', 'trash',
   'get-started', 'guides', 'help-center', 'contact-support',
   'login', 'register', 'verify-otp', 'complete-profile', 'forgot-password', 'reset-password', 'f',
