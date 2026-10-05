@@ -9,9 +9,6 @@ import type { CreateWorkspaceInput, UpdateWorkspaceInput } from './workspace.typ
 
 export const workspaceService = {
   async create(userId: string, input: CreateWorkspaceInput) {
-    // Enforce workspace limit. Users with at least one paid (PRO/BUSINESS)
-    // workspace can create unlimited new ones. Users who only own FREE
-    // workspaces are capped at PLAN_LIMITS.FREE.maxWorkspacesPerUser.
     const owned = await workspaceRepository.findOwnedByUser(userId);
     const hasPaidWorkspace = owned.some(
       (m) => m.workspace.plan === 'PRO' || m.workspace.plan === 'BUSINESS',
@@ -129,7 +126,6 @@ export const workspaceService = {
   },
 
   async inviteMember(workspaceId: string, email: string, role: WorkspaceRole) {
-    // Enforce member limit
     const workspace = await prisma.workspace.findUnique({
       where: { id: workspaceId },
       select: { plan: true },

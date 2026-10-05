@@ -28,7 +28,6 @@ export function PublishSuccessDialog({ open, onOpenChange, formUrl }: PublishSuc
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // Fallback for older browsers
       const input = document.querySelector<HTMLInputElement>('#publish-url-input');
       if (input) {
         input.select();

@@ -20,8 +20,6 @@ import type {
   DeleteSubmissionKeys,
 } from './types';
 
-// ─── Queries ─────────────────────────────────────────────────
-
 export const useSubmissions = (params: ListSubmissionsKeys) => {
   return useQuery<Submission[], Error>({
     queryKey: queryKeys.submissions.list(params.workspaceId, params.formId),
@@ -47,8 +45,6 @@ export const useFormAnalytics = (workspaceId: string, formId: string, days = 30)
     refetchOnWindowFocus: true,
   });
 };
-
-// ─── Mutations ───────────────────────────────────────────────
 
 export const useSubmitForm = () => {
   return useMutation<Submission, Error, SubmitFormKeys>({

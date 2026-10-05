@@ -16,11 +16,8 @@ export interface FormEmbedConfig {
 }
 
 export interface FormScheduleConfig {
-  /** ISO datetime when the form should start accepting submissions. Empty = open immediately. */
   startsAt: string;
-  /** ISO datetime when the form should stop accepting submissions. Empty = no end date. */
   endsAt: string;
-  /** Maximum number of submissions accepted before auto-closing. 0 = unlimited. */
   maxSubmissions: number;
 }
 
@@ -54,11 +51,6 @@ export const DEFAULT_SCHEDULE_CONFIG: FormScheduleConfig = {
   maxSubmissions: 0,
 };
 
-/**
- * Pure function that checks if a form is currently accepting submissions
- * based on its schedule settings and current submission count. Used by both
- * frontend (to render countdown / closed UI) and backend (to gate submit).
- */
 export type ScheduleStatus =
   | { state: 'open' }
   | { state: 'not_yet_open'; opensAt: Date }

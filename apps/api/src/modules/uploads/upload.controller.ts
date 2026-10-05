@@ -5,12 +5,6 @@ import { sendSuccess } from '../../utils/response';
 import { prisma } from '../../lib/prisma';
 
 export const uploadController = {
-  /**
-   * Authenticated sign endpoint — used by form owners when they upload
-   * media into blocks (Image / Video / Audio / Embed src fields) inside
-   * the editor. Verifies the user is a member of the workspace that owns
-   * the form.
-   */
   async signForOwner(req: Request, res: Response) {
     const userId = req.user!.sub;
     const { formId, fieldId, resourceType } = req.body;
@@ -30,11 +24,6 @@ export const uploadController = {
     sendSuccess(res, payload, 'Upload signed');
   },
 
-  /**
-   * Public sign endpoint — used by anonymous respondents when they upload
-   * a file to a published form. The form must be PUBLISHED. Rate limited
-   * by the global rate limiter on the API.
-   */
   async signForRespondent(req: Request, res: Response) {
     const { slug, fieldId, resourceType } = req.body;
 

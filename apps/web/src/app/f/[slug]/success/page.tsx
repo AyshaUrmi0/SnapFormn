@@ -20,7 +20,6 @@ export default function FormSuccessPage({
   const settings = (form?.settings ?? {}) as FormSettings;
   const config = { ...DEFAULT_SUCCESS_CONFIG, ...settings.successPage };
 
-  // Handle redirect
   useEffect(() => {
     if (config.redirectUrl && !isLoading) {
       window.location.href = config.redirectUrl;
@@ -35,7 +34,6 @@ export default function FormSuccessPage({
     );
   }
 
-  // If redirecting, show loading
   if (config.redirectUrl) {
     return (
       <div className="min-h-screen bg-muted/30 flex items-center justify-center">

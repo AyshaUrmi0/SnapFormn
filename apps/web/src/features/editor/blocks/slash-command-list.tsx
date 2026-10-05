@@ -50,8 +50,6 @@ function defaultOptionsForType(type: FieldType): string {
     return JSON.stringify({ min: 1, max: 5, minLabel: '', maxLabel: '' });
   }
   if (type === 'RECAPTCHA') {
-    // No per-field config — the site key is a deployment-level env var
-    // (NEXT_PUBLIC_RECAPTCHA_SITE_KEY) so creators never touch it.
     return JSON.stringify({});
   }
   if (type === 'CONDITIONAL_LOGIC') {

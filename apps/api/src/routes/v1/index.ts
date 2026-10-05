@@ -63,7 +63,7 @@ router.use('/users', authenticate as RequestHandler, userRoutes);
 router.use('/workspaces', authenticate as RequestHandler, workspaceRoutes);
 router.use('/forms', formRoutes);
 router.use('/submissions', submissionRoutes);
-router.use('/billing', billingRoutes); // Auth applied per-route (webhook must be unauthenticated)
-router.use('/uploads', uploadRoutes); // Auth applied per-route (public sign endpoint is unauthenticated)
+router.use('/billing', billingRoutes);
+router.use('/uploads', uploadRoutes);
 
 export default router;

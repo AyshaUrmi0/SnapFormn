@@ -1,16 +1,5 @@
 import type { FormField } from '@/modules/form/types';
 
-/**
- * Expand `@fieldName` tokens in a string against the current values map.
- *
- * The token matches any field whose label (trimmed, case-insensitive) equals
- * the text after the `@`. If no match, the raw token is left in place so the
- * creator can see they wrote something that didn't resolve.
- *
- * Limited to labels with letters, digits, "_", "-", and "." — keeps the regex
- * predictable and avoids accidental collisions with emails or @-mentions in
- * unrelated text. In other words: `@price` pipes; `support@example.com` does not.
- */
 const MENTION_RE = /@([A-Za-z][A-Za-z0-9_.-]*)/g;
 
 function formatValue(value: unknown): string {
@@ -48,11 +37,6 @@ export function expandMentions(
   });
 }
 
-/**
- * Return the list of field labels that can be referenced via @mention.
- * Today only CALCULATED fields are exposed as mention sources — they hold
- * the derived values that Tally-style forms most often need to display.
- */
 export function mentionableFields(fields: FormField[] | { id: string; label: string; type: string }[]): Array<{ id: string; label: string }> {
   return fields
     .filter((f) => (f as { type: string }).type === 'CALCULATED')

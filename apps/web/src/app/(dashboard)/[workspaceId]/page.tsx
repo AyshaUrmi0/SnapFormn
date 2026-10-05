@@ -66,7 +66,6 @@ export default function WorkspaceHomePage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Home</h1>
         <div className="flex items-center gap-2">
@@ -86,7 +85,6 @@ export default function WorkspaceHomePage() {
         </div>
       </div>
 
-      {/* Form list */}
       {isLoading && (
         <div className="flex justify-center py-12">
           <LoadingState message="Loading forms..." />

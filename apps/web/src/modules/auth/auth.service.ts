@@ -19,8 +19,6 @@ import type {
 
 const { GET, POST, PATCH, DELETE } = methodsEnums;
 
-// ─── Auth Service ────────────────────────────────────────────
-
 function registerRequest(data: RegisterKeys) {
   return { url: '/auth/register', method: POST, data };
 }
@@ -92,8 +90,6 @@ function logoutRequest() {
 export const logout = createApi<void, void>({
   request: logoutRequest,
 });
-
-// ─── User Service ────────────────────────────────────────────
 
 function getMeRequest() {
   return { url: '/users/me', method: GET };

@@ -15,12 +15,8 @@ import v1Router from './routes/v1';
 
 const app = express();
 
-// Behind a reverse proxy (Render, Vercel, etc.) — trust the first proxy hop
-// so req.ip reflects the real client IP from X-Forwarded-For. Required for
-// submission IP capture and geo-based COUNTRY resolution.
 app.set('trust proxy', 1);
 
-// Global middleware (order matters)
 app.use(requestIdMiddleware as RequestHandler);
 app.use(pinoHttp({ logger, autoLogging: { ignore: (req) => req.url === '/api/v1/health' } }) as RequestHandler);
 app.use(
@@ -41,7 +37,6 @@ app.use(
   express.json({
     limit: '5mb',
     verify: (req: any, _res, buf) => {
-      // Preserve raw body for Stripe webhook signature verification
       if (req.originalUrl === '/api/v1/billing/webhook') {
         req.rawBody = buf;
       }
@@ -52,13 +47,10 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser() as RequestHandler);
 app.use(rateLimiterMiddleware as RequestHandler);
 
-// API docs
 swaggerSetup(app);
 
-// Routes
 app.use('/api/v1', v1Router);
 
-// Error handling (must be last)
 app.use(notFoundMiddleware as RequestHandler);
 app.use(errorMiddleware as unknown as RequestHandler);
 

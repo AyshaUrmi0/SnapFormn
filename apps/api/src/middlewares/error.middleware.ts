@@ -19,7 +19,6 @@ export function errorMiddleware(err: Error, req: Request, res: Response, _next: 
     return res.status(err.statusCode).json(body);
   }
 
-  // Unhandled error
   const body: ApiErrorResponse = {
     success: false,
     data: null,

@@ -85,7 +85,6 @@ export function FieldConfig({ field, allFields, onChange, onClose, errors }: Fie
   const hasLabelError = errors?.some((e) => e.toLowerCase().includes('label'));
   const hasOptionsError = errors?.some((e) => e.toLowerCase().includes('option'));
 
-  // Text-display blocks can pipe calculated field values via `@name`.
   const TEXT_BLOCKS: string[] = [
     'STATEMENT', 'HEADING_1', 'HEADING_2', 'HEADING_3', 'TITLE', 'LABEL',
   ];
@@ -94,7 +93,6 @@ export function FieldConfig({ field, allFields, onChange, onClose, errors }: Fie
     .filter((f) => f.type === 'CALCULATED' && f.label.trim().length > 0)
     .map((f) => f.label.trim());
 
-  // Cloudinary resource type per block
   const resourceTypeFor: Record<string, ResourceType> = {
     IMAGE: 'image',
     VIDEO: 'video',

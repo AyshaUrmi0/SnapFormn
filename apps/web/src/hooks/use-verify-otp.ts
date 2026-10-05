@@ -29,7 +29,6 @@ export function useVerifyOtp() {
             toast.success('Welcome back!');
             router.push(ROUTES.WORKSPACES);
           } else if (res.accessToken && !res.profileComplete) {
-            // Store the temporary token so the complete-profile API call is authenticated
             setAccessToken(res.accessToken);
             router.push(
               `${ROUTES.COMPLETE_PROFILE}?email=${encodeURIComponent(variables.email)}`,

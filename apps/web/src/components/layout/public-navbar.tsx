@@ -28,7 +28,6 @@ export function PublicNavbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/80 backdrop-blur-md transition-all">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        {/* Brand */}
         <div className="flex items-center gap-8">
           <Link href="/" className="flex items-center gap-2 group">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm transition-transform group-hover:scale-105">
@@ -40,7 +39,6 @@ export function PublicNavbar() {
             </div>
           </Link>
 
-          {/* Desktop Nav */}
           <nav className="hidden md:flex items-center gap-1">
             {NAV_LINKS.map((link) => {
               const isActive = pathname === link.href;
@@ -62,7 +60,6 @@ export function PublicNavbar() {
           </nav>
         </div>
 
-        {/* Right Actions */}
         <div className="hidden md:flex items-center gap-3">
           <ThemeToggle />
 
@@ -98,7 +95,6 @@ export function PublicNavbar() {
           )}
         </div>
 
-        {/* Mobile Hamburger */}
         <div className="flex md:hidden items-center gap-2">
           <ThemeToggle />
           <Button
@@ -112,7 +108,6 @@ export function PublicNavbar() {
         </div>
       </div>
 
-      {/* Mobile Drawer */}
       {mobileMenuOpen && (
         <div className="md:hidden border-b border-border bg-background/95 backdrop-blur px-4 pt-2 pb-6 space-y-3 animate-in slide-in-from-top-2">
           <nav className="flex flex-col space-y-1">

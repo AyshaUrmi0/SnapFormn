@@ -5,15 +5,12 @@ export interface FieldOption {
   value: string;
 }
 
-// Shape for media blocks (IMAGE, VIDEO, AUDIO, EMBED)
 export interface MediaOptions {
   src?: string;
   publicId?: string;
   resourceType?: 'image' | 'video' | 'raw' | 'auto';
 }
 
-// Shape for SCALE blocks. Both endpoints get an optional descriptive label
-// (e.g. 1 = "Strongly disagree", 5 = "Strongly agree").
 export interface ScaleOptions {
   min: number;
   max: number;
@@ -21,23 +18,11 @@ export interface ScaleOptions {
   maxLabel?: string;
 }
 
-// Shape for MATRIX blocks. Rows are the questions being asked; columns are
-// the answer choices, shared across every row.
 export interface MatrixOptions {
   rows: FieldOption[];
   columns: FieldOption[];
 }
 
-/**
- * Block options are polymorphic depending on field type:
- * - choice fields → `FieldOption[]`
- * - media fields → `MediaOptions`
- * - MATRIX → `{ rows, columns }`
- * - HIDDEN → `{ paramName, defaultValue }`
- * - others → null
- *
- * Use helpers `getChoiceOptions` and `getMediaOptions` to read typed values.
- */
 export type EditorFieldOptions = FieldOption[] | Record<string, unknown> | null;
 
 export interface EditorField {
@@ -56,13 +41,11 @@ export interface EditorField {
 export const CHOICE_FIELD_TYPES: FieldType[] = ['DROPDOWN', 'MULTI_SELECT', 'CHECKBOX', 'RADIO', 'RANKING'];
 export const MEDIA_FIELD_TYPES: FieldType[] = ['IMAGE', 'VIDEO', 'AUDIO', 'EMBED'];
 
-/** Safely read choice options from a field. Returns empty array for non-choice fields. */
 export function getChoiceOptions(field: EditorField): FieldOption[] {
   if (Array.isArray(field.options)) return field.options as FieldOption[];
   return [];
 }
 
-/** Safely read media options from a field. */
 export function getMediaOptions(field: EditorField): MediaOptions {
   if (field.options && !Array.isArray(field.options) && typeof field.options === 'object') {
     return field.options as MediaOptions;
@@ -70,7 +53,6 @@ export function getMediaOptions(field: EditorField): MediaOptions {
   return {};
 }
 
-/** Safely read matrix options from a field. Returns empty rows/columns for malformed data. */
 export function getMatrixOptions(field: EditorField): MatrixOptions {
   const empty: MatrixOptions = { rows: [], columns: [] };
   const opts = field.options;
@@ -90,11 +72,6 @@ export function getMatrixOptions(field: EditorField): MatrixOptions {
   return { rows: parseList(o.rows), columns: parseList(o.columns) };
 }
 
-/**
- * Read SCALE options with a defensive fallback. Legacy fields with no
- * options stored still render as the previous hardcoded 1–10 range so
- * existing forms don't silently change.
- */
 export function getScaleOptions(field: { options: unknown }): ScaleOptions {
   const opts = field.options;
   if (opts && !Array.isArray(opts) && typeof opts === 'object') {
@@ -120,7 +97,6 @@ export function toEditorField(field: FormField): EditorField {
       .filter((o) => typeof o.label === 'string' && typeof o.value === 'string')
       .map((o) => ({ label: o.label as string, value: o.value as string }));
   } else if (field.options && typeof field.options === 'object') {
-    // Preserve media / matrix / hidden object shapes
     options = field.options as Record<string, unknown>;
   }
 

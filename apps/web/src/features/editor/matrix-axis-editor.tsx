@@ -9,9 +9,7 @@ import type { FieldOption } from './types';
 interface MatrixAxisEditorProps {
   label: string;
   items: FieldOption[];
-  /** Human name for a single item — used for placeholder text and the add button. */
   singular: string;
-  /** Prefix for auto-generated `value` slugs, e.g. "row" or "col". */
   valuePrefix: string;
   onChange: (items: FieldOption[]) => void;
 }

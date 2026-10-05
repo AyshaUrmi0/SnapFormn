@@ -39,8 +39,6 @@ import type {
   ToggleFavoriteKeys,
 } from './types';
 
-// ─── Queries ─────────────────────────────────────────────────
-
 export const useFormBySlug = (slug: string) => {
   return useQuery<Form & { fields: FormField[] }, Error>({
     queryKey: queryKeys.forms.public(slug),
@@ -64,8 +62,6 @@ export const useForm = (workspaceId: string, formId: string) => {
     enabled: !!workspaceId && !!formId,
   });
 };
-
-// ─── Mutations ───────────────────────────────────────────────
 
 export const useCreateForm = () => {
   const queryClient = useQueryClient();
@@ -214,8 +210,6 @@ export const useDeleteForm = () => {
     },
   });
 };
-
-// ─── Trash ──────────────────────────────────────────────────
 
 export const useTrash = (workspaceId: string) => {
   return useQuery<Form[], Error>({

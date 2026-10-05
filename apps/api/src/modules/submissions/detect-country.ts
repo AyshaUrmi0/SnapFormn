@@ -12,8 +12,6 @@ function isLoopbackIp(ip: string): boolean {
 }
 
 function normalizeIp(ip: string): string {
-  // IPv4-mapped IPv6 addresses arrive as "::ffff:1.2.3.4"; strip the prefix
-  // so the IPv4 database lookup succeeds.
   if (ip.startsWith('::ffff:')) return ip.slice('::ffff:'.length);
   return ip;
 }
@@ -41,10 +39,7 @@ export async function detectCountryFromIp(ip: string | undefined): Promise<strin
         logger.info({ ip: normalized, code: geo.country, name }, 'detectCountryFromIp resolved');
         return name;
       }
-    } catch {
-      // Intl.DisplayNames may throw for unknown region codes; fall through.
-    }
-    // Fall back to the raw country code if we can't translate it.
+    } catch {}
     logger.info({ ip: normalized, code: geo.country }, 'detectCountryFromIp resolved (code only)');
     return geo.country;
   } catch (err) {

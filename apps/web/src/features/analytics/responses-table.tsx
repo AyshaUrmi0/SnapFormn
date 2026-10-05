@@ -14,8 +14,6 @@ interface ResponsesTableProps {
   submissions: Submission[];
 }
 
-// Field categories/types that don't collect any answer data and should
-// never appear as a column in the responses table.
 const NON_DATA_TYPES = new Set<FieldType>([
   'STATEMENT',
   'PAGE_BREAK',
@@ -37,9 +35,6 @@ const NON_DATA_TYPES = new Set<FieldType>([
 function columnLabelFor(field: FormField): string {
   if (field.type === 'COUNTRY') return 'Country';
   if (field.type === 'HIDDEN') {
-    // Prefer a creator-customized label; fall back to the URL parameter name;
-    // finally fall back to a generic label. The slash-menu default label is
-    // the plural "Hidden fields" which looks odd as a column header.
     const customLabel = field.label && field.label !== 'Hidden fields' ? field.label : '';
     if (customLabel) return customLabel;
     const opts = field.options as { paramName?: string } | null | undefined;
@@ -48,7 +43,6 @@ function columnLabelFor(field: FormField): string {
     return 'Hidden field';
   }
   if (field.type === 'CALCULATED') {
-    // Strip the slash-menu default label; prefer the creator's @-mention name.
     const customLabel = field.label && field.label !== 'Calculated fields' ? field.label : '';
     return customLabel || 'Calculated';
   }
@@ -71,7 +65,6 @@ function stringifyValue(value: unknown): string {
   if (typeof value === 'number' || typeof value === 'boolean') return String(value);
   if (Array.isArray(value)) return value.map(stringifyValue).filter(Boolean).join(', ');
   if (typeof value === 'object') {
-    // File uploads / signatures often store { url, name } — prefer name/url.
     const obj = value as Record<string, unknown>;
     if (typeof obj.name === 'string') return obj.name;
     if (typeof obj.url === 'string') return obj.url;

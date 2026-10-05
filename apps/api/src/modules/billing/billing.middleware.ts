@@ -2,10 +2,6 @@ import type { Request, Response, NextFunction } from 'express';
 import { AppError } from '@snapform/shared';
 import { prisma } from '../../lib/prisma';
 
-/**
- * Checks that the authenticated user is an OWNER or ADMIN of the workspace
- * specified in req.body.workspaceId or req.query.workspaceId.
- */
 export function requireBillingPermission() {
   return async (req: Request, _res: Response, next: NextFunction) => {
     const userId = req.user?.sub;

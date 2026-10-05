@@ -80,9 +80,6 @@ export const DocumentEditor = forwardRef<DocumentEditorRef, DocumentEditorProps>
               let reactRoot: ReactDOM.Root | null = null;
               let slashRef: SlashCommandListRef | null = null;
 
-              // Position the popup near the cursor, flipping above the caret
-              // when there isn't enough room below and clamping to the viewport.
-              // Uses rAF so the measurement runs after React commits its render.
               function position(rect: DOMRect) {
                 if (!component) return;
                 requestAnimationFrame(() => {

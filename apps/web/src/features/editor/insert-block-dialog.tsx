@@ -11,7 +11,6 @@ import type { FieldType } from '@/modules/form/types';
 interface InsertBlockDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  /** Called with the chosen field type when the user selects an item */
   onSelect: (type: FieldType) => void;
 }
 
@@ -37,7 +36,6 @@ export function InsertBlockDialog({ open, onOpenChange, onSelect }: InsertBlockD
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  // Focus input and reset state when dialog opens
   useEffect(() => {
     if (open) {
       setQuery('');
@@ -50,7 +48,6 @@ export function InsertBlockDialog({ open, onOpenChange, onSelect }: InsertBlockD
     setSelectedIndex(0);
   }, [query]);
 
-  // Filter by label + category (fuzzy: every word must match somewhere)
   const filtered = useMemo(() => {
     if (!query.trim()) return ALL_ITEMS;
     const q = query.toLowerCase();
@@ -61,7 +58,6 @@ export function InsertBlockDialog({ open, onOpenChange, onSelect }: InsertBlockD
     });
   }, [query]);
 
-  // Group filtered results by category, preserving category order
   const groups = useMemo(() => {
     const orderedCats = Object.entries(FIELD_TYPE_CATEGORIES) as [
       PaletteItem['category'],
@@ -76,7 +72,6 @@ export function InsertBlockDialog({ open, onOpenChange, onSelect }: InsertBlockD
       .filter((g) => g.items.length > 0);
   }, [filtered]);
 
-  // Flat list for keyboard navigation
   const flatItems = useMemo(() => groups.flatMap((g) => g.items), [groups]);
 
   const selectItem = useCallback(
@@ -87,7 +82,6 @@ export function InsertBlockDialog({ open, onOpenChange, onSelect }: InsertBlockD
     [onSelect, onOpenChange],
   );
 
-  // Keyboard navigation
   useEffect(() => {
     if (!open) return;
 
@@ -112,7 +106,6 @@ export function InsertBlockDialog({ open, onOpenChange, onSelect }: InsertBlockD
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [open, selectedIndex, flatItems, selectItem]);
 
-  // Scroll selected item into view as user navigates with arrows
   useEffect(() => {
     if (!listRef.current) return;
     const selected = listRef.current.querySelector('[data-selected="true"]');
@@ -126,7 +119,6 @@ export function InsertBlockDialog({ open, onOpenChange, onSelect }: InsertBlockD
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden" showCloseButton={false}>
         <DialogTitle className="sr-only">Insert a block</DialogTitle>
 
-        {/* Search input */}
         <div className="flex items-center gap-3 px-4 border-b">
           <Search className="h-4 w-4 text-muted-foreground shrink-0" />
           <input
@@ -149,7 +141,6 @@ export function InsertBlockDialog({ open, onOpenChange, onSelect }: InsertBlockD
           </button>
         </div>
 
-        {/* Results */}
         <div ref={listRef} className="max-h-80 overflow-y-auto p-2">
           {flatItems.length === 0 && (
             <p className="px-3 py-6 text-center text-sm text-muted-foreground">

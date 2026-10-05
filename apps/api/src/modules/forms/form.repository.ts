@@ -113,7 +113,6 @@ export const formRepository = {
     });
   },
 
-  // Bulk upsert fields in a transaction
   async replaceFields(
     formId: string,
     fields: Array<{
@@ -130,7 +129,6 @@ export const formRepository = {
     }>,
   ) {
     return prisma.$transaction(async (tx) => {
-      // Delete existing fields not in the new list
       const existingIds = fields.filter((f) => f.id).map((f) => f.id!);
       await tx.formField.deleteMany({
         where: {
@@ -139,7 +137,6 @@ export const formRepository = {
         },
       });
 
-      // Upsert each field
       for (const field of fields) {
         if (field.id) {
           await tx.formField.update({

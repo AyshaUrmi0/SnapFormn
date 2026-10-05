@@ -3,7 +3,7 @@ import { AppError } from '@snapform/shared';
 import { prisma } from '../lib/prisma';
 import { redis } from '../lib/redis';
 
-const CACHE_TTL_SECONDS = 300; // 5 minutes
+const CACHE_TTL_SECONDS = 300;
 
 export function requirePermission(...requiredPermissions: string[]) {
   return async (req: Request, _res: Response, next: NextFunction) => {

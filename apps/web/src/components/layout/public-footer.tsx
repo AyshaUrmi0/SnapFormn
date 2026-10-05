@@ -7,7 +7,6 @@ export function PublicFooter() {
     <footer className="border-t border-border/40 bg-muted/20 text-muted-foreground transition-colors">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:grid-cols-5">
-          {/* Brand col */}
           <div className="col-span-2">
             <Link href="/" className="flex items-center gap-2 mb-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm">
@@ -33,7 +32,6 @@ export function PublicFooter() {
             </div>
           </div>
 
-          {/* Product col */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-3">Product</h4>
             <ul className="space-y-2 text-sm">
@@ -60,7 +58,6 @@ export function PublicFooter() {
             </ul>
           </div>
 
-          {/* Resources col */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-3">Resources</h4>
             <ul className="space-y-2 text-sm">
@@ -87,7 +84,6 @@ export function PublicFooter() {
             </ul>
           </div>
 
-          {/* Legal / Info */}
           <div>
             <h4 className="text-xs font-semibold uppercase tracking-wider text-foreground mb-3">Features</h4>
             <ul className="space-y-2 text-sm">

@@ -33,14 +33,12 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
       <SheetContent side="left" className="w-56 p-0 flex flex-col bg-sidebar text-sidebar-foreground">
         <SheetTitle className="sr-only">Navigation</SheetTitle>
 
-        {/* User menu at top */}
         <div className="p-3">
           <UserMenu showName sidebar />
         </div>
 
         <Separator />
 
-        {/* Nav */}
         <nav className="flex-1 min-h-0 overflow-y-auto py-1">
           {sections.map((section, sIdx) => {
             if (section.label === 'Workspaces') {
@@ -113,7 +111,6 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
 
         <Separator />
 
-        {/* Footer */}
         <div className="p-2 flex items-center justify-between">
           <Link
             href="#"

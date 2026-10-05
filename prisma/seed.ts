@@ -6,7 +6,6 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('Seeding database...');
 
-  // Create permissions
   const permissionRecords: Record<string, string> = {};
   for (const action of Object.values(PERMISSIONS)) {
     const permission = await prisma.permission.upsert({
@@ -18,7 +17,6 @@ async function main() {
   }
   console.log(`Created ${Object.keys(permissionRecords).length} permissions`);
 
-  // Create roles and assign permissions
   const roles: WorkspaceRole[] = ['OWNER', 'ADMIN', 'EDITOR', 'VIEWER'];
   for (const roleName of roles) {
     const role = await prisma.role.upsert({

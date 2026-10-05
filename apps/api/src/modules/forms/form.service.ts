@@ -24,7 +24,7 @@ async function enforceFormLimit(workspaceId: string) {
   if (!workspace) throw AppError.notFound('Workspace not found');
 
   const limit = PLAN_LIMITS[workspace.plan].maxForms;
-  if (limit === null) return; // unlimited
+  if (limit === null) return;
 
   const current = await formRepository.countByWorkspace(workspaceId);
   if (current >= limit) {
@@ -171,7 +171,6 @@ export const formService = {
       description: form.description,
     });
 
-    // Duplicate fields
     if (form.fields && form.fields.length > 0) {
       await formRepository.replaceFields(
         newForm.id,
@@ -211,10 +210,8 @@ export const formService = {
     if (!form) throw AppError.notFound('Form not found');
     if (!form.deletedAt) throw AppError.badRequest('Form is not in trash');
 
-    // Extract original slug by stripping the -deleted-{timestamp} suffix
     const originalSlug = form.slug.replace(/-deleted-\d+$/, '');
 
-    // Check if the original slug is taken globally
     const conflict = await formRepository.findBySlugGlobal(originalSlug);
     const restoredSlug = conflict ? `${originalSlug}-restored-${Date.now()}` : originalSlug;
 

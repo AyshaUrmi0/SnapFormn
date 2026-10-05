@@ -18,7 +18,6 @@ export const PRICE_IDS = {
 
 export type BillingPeriod = 'monthly' | 'yearly';
 
-/** Reverse lookup: Stripe price ID → plan name */
 export function planFromPriceId(priceId: string): 'PRO' | 'BUSINESS' | null {
   for (const [plan, prices] of Object.entries(PRICE_IDS)) {
     if (prices.monthly === priceId || prices.yearly === priceId) {

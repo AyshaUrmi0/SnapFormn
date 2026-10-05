@@ -172,7 +172,6 @@ export default function GuidesPage() {
     });
   }
 
-  // Filter by search query (matches title + summary + category)
   const filtered = useMemo(() => {
     if (!query.trim()) return GUIDES;
     const q = query.toLowerCase();
@@ -181,7 +180,6 @@ export default function GuidesPage() {
     );
   }, [query]);
 
-  // Group filtered guides by category, preserving the canonical category order
   const grouped = useMemo(() => {
     return CATEGORIES
       .map((cat) => ({
@@ -203,7 +201,6 @@ export default function GuidesPage() {
         </p>
       </div>
 
-      {/* Search */}
       <div className="relative mb-8">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
         <Input
@@ -215,7 +212,6 @@ export default function GuidesPage() {
         />
       </div>
 
-      {/* Empty state */}
       {grouped.length === 0 && (
         <div className="rounded-xl border border-dashed bg-muted/30 p-8 text-center">
           <p className="text-sm text-muted-foreground">
@@ -224,7 +220,6 @@ export default function GuidesPage() {
         </div>
       )}
 
-      {/* Grouped accordion */}
       <div className="space-y-8">
         {grouped.map((group) => (
           <section key={group.category}>

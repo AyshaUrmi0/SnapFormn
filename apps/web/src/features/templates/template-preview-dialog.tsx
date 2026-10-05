@@ -74,8 +74,6 @@ export function TemplatePreviewDialog({ template, open, onOpenChange }: Template
 
     setIsCreating(true);
     try {
-      // Add a short random suffix to the slug so users can create
-      // multiple forms from the same template in one workspace
       const suffix = crypto.randomUUID().slice(0, 6);
       const slug = `${template.id}-${suffix}`;
 
@@ -100,8 +98,6 @@ export function TemplatePreviewDialog({ template, open, onOpenChange }: Template
         })),
       });
 
-      // Wait for the detail query to refetch with fields before navigating,
-      // otherwise the editor initializes with 0 fields from stale cache
       await queryClient.refetchQueries({
         queryKey: queryKeys.forms.detail(workspaceId, newForm.id),
       });
@@ -109,7 +105,6 @@ export function TemplatePreviewDialog({ template, open, onOpenChange }: Template
       onOpenChange(false);
       router.push(ROUTES.workspace(workspaceId).form(newForm.id).EDIT);
     } catch (error) {
-      // If the error is a plan limit, redirect to upgrade page
       if (redirectOnPlanLimit(error, router, workspaceId, 'forms')) {
         onOpenChange(false);
       }

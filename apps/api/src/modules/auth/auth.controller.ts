@@ -33,7 +33,6 @@ export const authController = {
     const { email, code, purpose } = req.body;
     const result = await authService.verifyOtp(email, code, purpose);
 
-    // If login OTP with complete profile, set refresh token cookie
     if ('refreshToken' in result) {
       res.cookie('refreshToken', result.refreshToken, REFRESH_COOKIE_OPTIONS);
       sendSuccess(

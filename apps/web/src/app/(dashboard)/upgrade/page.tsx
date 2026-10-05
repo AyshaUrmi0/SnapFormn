@@ -6,11 +6,6 @@ import { LoadingState } from '@/components/shared/loading-state';
 import { usePlan } from '@/providers/plan-provider';
 import { ROUTES } from '@/constants/routes';
 
-/**
- * Legacy global upgrade route. Redirects to the workspace-scoped upgrade page.
- * Picks the workspace from the `?workspace=` query param, the first FREE
- * workspace the user owns, or the first workspace overall.
- */
 export default function LegacyUpgradeRedirect() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -24,7 +19,6 @@ export default function LegacyUpgradeRedirect() {
 
     const targetId =
       workspaceIdParam ||
-      // Prefer a FREE workspace (most likely to be the upgrade target)
       workspaces.find((w) => w.plan === 'FREE' && w.role === 'OWNER')?.id ||
       workspaces[0]?.id;
 

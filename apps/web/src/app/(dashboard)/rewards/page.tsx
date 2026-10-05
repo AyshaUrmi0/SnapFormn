@@ -11,7 +11,6 @@ export default function RewardsPage() {
   const { user } = useAuth();
   const [copied, setCopied] = useState(false);
 
-  // Generate a deterministic referral code from the user ID
   const referralCode = user ? `SNAP${user.id.slice(-6).toUpperCase()}` : 'SNAPCODE';
   const referralUrl = `https://snap-formn-web.vercel.app/register?ref=${referralCode}`;
 
@@ -34,7 +33,6 @@ export default function RewardsPage() {
         </p>
       </div>
 
-      {/* Hero */}
       <div className="rounded-xl border bg-gradient-to-br from-primary/10 via-pink-500/5 to-purple-500/10 p-6 mb-6">
         <Badge className="bg-primary text-primary-foreground border-0 mb-3">
           <Sparkles className="mr-1 h-3 w-3" />
@@ -47,7 +45,6 @@ export default function RewardsPage() {
         </p>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
         <div className="rounded-xl border bg-card p-4">
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-1">
@@ -72,7 +69,6 @@ export default function RewardsPage() {
         </div>
       </div>
 
-      {/* Referral link */}
       <div className="rounded-xl border bg-card p-5 mb-6">
         <div className="flex items-center gap-2 mb-2">
           <Share2 className="h-4 w-4 text-primary" />
@@ -92,7 +88,6 @@ export default function RewardsPage() {
         </div>
       </div>
 
-      {/* How it works */}
       <div className="rounded-xl border bg-card p-5">
         <h3 className="font-semibold mb-4">How it works</h3>
         <ol className="space-y-3 text-sm">

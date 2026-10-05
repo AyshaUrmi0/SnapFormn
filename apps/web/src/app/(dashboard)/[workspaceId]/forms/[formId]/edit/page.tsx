@@ -45,7 +45,6 @@ export default function FormEditorPage() {
   const editorRef = useRef<DocumentEditorRef>(null);
   const serverFieldIds = useRef<Set<string>>(new Set());
 
-  // Initialize editor state from form data — runs once when form first loads
   useEffect(() => {
     if (form && !isReady) {
       setTitle(form.title);
@@ -74,7 +73,6 @@ export default function FormEditorPage() {
     setValidationErrors([]);
   }, []);
 
-  // Update a single field from the sidebar config panel
   const handleFieldUpdate = useCallback((updates: Partial<EditorField>) => {
     setFields((prev) =>
       prev.map((f) => {
@@ -85,7 +83,6 @@ export default function FormEditorPage() {
     markDirty();
     setValidationErrors([]);
 
-    // Sync changes back to TipTap
     if (editorRef.current && selectedFieldId) {
       const tiptapUpdates: Record<string, unknown> = {};
       if ('label' in updates) tiptapUpdates.label = updates.label;
@@ -114,7 +111,6 @@ export default function FormEditorPage() {
   );
 
   async function handleSave() {
-    // Client-side validation
     const errors = validateFields(fields);
     if (errors.length > 0) {
       setValidationErrors(errors);
@@ -154,7 +150,6 @@ export default function FormEditorPage() {
 
       await Promise.all(promises);
       setIsDirty(false);
-      // Refetch to get server-generated IDs for new fields
       const updated = await refetch();
       if (updated.data) {
         const serverFields = (updated.data.fields ?? [])
@@ -170,7 +165,6 @@ export default function FormEditorPage() {
 
   async function handleStatusChange(status: FormStatus) {
     try {
-      // If publishing, validate first
       if (status === 'PUBLISHED') {
         const errors = validateFields(fields);
         if (errors.length > 0) {
@@ -180,13 +174,11 @@ export default function FormEditorPage() {
           return;
         }
 
-        // Auto-save before publishing
         if (isDirty) {
           await handleSave();
         }
       }
 
-      // Confirm before closing
       if (status === 'CLOSED') {
         const confirmed = await confirm({
           title: 'Close form',
@@ -250,7 +242,6 @@ export default function FormEditorPage() {
       />
 
       <div className="flex-1 flex min-h-0 overflow-hidden">
-        {/* Main editor / preview area */}
         <div className="flex-1 min-w-0 overflow-y-auto bg-muted/20">
           {isPreview ? (
             <div className="max-w-xl mx-auto py-8 px-4">
@@ -279,7 +270,6 @@ export default function FormEditorPage() {
             </div>
           ) : (
             <div className="py-8 px-4">
-              {/* Editable title */}
               <div className="max-w-2xl mx-auto mb-4">
                 <input
                   type="text"
@@ -293,7 +283,6 @@ export default function FormEditorPage() {
                 )}
               </div>
 
-              {/* TipTap document editor */}
               <EditorSelectionContext.Provider value={{ selectedFieldId, onSelectField: setSelectedFieldId, validationErrorIds }}>
                 <DocumentEditor
                   ref={editorRef}
@@ -303,7 +292,6 @@ export default function FormEditorPage() {
                 />
               </EditorSelectionContext.Provider>
 
-              {/* Helper text at bottom */}
               {fields.length === 0 && (
                 <div className="max-w-2xl mx-auto mt-8 text-center space-y-3">
                   <p className="text-muted-foreground">
@@ -318,7 +306,6 @@ export default function FormEditorPage() {
           )}
         </div>
 
-        {/* Right sidebar: field config */}
         {selectedField && !isPreview && (
           <div className="w-80 border-l bg-background overflow-y-auto p-4 shrink-0">
             <FieldConfig
@@ -333,7 +320,6 @@ export default function FormEditorPage() {
         )}
       </div>
 
-      {/* Publish success dialog */}
       <PublishSuccessDialog
         open={showPublishDialog}
         onOpenChange={setShowPublishDialog}
