@@ -4,7 +4,6 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { env } from './env';
 
-// Resolve paths relative to the api package root, not cwd
 const apiRoot = path.resolve(__dirname, '../..');
 
 const options: swaggerJsdoc.Options = {

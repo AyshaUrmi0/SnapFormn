@@ -8,7 +8,6 @@ export interface ValidationError {
   message: string;
 }
 
-// Block types that don't require a label (layout, embed, decorative blocks)
 const LABEL_OPTIONAL_TYPES: FieldType[] = [
   'PAGE_BREAK',
   'DIVIDER',
@@ -32,7 +31,6 @@ export function validateFields(fields: EditorField[]): ValidationError[] {
       });
     }
 
-    // Choice fields need at least 1 option with a non-empty label
     if (CHOICE_FIELD_TYPES.includes(field.type)) {
       const validOptions = getChoiceOptions(field).filter((o) => o.label.trim());
       if (validOptions.length === 0) {

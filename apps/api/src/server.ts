@@ -9,7 +9,6 @@ const server = app.listen(env.PORT, () => {
   logger.info(`API docs: http://localhost:${env.PORT}/api/docs`);
 });
 
-// Graceful shutdown
 const shutdown = async (signal: string) => {
   logger.info(`${signal} received. Starting graceful shutdown...`);
   server.close(async () => {
@@ -19,7 +18,6 @@ const shutdown = async (signal: string) => {
     process.exit(0);
   });
 
-  // Force exit after 10s
   setTimeout(() => {
     logger.error('Forced shutdown after timeout');
     process.exit(1);

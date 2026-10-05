@@ -294,8 +294,6 @@ function FieldPreview({
         </div>
       );
     case 'PAGE_BREAK': {
-      // pageIndex is 0-based position among PAGE_BREAK blocks.
-      // The block marks the end of page (index+1) and start of (index+2).
       const fromPage = (pageIndex ?? 0) + 1;
       const toPage = fromPage + 1;
       return (
@@ -577,13 +575,6 @@ function FieldPreview({
       return (
         <div className="rounded-md border border-dashed border-input p-3 bg-muted/10 space-y-2">
           <div className="flex items-center gap-3">
-            {/* <Shield className="h-4 w-4 text-muted-foreground shrink-0" /> */}
-            {/* <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">reCAPTCHA</p>
-              <p className="text-xs text-muted-foreground">
-                Google v2 &ldquo;I&apos;m not a robot&rdquo; checkbox. Blocks spam submissions.
-              </p>
-            </div> */}
           </div>
           <div className="h-[78px] w-[304px] rounded border bg-background flex items-center px-3 gap-2 text-xs text-muted-foreground select-none pointer-events-none">
             <div className="h-6 w-6 border border-input rounded bg-background" />
@@ -627,9 +618,6 @@ export function FormBlockRenderer({ node, deleteNode, editor, getPos }: NodeView
     isDragging,
   } = useSortable({ id: fieldId });
 
-  // PAGE_BREAK labels need to show their position among all page breaks in
-  // the document, so they must re-render when siblings change. Other block
-  // types already re-render on their own attr changes via the NodeView.
   const [docTick, setDocTick] = useState(0);
   useEffect(() => {
     if (fieldType !== 'PAGE_BREAK') return;

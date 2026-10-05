@@ -30,7 +30,6 @@ export function RenameFormDialog({
 }: RenameFormDialogProps) {
   const [title, setTitle] = useState(currentTitle);
 
-  // Sync when dialog opens with a different form
   useEffect(() => {
     if (open) setTitle(currentTitle);
   }, [open, currentTitle]);

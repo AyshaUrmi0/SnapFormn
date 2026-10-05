@@ -27,7 +27,6 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
 
   return (
     <div className="rounded-xl border bg-card p-5 flex flex-col gap-4 hover:border-primary/40 transition-colors">
-      {/* Header */}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <h3 className="font-semibold text-base truncate">{workspace.name}</h3>
@@ -40,7 +39,6 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
         </Badge>
       </div>
 
-      {/* Usage metrics */}
       <div className="grid grid-cols-3 gap-2">
         <UsageStat
           icon={FileText}
@@ -65,7 +63,6 @@ export function WorkspaceCard({ workspace }: WorkspaceCardProps) {
         />
       </div>
 
-      {/* Actions */}
       <div className="flex items-center gap-2 pt-1">
         <Link
           href={wsRoutes.ROOT}
@@ -110,7 +107,6 @@ function UsageStat({ icon: Icon, label, current, limit, showProgress }: UsageSta
   const value = isLoading ? '—' : current;
   const limitText = isLoading ? '' : isUnlimited ? '∞' : `/ ${limit}`;
 
-  // Progress bar percent (only shown for FREE plan with numeric limit)
   let percent = 0;
   let isCritical = false;
   if (showProgress && !isLoading && !isUnlimited && typeof limit === 'number' && limit > 0) {

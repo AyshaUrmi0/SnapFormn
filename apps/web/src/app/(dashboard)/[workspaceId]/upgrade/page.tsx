@@ -33,14 +33,10 @@ export default function WorkspaceUpgradePage() {
 
   const [period, setPeriod] = useState<'monthly' | 'yearly'>('monthly');
 
-  // Refresh plan on mount so the current plan reflects the latest DB state
-  // (e.g. after returning from Stripe checkout success page)
   useEffect(() => {
     refresh();
   }, [refresh]);
 
-  // Always read from PlanProvider (which has its own fresh data) but fall
-  // back to the workspace context value to avoid a flash of stale data.
   const currentPlan: Plan = getPlan(workspace.id) || workspace.plan;
 
   function handleUpgrade(plan: 'PRO' | 'BUSINESS') {
@@ -55,14 +51,12 @@ export default function WorkspaceUpgradePage() {
 
   return (
     <div className="mx-auto max-w-5xl py-8 px-4">
-      {/* Reason banner */}
       {reason && REASON_LABELS[reason] && (
         <div className="mb-6 rounded-lg border border-primary/30 bg-primary/10 px-4 py-3 text-sm text-primary">
           Upgrade to Pro to {REASON_LABELS[reason]}.
         </div>
       )}
 
-      {/* Header with illustration */}
       <div className="flex items-start justify-between gap-6 mb-6">
         <div className="flex-1">
           <h1 className="text-3xl md:text-4xl font-bold tracking-tight">Do more with Snapform</h1>
@@ -75,7 +69,6 @@ export default function WorkspaceUpgradePage() {
         </div>
       </div>
 
-      {/* Workspace context */}
       <div className="mb-6 text-sm text-muted-foreground">
         Upgrading workspace <strong className="text-foreground">{workspace.name}</strong>{' '}
         <Badge variant="secondary" className="ml-1 text-[10px]">
@@ -83,7 +76,6 @@ export default function WorkspaceUpgradePage() {
         </Badge>
       </div>
 
-      {/* Period toggle */}
       <div className="flex items-center justify-center gap-3 mb-8">
         <div className="inline-flex rounded-full bg-muted p-1">
           <button
@@ -114,7 +106,6 @@ export default function WorkspaceUpgradePage() {
         )}
       </div>
 
-      {/* Plan cards */}
       <div className="grid md:grid-cols-2 gap-4">
         <PlanCard
           plan={pro}
@@ -140,7 +131,6 @@ export default function WorkspaceUpgradePage() {
         />
       </div>
 
-      {/* Fair use footer */}
       <p className="text-xs text-muted-foreground text-center mt-8">
         Snapform&apos;s plans are subject to our{' '}
         <a href="#" className="underline hover:text-foreground">
@@ -149,7 +139,6 @@ export default function WorkspaceUpgradePage() {
         .
       </p>
 
-      {/* Billing details link */}
       <div className="text-center text-sm text-muted-foreground mt-6">
         <Link
           href={ROUTES.workspace(workspace.id).BILLING}
@@ -216,7 +205,6 @@ function PlanCard({ plan, planKey, price, priceSuffix, ctaLabel, ctaVariant, isC
         Pay ${price} {priceSuffix}
       </p>
 
-      {/* Feature grid */}
       <div className="grid grid-cols-2 gap-x-4 gap-y-4 mt-6">
         {plan.features.map((feature) => {
           const Icon = feature.icon;

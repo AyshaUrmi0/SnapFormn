@@ -1,5 +1,4 @@
 export const ROUTES = {
-  // Auth
   LOGIN: '/login',
   REGISTER: '/register',
   VERIFY_OTP: '/verify-otp',
@@ -7,7 +6,6 @@ export const ROUTES = {
   FORGOT_PASSWORD: '/forgot-password',
   RESET_PASSWORD: '/reset-password',
 
-  // Dashboard
   HOME: '/',
   SETTINGS: '/settings',
   SEARCH: '/search',
@@ -28,7 +26,6 @@ export const ROUTES = {
   WORKSPACES: '/workspaces',
   NEW_WORKSPACE: '/workspaces/new',
 
-  // Workspace-scoped
   workspace: (workspaceId: string) => ({
     ROOT: `/${workspaceId}`,
     FORMS: `/${workspaceId}/forms`,
@@ -46,7 +43,6 @@ export const ROUTES = {
     UPGRADE: `/${workspaceId}/upgrade`,
   }),
 
-  // Public
   publicForm: (slug: string) => `/f/${slug}`,
   publicFormSuccess: (slug: string) => `/f/${slug}/success`,
   SANDBOX: '/sandbox',

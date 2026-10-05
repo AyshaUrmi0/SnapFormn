@@ -1,26 +1,21 @@
 export const PERMISSIONS = {
-  // Workspace
   WORKSPACE_MANAGE: 'workspace:manage',
   WORKSPACE_DELETE: 'workspace:delete',
 
-  // Members
   MEMBER_INVITE: 'member:invite',
   MEMBER_REMOVE: 'member:remove',
   MEMBER_MANAGE_ROLE: 'member:manage_role',
 
-  // Forms
   FORM_CREATE: 'form:create',
   FORM_EDIT: 'form:edit',
   FORM_DELETE: 'form:delete',
   FORM_PUBLISH: 'form:publish',
   FORM_VIEW: 'form:view',
 
-  // Submissions
   SUBMISSION_VIEW: 'submission:view',
   SUBMISSION_DELETE: 'submission:delete',
   SUBMISSION_EXPORT: 'submission:export',
 
-  // Billing
   BILLING_MANAGE: 'billing:manage',
 } as const;
 

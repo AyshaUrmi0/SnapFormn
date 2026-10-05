@@ -11,14 +11,12 @@ export const billingService = {
   async createCheckout(userId: string, input: CreateCheckoutInput) {
     const { workspaceId, plan, period } = input;
 
-    // Get the user's email for creating a Stripe customer
     const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true } });
     if (!user) throw AppError.notFound('User not found');
 
     const workspace = await prisma.workspace.findUnique({ where: { id: workspaceId }, select: { id: true } });
     if (!workspace) throw AppError.notFound('Workspace not found');
 
-    // Reuse existing Stripe customer if workspace already has a subscription
     const existing = await billingRepository.findByWorkspaceId(workspaceId);
     let customerId = existing?.stripeCustomerId;
 
@@ -114,7 +112,6 @@ export const billingService = {
           cancelAtPeriodEnd: sub.cancel_at_period_end,
         });
 
-        // Update workspace plan if price changed
         const plan = planFromPriceId(priceId);
         const targetWorkspaceId = workspaceId || dbSub.workspaceId;
 

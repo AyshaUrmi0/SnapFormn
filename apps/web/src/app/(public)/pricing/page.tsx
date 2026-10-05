@@ -77,7 +77,6 @@ export default function PricingPage() {
 
   return (
     <div className="py-16 sm:py-24 px-4 sm:px-6 max-w-6xl mx-auto">
-      {/* Header */}
       <div className="text-center max-w-2xl mx-auto mb-12">
         <Badge variant="outline" className="mb-3">Transparent Pricing</Badge>
         <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight mb-4">
@@ -87,7 +86,6 @@ export default function PricingPage() {
           Start for free, then upgrade your workspace as your submission volume and team grow.
         </p>
 
-        {/* Toggle */}
         <div className="mt-8 inline-flex items-center rounded-full border border-border bg-muted/40 p-1">
           <button
             type="button"
@@ -115,7 +113,6 @@ export default function PricingPage() {
         </div>
       </div>
 
-      {/* Pricing Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
         {plans.map((p) => (
           <Card
@@ -168,7 +165,6 @@ export default function PricingPage() {
         ))}
       </div>
 
-      {/* FAQ Callout */}
       <div className="mt-16 text-center text-sm text-muted-foreground">
         Have questions about custom plans or enterprise security?{' '}
         <Link href={ROUTES.HELP_CENTER} className="text-primary underline underline-offset-4">

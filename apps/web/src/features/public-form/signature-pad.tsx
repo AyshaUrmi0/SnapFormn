@@ -14,11 +14,6 @@ interface SignaturePadProps {
   onChange: (value: UploadResult | null) => void;
 }
 
-/**
- * HTML canvas signature pad with mouse + touch support.
- * On save, converts canvas to a PNG blob and uploads to Cloudinary
- * via the public sign endpoint.
- */
 export function SignaturePad({ uploadContext, fieldId, value, onChange }: SignaturePadProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawing = useRef(false);
@@ -26,12 +21,10 @@ export function SignaturePad({ uploadContext, fieldId, value, onChange }: Signat
   const [hasStrokes, setHasStrokes] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // Initialize canvas context on mount
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Scale for retina / high-DPI
     const ratio = window.devicePixelRatio || 1;
     const rect = canvas.getBoundingClientRect();
     canvas.width = rect.width * ratio;
@@ -42,7 +35,7 @@ export function SignaturePad({ uploadContext, fieldId, value, onChange }: Signat
     ctx.lineWidth = 2;
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.strokeStyle = '#111827'; // dark gray (same as foreground)
+    ctx.strokeStyle = '#111827';
   }, []);
 
   function getPoint(e: React.MouseEvent | React.TouchEvent): { x: number; y: number } {
@@ -103,7 +96,6 @@ export function SignaturePad({ uploadContext, fieldId, value, onChange }: Signat
 
     setUploading(true);
     try {
-      // Convert the canvas to a PNG blob
       const blob: Blob | null = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'));
       if (!blob) throw new Error('Could not export signature');
 
@@ -124,7 +116,6 @@ export function SignaturePad({ uploadContext, fieldId, value, onChange }: Signat
     }
   }
 
-  // If already signed, show the stored signature image with a "re-sign" button
   if (value) {
     return (
       <div className="rounded-md border border-input bg-background p-3 flex items-center justify-between gap-3">

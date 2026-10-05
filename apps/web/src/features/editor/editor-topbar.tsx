@@ -87,7 +87,6 @@ export function EditorTopbar({
   return (
     <TooltipProvider>
       <div className="flex items-center border-b bg-background px-4 h-12 shrink-0">
-        {/* Left: Back + Breadcrumbs */}
         <div className="flex items-center gap-1 min-w-0 flex-1">
           <Link
             href={ROUTES.workspace(workspaceId).FORMS}
@@ -137,7 +136,6 @@ export function EditorTopbar({
           )}
         </div>
 
-        {/* Center: Tabs */}
         <nav className="flex items-center gap-1 shrink-0 mx-4">
           {tabs.map((tab) => {
             const isActive = pathname === tab.href;
@@ -158,7 +156,6 @@ export function EditorTopbar({
           })}
         </nav>
 
-        {/* Right: Actions */}
         <div className="flex items-center gap-1.5 shrink-0">
           {onSave && isDirty && (
             <Button

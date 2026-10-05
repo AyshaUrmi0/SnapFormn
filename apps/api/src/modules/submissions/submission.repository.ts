@@ -92,9 +92,6 @@ export const submissionRepository = {
     const since = new Date();
     since.setDate(since.getDate() - days);
 
-    // Note the table name: the Prisma model `Submission` is mapped to the
-    // Postgres table `submissions` via `@@map("submissions")`. Raw SQL must
-    // use the real table name, not the model name.
     const rows = await prisma.$queryRaw<Array<{ date: string; count: bigint }>>`
       SELECT TO_CHAR("createdAt", 'YYYY-MM-DD') as date, COUNT(*)::bigint as count
       FROM "submissions"

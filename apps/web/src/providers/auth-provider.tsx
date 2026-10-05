@@ -59,7 +59,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     queryClient.clear();
   }, [queryClient]);
 
-  // Restore session on mount — always attempt refresh via httpOnly cookie
   useEffect(() => {
     const restore = async () => {
       try {
@@ -68,7 +67,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await refreshUser();
         }
       } catch {
-        // No valid session
       } finally {
         setIsLoading(false);
       }

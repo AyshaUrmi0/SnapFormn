@@ -40,7 +40,6 @@ export default function SandboxPage() {
   const [lastSaved, setLastSaved] = useState<string>('Saved');
   const editorRef = useRef<DocumentEditorRef>(null);
 
-  // Initialize draft from localStorage or fallback to default
   useEffect(() => {
     const draft = loadGuestDraft();
     setTitle(draft.title);
@@ -49,7 +48,6 @@ export default function SandboxPage() {
     setIsReady(true);
   }, []);
 
-  // Auto-save whenever title, description, or fields change
   useEffect(() => {
     if (!isReady) return;
     saveGuestDraft({ title, description, fields });
@@ -71,7 +69,6 @@ export default function SandboxPage() {
       );
       setValidationErrors([]);
 
-      // Sync changes back to TipTap
       if (editorRef.current && selectedFieldId) {
         const tiptapUpdates: Record<string, unknown> = {};
         if ('label' in updates) tiptapUpdates.label = updates.label;
@@ -138,9 +135,7 @@ export default function SandboxPage() {
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] min-h-0 bg-background overflow-hidden">
-      {/* ─── SANDBOX TOPBAR ─── */}
       <div className="flex items-center justify-between border-b px-4 h-13 shrink-0 bg-background/95 backdrop-blur z-20">
-        {/* Left: Back + Sandbox Badge */}
         <div className="flex items-center gap-3 min-w-0">
           <Link
             href="/"
@@ -159,15 +154,12 @@ export default function SandboxPage() {
           </div>
         </div>
 
-        {/* Center / Right Actions */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Auto-save status */}
           <div className="hidden md:flex items-center gap-1.5 text-xs text-muted-foreground mr-2">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
             <span>{lastSaved}</span>
           </div>
 
-          {/* Reset button */}
           <Button
             variant="ghost"
             size="sm"
@@ -179,7 +171,6 @@ export default function SandboxPage() {
             <span className="hidden sm:inline">Reset</span>
           </Button>
 
-          {/* Preview Toggle */}
           <Button
             variant={isPreview ? 'default' : 'outline'}
             size="sm"
@@ -190,7 +181,6 @@ export default function SandboxPage() {
             <span>{isPreview ? 'Exit Preview' : 'Preview'}</span>
           </Button>
 
-          {/* Primary Save & Claim CTA */}
           <Button
             size="sm"
             onClick={handleOpenClaimDialog}
@@ -202,9 +192,7 @@ export default function SandboxPage() {
         </div>
       </div>
 
-      {/* ─── EDITOR / PREVIEW CANVAS ─── */}
       <div className="flex-1 flex min-h-0 overflow-hidden">
-        {/* Main Canvas */}
         <div className="flex-1 min-w-0 overflow-y-auto bg-muted/20">
           {isPreview ? (
             <div className="max-w-xl mx-auto py-10 px-4">
@@ -232,7 +220,6 @@ export default function SandboxPage() {
             </div>
           ) : (
             <div className="py-8 px-4">
-              {/* Title & Description Header */}
               <div className="max-w-2xl mx-auto mb-6">
                 <input
                   type="text"
@@ -250,7 +237,6 @@ export default function SandboxPage() {
                 />
               </div>
 
-              {/* Document Editor */}
               <EditorSelectionContext.Provider
                 value={{
                   selectedFieldId,
@@ -266,7 +252,6 @@ export default function SandboxPage() {
                 />
               </EditorSelectionContext.Provider>
 
-              {/* Keyboard helper hint */}
               {fields.length === 0 && (
                 <div className="max-w-2xl mx-auto mt-8 text-center space-y-3">
                   <p className="text-muted-foreground">
@@ -281,7 +266,6 @@ export default function SandboxPage() {
           )}
         </div>
 
-        {/* Right Sidebar: Field Configurator */}
         {selectedField && !isPreview && (
           <div className="w-80 border-l bg-background overflow-y-auto p-4 shrink-0 shadow-sm animate-in slide-in-from-right-4">
             <FieldConfig
@@ -296,7 +280,6 @@ export default function SandboxPage() {
         )}
       </div>
 
-      {/* ─── GUEST CLAIM DIALOG ─── */}
       <GuestClaimDialog
         open={showClaimDialog}
         onOpenChange={setShowClaimDialog}

@@ -1,24 +1,3 @@
-/**
- * Tally-style rule engine for CALCULATED fields.
- *
- * A form can have any number of LOGIC blocks (field.type === 'CONDITIONAL_LOGIC').
- * Each block is shaped like:
- *   {
- *     combinator: 'and' | 'or',
- *     conditions: [{ sourceFieldId, op, value }, ...],
- *     actions:    [{ type: 'calculate', targetFieldId, op, value }, ...]
- *   }
- *
- * On every respondent answer change:
- *   1. Every CALCULATED field is reset to its configured initialValue.
- *   2. Logic blocks run top-to-bottom (by field order).
- *   3. For each block whose conditions match, every action runs in order,
- *      mutating the target CALCULATED field value.
- *   4. The final map { fieldId: computedValue } is merged into the
- *      respondent's values object for rendering, piping, and submission.
- *
- * Pure — no side effects, no state, no React. Safe to call from useMemo.
- */
 
 import type { FormField } from '@/modules/form/types';
 
@@ -66,13 +45,7 @@ export interface LogicBlock {
 
 export interface CalculatedOptions {
   valueType?: 'number' | 'text';
-  /** Literal initial value. Ignored when initialValueFieldId is set. */
   initialValue?: number | string;
-  /**
-   * If set, the initial value is read from this field's submitted value
-   * before logic runs. Lets creators seed a calculated from another input
-   * (e.g. base score = respondent's "Starting points" question).
-   */
   initialValueFieldId?: string | null;
 }
 
@@ -177,10 +150,6 @@ function applyCalculate(
   return { ...currentValues, [action.targetFieldId]: next };
 }
 
-/**
- * Safely parse the JSON options column of a LOGIC field into a LogicBlock.
- * Returns null when the shape is malformed — caller should treat as "no rule".
- */
 export function parseLogicBlock(options: unknown): LogicBlock | null {
   if (!options || typeof options !== 'object' || Array.isArray(options)) return null;
   const raw = options as Record<string, unknown>;
@@ -202,20 +171,11 @@ export function parseLogicBlock(options: unknown): LogicBlock | null {
 }
 
 export interface LogicResult {
-  /** Values map with CALCULATED fields resolved. */
   values: Record<string, unknown>;
-  /** Field IDs explicitly hidden by a hide action. */
   hiddenFieldIds: Set<string>;
-  /** Field IDs explicitly shown by a show action. Defaults to visible. */
   shownFieldIds: Set<string>;
 }
 
-/**
- * Run all logic blocks and return the computed values, visibility decisions.
- * CALCULATED fields are reset to their initial then mutated in order.
- * Visibility actions (show/hide) are collected; last-matching-action-wins
- * semantics — a later block's `show` overrides an earlier block's `hide`.
- */
 export function runLogic(
   fields: FormField[],
   baseValues: Record<string, unknown>,
@@ -224,10 +184,6 @@ export function runLogic(
   const hiddenFieldIds = new Set<string>();
   const shownFieldIds = new Set<string>();
 
-  // Reset every CALCULATED field to its configured initial value. If the
-  // creator chose to source the initial from another field, read that
-  // field's value from the respondent's raw baseValues (never from already-
-  // reset calculated fields, to avoid cyclic reads).
   for (const f of fields) {
     if (f.type !== 'CALCULATED') continue;
     const opts = (f.options ?? {}) as CalculatedOptions;
@@ -247,7 +203,6 @@ export function runLogic(
     values[f.id] = initial;
   }
 
-  // Walk logic blocks in document order and apply their actions.
   const logicFields = fields
     .filter((f) => f.type === 'CONDITIONAL_LOGIC')
     .sort((a, b) => a.order - b.order);
@@ -272,11 +227,6 @@ export function runLogic(
   return { values, hiddenFieldIds, shownFieldIds };
 }
 
-/**
- * Return the list of operator options that are valid for a given
- * source-field type. Used by the logic editor to populate the operator
- * dropdown contextually.
- */
 export function operatorsForFieldType(type: string): Operator[] {
   switch (type) {
     case 'SHORT_TEXT':

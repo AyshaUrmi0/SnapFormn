@@ -215,7 +215,6 @@ function PreviewField({ field }: { field: EditorField }) {
         </div>
       );
 
-    // Layout blocks — render directly from label
     case 'HEADING_1':
       return <h1 className="text-3xl font-bold">{displayLabel}</h1>;
     case 'HEADING_2':
@@ -233,7 +232,6 @@ function PreviewField({ field }: { field: EditorField }) {
     case 'DIVIDER':
       return <div className="h-px w-full bg-border my-4" />;
 
-    // Invisible / runtime-only blocks — hide in preview
     case 'THANK_YOU_PAGE':
     case 'CONDITIONAL_LOGIC':
     case 'CALCULATED':
@@ -260,12 +258,10 @@ export function FormPreview({ title, fields }: FormPreviewProps) {
   return (
     <div className="py-8 px-4">
       <div className="max-w-xl mx-auto space-y-8">
-        {/* Form header */}
         <div className="text-center space-y-2">
           <h1 className="text-3xl font-bold">{title || 'Untitled form'}</h1>
         </div>
 
-        {/* Fields */}
         <div className="space-y-6">
           {fields.map((field) => (
             <PreviewField key={field.id} field={field} />

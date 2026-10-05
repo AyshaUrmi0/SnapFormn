@@ -27,7 +27,6 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
   const close = useCallback(() => setIsOpen(false), []);
   const toggle = useCallback(() => setIsOpen((prev) => !prev), []);
 
-  // Global Ctrl+K / Cmd+K shortcut
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {

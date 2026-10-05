@@ -15,8 +15,6 @@ import { useCreateFormHref, useCreateWorkspaceHref } from '@/hooks/use-creation-
 import { ROUTES } from '@/constants/routes';
 import type { LucideIcon } from 'lucide-react';
 
-// ─── Types ──────────────────────────────────────────────────
-
 interface PaletteItem {
   id: string;
   label: string;
@@ -27,15 +25,11 @@ interface PaletteItem {
   onExecute: () => void;
 }
 
-// ─── Fuzzy filter ───────────────────────────────────────────
-
 function matchesQuery(label: string, keywords: string, query: string): boolean {
   const q = query.toLowerCase();
   const text = `${label} ${keywords}`.toLowerCase();
   return q.split(/\s+/).every((word) => text.includes(word));
 }
-
-// ─── Component ──────────────────────────────────────────────
 
 export function CommandPalette() {
   const { isOpen, close } = useCommandPalette();
@@ -48,7 +42,6 @@ export function CommandPalette() {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // ─── Fetch real data ────────────────────────────────────────
   const { data: workspaces } = useWorkspaces();
   const { data: forms, isLoading: formsLoading } = useForms({
     workspaceId: workspaceId ?? '',
@@ -56,11 +49,9 @@ export function CommandPalette() {
   const newFormHref = useCreateFormHref(workspaceId ?? '');
   const newWorkspaceHref = useCreateWorkspaceHref();
 
-  // ─── Build items list ───────────────────────────────────────
   const allItems = useMemo(() => {
     const items: PaletteItem[] = [];
 
-    // Actions (always shown)
     items.push({
       id: 'action-new-form',
       label: 'New form',
@@ -81,7 +72,6 @@ export function CommandPalette() {
       onExecute: () => router.push(newWorkspaceHref),
     });
 
-    // Forms from current workspace
     if (forms && workspaceId) {
       for (const form of forms) {
         items.push({
@@ -96,7 +86,6 @@ export function CommandPalette() {
       }
     }
 
-    // Workspaces
     if (workspaces) {
       for (const ws of workspaces) {
         items.push({
@@ -111,7 +100,6 @@ export function CommandPalette() {
       }
     }
 
-    // Navigation
     items.push(
       {
         id: 'nav-home',
@@ -167,8 +155,6 @@ export function CommandPalette() {
     return items;
   }, [forms, workspaces, workspaceId, router, newFormHref, newWorkspaceHref]);
 
-  // ─── Filter & group ─────────────────────────────────────────
-  // Only show forms & workspaces when user is actively searching
   const filtered = query
     ? allItems.filter((item) => matchesQuery(item.label, item.keywords ?? '', query))
     : allItems.filter((item) => item.group === 'Actions' || item.group === 'Navigation');
@@ -189,7 +175,6 @@ export function CommandPalette() {
 
   const flatItems = groups.flatMap((g) => g.items);
 
-  // ─── Effects ────────────────────────────────────────────────
   useEffect(() => {
     if (isOpen) {
       setQuery('');
@@ -210,7 +195,6 @@ export function CommandPalette() {
     [close],
   );
 
-  // Keyboard navigation
   useEffect(() => {
     if (!isOpen) return;
 
@@ -239,7 +223,6 @@ export function CommandPalette() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, selectedIndex, flatItems, executeItem, close]);
 
-  // Scroll selected into view
   useEffect(() => {
     if (!listRef.current) return;
     const selected = listRef.current.querySelector('[data-selected="true"]');
@@ -252,19 +235,16 @@ export function CommandPalette() {
 
   return (
     <>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 z-50 bg-black/20 supports-backdrop-filter:backdrop-blur-xs animate-in fade-in-0 duration-100"
         onClick={close}
       />
 
-      {/* Palette */}
       <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh] px-4 pointer-events-none">
         <div
           className="w-full max-w-lg rounded-xl bg-popover text-popover-foreground ring-1 ring-foreground/10 shadow-lg pointer-events-auto animate-in fade-in-0 zoom-in-95 duration-100"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Search input */}
           <div className="flex items-center gap-3 px-4 border-b">
             <Search className="h-4 w-4 text-muted-foreground shrink-0" />
             <input
@@ -289,7 +269,6 @@ export function CommandPalette() {
             </button>
           </div>
 
-          {/* Results */}
           <div ref={listRef} className="max-h-80 overflow-y-auto p-2">
             {flatItems.length === 0 && (
               <p className="px-3 py-6 text-center text-sm text-muted-foreground">
@@ -335,7 +314,6 @@ export function CommandPalette() {
             ))}
           </div>
 
-          {/* Footer hint */}
           <div className="flex items-center gap-3 border-t px-4 py-2">
             <span className="text-[11px] text-muted-foreground">
               <kbd className="rounded border bg-muted px-1 py-0.5 text-[10px]">↑↓</kbd> navigate

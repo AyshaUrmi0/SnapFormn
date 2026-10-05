@@ -26,11 +26,6 @@ function getPrefillKey(field: FormField): string {
   return slugify(field.label || '');
 }
 
-/**
- * Context passed to upload components so they call the right signing endpoint.
- *  - respondent: public form, uses slug + PUBLISHED check
- *  - owner: authenticated preview, uses formId + workspace check
- */
 export type UploadContext =
   | { mode: 'respondent'; slug: string }
   | { mode: 'owner'; formId: string };
@@ -153,9 +148,7 @@ interface FormFieldRendererProps {
   onChange: (value: unknown) => void;
   error?: string;
   uploadContext: UploadContext;
-  /** All form fields — needed to resolve @mention tokens in text blocks. */
   allFields: FormField[];
-  /** Current values including logic-derived CALCULATED fields. */
   derivedValues: Record<string, unknown>;
 }
 
@@ -170,8 +163,6 @@ function FormFieldRenderer({
 }: FormFieldRendererProps) {
   const options = parseOptions(field.options);
   const rawLabel = field.label || 'Untitled';
-  // Text-only block types (statements, headings, titles, labels) expand
-  // @mentions in their label so creators can write "Your total is $@price".
   const TEXT_BLOCKS: FieldType[] = [
     'STATEMENT', 'HEADING_1', 'HEADING_2', 'HEADING_3', 'TITLE', 'LABEL',
   ];
@@ -435,9 +426,6 @@ function FormFieldRenderer({
       );
 
     case 'PAGE_BREAK':
-      // At runtime, PAGE_BREAK is a structural separator — it splits the
-      // form into pages. The splitter below removes it before rendering,
-      // so this branch should never fire for a respondent.
       return null;
 
     case 'TIME':
@@ -627,12 +615,9 @@ function FormFieldRenderer({
     case 'CALCULATED':
     case 'HIDDEN':
     case 'COUNTRY':
-      // These blocks are not visible to respondents — they run logic silently
       return null;
 
     case 'RECAPTCHA':
-      // Renders Google's v2 "I'm not a robot" checkbox. The token is tracked
-      // in the parent via onChange and sent with the submission payload.
       return (
         <div className="space-y-2">
           <RecaptchaWidget
@@ -668,8 +653,6 @@ function inputType(fieldType: FieldType): string {
   }
 }
 
-// --- Main Form Renderer ---
-
 interface FormRendererProps {
   title: string;
   description: string | null;
@@ -680,12 +663,7 @@ interface FormRendererProps {
     values: Record<string, unknown>,
     extras: { recaptchaToken?: string },
   ) => void;
-  /**
-   * When true, form submissions render the thank-you page inline without
-   * calling `onSubmit`. Used by the editor "Preview" mode.
-   */
   previewMode?: boolean;
-  /** Custom thank-you message from form settings. Falls back to a default. */
   thankYouMessage?: string;
 }
 
@@ -720,19 +698,10 @@ export function FormRenderer({
   const recaptchaFields = fields.filter((f) => f.type === 'RECAPTCHA');
   const allFields = fields.sort((a, b) => a.order - b.order);
 
-  // Re-run all LOGIC blocks on every value change. `values` gets CALCULATED
-  // fields resolved; `hiddenFieldIds` is the set of field IDs explicitly
-  // hidden by a logic action. Pure and memoized so it's cheap.
   const logicResult = useMemo(() => runLogic(fields, values), [fields, values]);
   const derivedValues = logicResult.values;
   const hiddenByLogic = logicResult.hiddenFieldIds;
 
-  // On mount, seed values from the URL query string:
-  //   1. HIDDEN fields match by their configured `paramName`.
-  //   2. Visible/interactive fields match by their `prefillKey` (either the
-  //      creator's custom key stored in `validations.prefillKey`, or the
-  //      slugified field label as a default).
-  // Skipped in preview mode so the editor's preview stays deterministic.
   useEffect(() => {
     if (previewMode) return;
     const params = new URLSearchParams(window.location.search);
@@ -748,8 +717,6 @@ export function FormRenderer({
         next[field.id] = fromUrl ?? opts.defaultValue ?? '';
       }
 
-      // Seed CALCULATED fields with their configured initial value. Logic
-      // blocks will mutate these on every respondent answer change.
       for (const field of calculatedFields) {
         const opts = (field.options ?? {}) as { valueType?: 'number' | 'text'; initialValue?: number | string };
         if (next[field.id] === undefined) {
@@ -771,13 +738,6 @@ export function FormRenderer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fields.length, previewMode]);
 
-  // COUNTRY fields are resolved server-side at submission time (from the
-  // respondent's real request IP). No client-side fetch here — the client
-  // can't be trusted for geo data, and Tally uses the same pattern.
-
-  // Split the form into pages using PAGE_BREAK blocks as separators. Runs
-  // on the already-visible set so pages where every field is hidden by a
-  // logic block collapse away (the respondent never sees a blank page).
   const pages = useMemo(() => {
     const visibleAll = allFields.filter(
       (f) => f.type !== 'THANK_YOU_PAGE' && !hiddenByLogic.has(f.id),
@@ -805,7 +765,6 @@ export function FormRenderer({
     for (const field of scopeFields) {
       if (NON_INTERACTIVE_TYPES.includes(field.type)) continue;
       if (!field.required) continue;
-      // A field hidden by logic never needs to be filled in.
       if (hiddenByLogic.has(field.id)) continue;
 
       const val = values[field.id];
@@ -852,8 +811,6 @@ export function FormRenderer({
     e.preventDefault();
     if (!validate(interactiveFields)) return;
 
-    // If the form has a reCAPTCHA block, require the token before
-    // submitting. The backend also verifies it; this is just UX.
     let recaptchaToken: string | undefined;
     if (recaptchaFields.length > 0 && !previewMode) {
       const first = recaptchaFields[0];
@@ -868,12 +825,6 @@ export function FormRenderer({
       recaptchaToken = token;
     }
 
-    // Build submission payload — interactive fields with values, plus every
-    // hidden and calculated field (always send, including empty / initial
-    // values so the creator sees them in analytics). COUNTRY fields are
-    // resolved server-side and injected by the API, so we don't send them
-    // at all from the client. Fields hidden by a LOGIC block are dropped —
-    // an unanswered hidden question shouldn't leak into the submission.
     const submissionValues: Record<string, unknown> = {};
     for (const field of interactiveFields) {
       if (hiddenByLogic.has(field.id)) continue;
@@ -887,12 +838,9 @@ export function FormRenderer({
     for (const field of calculatedFields) {
       const opts = (field.options ?? {}) as { valueType?: 'number' | 'text'; initialValue?: number | string };
       const fallback = opts.initialValue ?? (opts.valueType === 'text' ? '' : 0);
-      // Prefer the logic-engine-derived value; fall back to the initial if
-      // no logic blocks touched it.
       submissionValues[field.id] = derivedValues[field.id] ?? fallback;
     }
 
-    // In preview mode, show the thank-you page locally without calling the API
     if (previewMode) {
       setSubmitted(true);
       return;
@@ -901,10 +849,6 @@ export function FormRenderer({
     onSubmit(submissionValues, { recaptchaToken });
   }
 
-  // Resolve the thank-you content. Priority:
-  //   1. A THANK_YOU_PAGE block in the form's fields (use its label)
-  //   2. The `thankYouMessage` prop (from form settings)
-  //   3. Default message
   const thankYouBlock = fields.find((f) => f.type === 'THANK_YOU_PAGE');
   const successHeading = thankYouBlock?.label || 'Thanks for your submission!';
   const successDescription =
@@ -942,8 +886,6 @@ export function FormRenderer({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Form header — title and description only render on the first page
-          so respondents focus on the question at hand on later pages. */}
       {isFirstPage && (
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">{title}</h1>
@@ -963,7 +905,6 @@ export function FormRenderer({
         </div>
       )}
 
-      {/* Only fields for the current page are mounted */}
       <div className="space-y-6">
         {currentPageFields.map((field) => (
           <FormFieldRenderer

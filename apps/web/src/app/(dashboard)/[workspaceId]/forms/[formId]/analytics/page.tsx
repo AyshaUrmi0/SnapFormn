@@ -17,10 +17,6 @@ import { EditorTopbar } from '@/features/editor/editor-topbar';
 import { ROUTES } from '@/constants/routes';
 import type { FormAnalytics } from '@/modules/submission/types';
 
-/**
- * Compute analytics client-side from raw submissions + form fields
- * as a fallback when the backend analytics endpoint is unavailable.
- */
 function computeClientAnalytics(
   submissions: Array<{ id: string; completedAt: string | null; createdAt: string; fields?: Array<{ fieldId: string }> }>,
   formFields: Array<{ id: string; label: string; type: string }>,
@@ -32,7 +28,6 @@ function computeClientAnalytics(
     (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
   );
 
-  // Timeline: group by date
   const timelineMap = new Map<string, number>();
   for (const s of sorted) {
     const date = new Date(s.createdAt).toISOString().split('T')[0];
@@ -40,7 +35,6 @@ function computeClientAnalytics(
   }
   const timeline = Array.from(timelineMap.entries()).map(([date, count]) => ({ date, count }));
 
-  // Field stats
   const fieldCountMap = new Map<string, number>();
   for (const s of submissions) {
     for (const f of s.fields ?? []) {
@@ -86,17 +80,14 @@ export default function AnalyticsPage({
   const { data: form, isLoading: formLoading } = useFormQuery(workspaceId, formId);
   const { data: serverAnalytics, isLoading: analyticsLoading, isError: analyticsError } = useFormAnalytics(workspaceId, formId);
 
-  // Fallback: fetch submissions if server analytics fails
   const { data: submissions, isLoading: subsLoading } = useSubmissions({
     workspaceId,
     formId,
   });
 
   const analytics = useMemo<FormAnalytics | null>(() => {
-    // Prefer server analytics
     if (serverAnalytics) return serverAnalytics;
 
-    // Fallback: compute from raw data
     if (analyticsError && submissions && form?.fields) {
       return computeClientAnalytics(
         submissions as Array<{ id: string; completedAt: string | null; createdAt: string; fields?: Array<{ fieldId: string }> }>,
@@ -117,7 +108,6 @@ export default function AnalyticsPage({
     );
   }
 
-  // Use empty analytics if nothing available
   const data: FormAnalytics = analytics ?? {
     overview: { totalSubmissions: 0, completedSubmissions: 0, completionRate: 0, firstSubmissionAt: null, lastSubmissionAt: null },
     timeline: [],
@@ -141,7 +131,6 @@ export default function AnalyticsPage({
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="space-y-6">
-          {/* Sub-header */}
           <div className="flex items-center justify-between gap-3">
             <p className="text-sm text-muted-foreground">Last 30 days</p>
             <Link href={ROUTES.workspace(workspaceId).form(formId).SUBMISSIONS}>
@@ -151,10 +140,8 @@ export default function AnalyticsPage({
             </Link>
           </div>
 
-          {/* Overview cards */}
           <OverviewCards overview={data.overview} />
 
-          {/* Charts */}
           {data.overview.totalSubmissions === 0 ? (
             <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-12 text-center">
               <div className="rounded-full bg-muted p-3">

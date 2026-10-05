@@ -108,14 +108,12 @@ export default function FormSettingsPage({
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mx-auto max-w-2xl space-y-6">
-          {/* Save bar */}
           <div className="flex items-center justify-end">
             <Button size="sm" onClick={handleSave} disabled={!isDirty || updateForm.isPending}>
               {updateForm.isPending ? 'Saving...' : 'Save changes'}
             </Button>
           </div>
 
-      {/* Share Link */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Share Link</CardTitle>
@@ -136,7 +134,6 @@ export default function FormSettingsPage({
         </CardContent>
       </Card>
 
-      {/* Schedule */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Schedule</CardTitle>
@@ -195,7 +192,6 @@ export default function FormSettingsPage({
         </CardContent>
       </Card>
 
-      {/* Thank You Page */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Thank You Page</CardTitle>
@@ -245,7 +241,6 @@ export default function FormSettingsPage({
         </CardContent>
       </Card>
 
-      {/* Password Protection */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Password Protection</CardTitle>
@@ -298,7 +293,6 @@ export default function FormSettingsPage({
         </CardContent>
       </Card>
 
-      {/* Embedding */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Embed</CardTitle>

@@ -3,10 +3,6 @@
 import { Check, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
-// Self-contained "I'm not a robot" checkbox styled to resemble Google's
-// reCAPTCHA v2 widget. No Google integration — ticking it emits a marker
-// token. The form renderer requires the token before allowing submission.
-// This is UX-only, not actual bot protection.
 const CONFIRMED_TOKEN = 'user-confirmed';
 
 interface RecaptchaWidgetProps {

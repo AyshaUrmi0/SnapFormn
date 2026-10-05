@@ -27,7 +27,6 @@ function TemplatesContent() {
   const [categoryFilter, setCategoryFilter] = useState<TemplateCategory | 'all'>('all');
   const [selectedTemplate, setSelectedTemplate] = useState<FormTemplate | null>(null);
 
-  // Auto-select template from URL if passed
   useEffect(() => {
     if (templateQuery) {
       const match = FORM_TEMPLATES.find((t) => t.id === templateQuery);
@@ -52,7 +51,6 @@ function TemplatesContent() {
         </p>
       </div>
 
-      {/* Category filter */}
       <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
         <Button
           variant={categoryFilter === 'all' ? 'default' : 'outline'}
@@ -73,7 +71,6 @@ function TemplatesContent() {
         ))}
       </div>
 
-      {/* Template grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filtered.map((template) => {
           const Icon = TEMPLATE_ICON_MAP[template.icon] ?? Type;

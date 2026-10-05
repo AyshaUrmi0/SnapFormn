@@ -24,7 +24,6 @@ export function FieldOptionsEditor({ options, onChange }: FieldOptionsEditorProp
   function updateOptionLabel(index: number, label: string) {
     const updated = options.map((opt, i) => {
       if (i !== index) return opt;
-      // Auto-generate value from label
       const value = label.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
       return { label, value };
     });

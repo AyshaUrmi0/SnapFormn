@@ -40,13 +40,10 @@ export function LogicBlockEditor({
   value,
   onChange,
 }: LogicBlockEditorProps) {
-  // Fields that can be used as condition SOURCES: any answerable field,
-  // excluding layout, the current logic block itself, and other logic blocks.
   const sourceFields = allFields.filter(
     (f) => !LAYOUT_TYPES.has(f.type) && f.id !== selfFieldId,
   );
 
-  // Fields that can be CALCULATE targets: only CALCULATED fields.
   const targetFields = allFields.filter((f) => f.type === 'CALCULATED');
 
   function updateConditions(next: LogicCondition[]) {
@@ -57,10 +54,6 @@ export function LogicBlockEditor({
     onChange({ ...value, actions: next });
   }
 
-  // Fields that can be targets for show/hide actions: anything answerable
-  // or visible to respondents. Excludes the current logic block, other
-  // logic blocks, and blocks that are always invisible (HIDDEN/CALCULATED/
-  // RECAPTCHA/COUNTRY).
   const visibilityTargetFields = allFields.filter(
     (f) =>
       f.id !== selfFieldId &&
@@ -91,8 +84,6 @@ export function LogicBlockEditor({
   }
 
   function addAction() {
-    // Default to show/hide when no CALCULATED field exists yet, so the
-    // "+ Add action" button is always useful.
     if (targetFields.length > 0) {
       const firstTarget = targetFields[0];
       updateActions([
@@ -149,7 +140,6 @@ export function LogicBlockEditor({
         </p>
       </div>
 
-      {/* IF */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Label className="text-xs uppercase tracking-wider text-muted-foreground">
@@ -302,7 +292,6 @@ export function LogicBlockEditor({
         </Button>
       </div>
 
-      {/* THEN */}
       <div className="space-y-2">
         <Label className="text-xs uppercase tracking-wider text-muted-foreground">Then</Label>
 

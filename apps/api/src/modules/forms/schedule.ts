@@ -1,11 +1,3 @@
-/**
- * Form scheduling logic — mirrors the frontend `getScheduleStatus` helper
- * in apps/web/src/modules/form/settings-types.ts. Both must stay in sync.
- *
- * A form's schedule is stored inside the existing `settings` JSON column
- * under `settings.schedule = { startsAt, endsAt, maxSubmissions }`. None of
- * these fields require a Prisma migration.
- */
 
 export interface FormScheduleConfig {
   startsAt: string;
@@ -47,10 +39,6 @@ export function getScheduleStatus(
   return { state: 'open' };
 }
 
-/**
- * Read the schedule config from a form's `settings` JSON. Returns null if
- * the form has no schedule configured.
- */
 export function extractSchedule(settings: unknown): FormScheduleConfig | null {
   if (!settings || typeof settings !== 'object') return null;
   const obj = settings as Record<string, unknown>;

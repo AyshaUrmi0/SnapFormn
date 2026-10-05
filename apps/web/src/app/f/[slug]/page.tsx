@@ -57,7 +57,6 @@ export default function PublicFormPage({
     );
   }
 
-  // Password gate
   if (needsPassword) {
     return (
       <div className={`min-h-screen flex items-center justify-center py-12 px-4 ${isEmbedded ? '' : 'bg-muted/30'}`}>
@@ -102,7 +101,6 @@ export default function PublicFormPage({
     );
   }
 
-  // Check schedule status (start/end dates + max submissions cap)
   const submissionCount = (form as { _count?: { submissions?: number } })._count?.submissions ?? 0;
   const scheduleStatus = getScheduleStatus(settings.schedule, submissionCount);
 
@@ -157,11 +155,9 @@ export default function PublicFormPage({
       },
       {
         onSuccess: () => {
-          // Check for redirect URL in settings
           const successRedirect = (settings.successPage?.redirectUrl ?? '').trim();
           if (successRedirect) {
             if (isEmbedded) {
-              // In iframe, redirect the iframe itself
               window.location.href = successRedirect;
             } else {
               window.location.href = successRedirect;

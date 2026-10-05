@@ -37,20 +37,9 @@ interface UploadRespondentOpts {
 
 type UploadOpts = UploadOwnerOpts | UploadRespondentOpts;
 
-/**
- * Upload a file to Cloudinary via a signed direct upload.
- *
- * Flow:
- *   1. Ask our API for a signature (server-side, API secret stays server-side)
- *   2. POST the file + signed params directly to Cloudinary
- *   3. Return the resulting secure_url and public_id
- *
- * Large files bypass our API entirely — the bytes only touch Cloudinary.
- */
 export async function uploadToCloudinary(file: File, opts: UploadOpts): Promise<UploadResult> {
   const resourceType: ResourceType = opts.resourceType ?? 'auto';
 
-  // 1. Get a signed upload payload from our API
   const sign = opts.mode === 'owner'
     ? await api.post<SignResponse>('/uploads/sign', {
         formId: opts.formId,
@@ -67,7 +56,6 @@ export async function uploadToCloudinary(file: File, opts: UploadOpts): Promise<
     throw new Error('Cloudinary is not configured on the server');
   }
 
-  // 2. POST the file directly to Cloudinary using the signed params
   const endpointType = resourceType === 'raw' ? 'raw' : resourceType === 'video' ? 'video' : resourceType === 'image' ? 'image' : 'auto';
   const url = `https://api.cloudinary.com/v1_1/${sign.cloudName}/${endpointType}/upload`;
 
@@ -78,7 +66,6 @@ export async function uploadToCloudinary(file: File, opts: UploadOpts): Promise<
   formData.append('signature', sign.signature);
   formData.append('folder', sign.folder);
 
-  // Use XMLHttpRequest for real upload progress events (fetch doesn't expose them)
   const response = await new Promise<{
     secure_url: string;
     public_id: string;

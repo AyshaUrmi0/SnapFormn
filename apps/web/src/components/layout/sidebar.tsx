@@ -115,7 +115,6 @@ function NavItem({
     item.className,
   );
 
-  // If the item has an action callback, render a button instead of a link
   if (item.action) {
     return (
       <button type="button" onClick={item.action} className={classes}>
@@ -153,14 +152,12 @@ export function Sidebar() {
 
   return (
     <aside className="flex flex-col w-56 border-r border-sidebar-border bg-sidebar text-sidebar-foreground h-screen shrink-0">
-      {/* User menu at top */}
       <div className="p-3">
         <UserMenu showName sidebar />
       </div>
 
       <Separator />
 
-      {/* Main nav */}
       <nav className="flex-1 min-h-0 overflow-y-auto py-1">
         {sections.map((section, sIdx) => {
           if (section.label === 'Workspaces') {
@@ -207,7 +204,6 @@ export function Sidebar() {
 
       <Separator />
 
-      {/* Footer */}
       <div className="p-2 flex items-center justify-between">
         <Link
           href="#"

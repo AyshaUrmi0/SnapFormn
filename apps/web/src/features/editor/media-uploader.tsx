@@ -11,17 +11,11 @@ import { useParams } from 'next/navigation';
 import type { MediaOptions } from './types';
 
 interface MediaUploaderProps {
-  /** Current media options object */
   value: MediaOptions;
-  /** Called whenever src/publicId changes */
   onChange: (next: MediaOptions) => void;
-  /** The editor field id — used as folder segment when signing */
   fieldId: string;
-  /** Which Cloudinary resource type to request */
   resourceType: ResourceType;
-  /** Optional label override (e.g. "Image" or "Video") */
   label?: string;
-  /** If true, also accepts external URLs via a text input (for Video/Audio/Embed) */
   allowExternalUrl?: boolean;
 }
 
@@ -75,7 +69,6 @@ export function MediaUploader({
     <div className="space-y-2">
       <Label>{label}</Label>
 
-      {/* Preview / current value */}
       {hasMedia && (
         <div className="flex items-center justify-between gap-2 rounded-md border bg-muted/30 px-3 py-2 text-sm">
           <div className="flex items-center gap-2 min-w-0 flex-1">
@@ -100,7 +93,6 @@ export function MediaUploader({
         </div>
       )}
 
-      {/* Upload button */}
       <input
         ref={inputRef}
         type="file"
@@ -114,7 +106,6 @@ export function MediaUploader({
         onChange={(e) => {
           const file = e.target.files?.[0];
           if (file) void handleFile(file);
-          // reset so the same file can be picked again
           e.target.value = '';
         }}
       />
@@ -139,7 +130,6 @@ export function MediaUploader({
         )}
       </Button>
 
-      {/* External URL input */}
       {allowExternalUrl && (
         <div className="space-y-1">
           <p className="text-[11px] text-muted-foreground">or paste a URL</p>

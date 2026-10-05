@@ -26,15 +26,12 @@ export default function GetStartedPage() {
   const { data: workspaces } = useWorkspaces();
   const firstWorkspaceId = workspaces?.[0]?.id;
 
-  // Persisted checklist state — survives page reloads
   const [completed, setCompleted] = useState<Record<string, boolean>>({});
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (raw) setCompleted(JSON.parse(raw));
-    } catch {
-      // ignore
-    }
+    } catch {}
   }, []);
 
   function toggleStep(id: string) {
@@ -42,9 +39,7 @@ export default function GetStartedPage() {
       const next = { ...prev, [id]: !prev[id] };
       try {
         localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // ignore
-      }
+      } catch {}
       return next;
     });
   }
@@ -133,7 +128,6 @@ export default function GetStartedPage() {
         </p>
       </div>
 
-      {/* Progress bar */}
       <div className="mb-8 rounded-xl border bg-card p-5">
         <div className="flex items-center justify-between mb-2">
           <p className="text-sm font-medium">Your progress</p>
@@ -155,7 +149,6 @@ export default function GetStartedPage() {
         )}
       </div>
 
-      {/* Steps */}
       <div className="space-y-3">
         {steps.map((step) => {
           const Icon = step.icon;
@@ -168,7 +161,6 @@ export default function GetStartedPage() {
                 isDone && 'bg-primary/5 border-primary/30',
               )}
             >
-              {/* Checkbox + step number */}
               <button
                 type="button"
                 onClick={() => toggleStep(step.id)}
@@ -206,7 +198,6 @@ export default function GetStartedPage() {
         })}
       </div>
 
-      {/* Quick links section */}
       <div className="mt-10 rounded-xl border border-dashed bg-muted/30 p-6">
         <h3 className="font-semibold mb-3">Useful shortcuts</h3>
         <div className="grid sm:grid-cols-2 gap-2 text-sm">

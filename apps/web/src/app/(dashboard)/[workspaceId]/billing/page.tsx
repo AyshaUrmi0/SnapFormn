@@ -75,7 +75,6 @@ export default function WorkspaceBillingPage() {
     <div className="space-y-6 max-w-2xl">
       <PageHeader title="Billing" description={`Billing for ${workspace.name}`} />
 
-      {/* Current plan card */}
       <div className="rounded-xl border p-6 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -96,7 +95,6 @@ export default function WorkspaceBillingPage() {
           </div>
         </div>
 
-        {/* Subscription details */}
         {subscription && (
           <div className="space-y-2 text-sm">
             {subscription.currentPeriodEnd && (
@@ -113,7 +111,6 @@ export default function WorkspaceBillingPage() {
           </div>
         )}
 
-        {/* Actions */}
         <div className="flex items-center gap-3 pt-2">
           {subscription && subscription.status !== 'CANCELED' && (
             <Button
@@ -135,7 +132,6 @@ export default function WorkspaceBillingPage() {
         </div>
       </div>
 
-      {/* Usage */}
       {usage && (
         <div className="rounded-xl border p-6 space-y-4">
           <div>
@@ -156,7 +152,6 @@ export default function WorkspaceBillingPage() {
         </div>
       )}
 
-      {/* Free plan upgrade prompt */}
       {planKey === 'FREE' && (
         <div className="rounded-xl border border-dashed p-6 text-center space-y-3">
           <h3 className="font-semibold">Unlock more features</h3>

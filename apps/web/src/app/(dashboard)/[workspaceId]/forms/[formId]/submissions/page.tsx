@@ -71,7 +71,6 @@ export default function SubmissionsPage({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <Link
           href={ROUTES.workspace(workspaceId).FORMS}
@@ -99,7 +98,6 @@ export default function SubmissionsPage({
         </Link>
       </div>
 
-      {/* Submissions list */}
       {submissionList.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed p-12 text-center">
           <div className="rounded-full bg-muted p-3">
@@ -168,7 +166,6 @@ export default function SubmissionsPage({
         </div>
       )}
 
-      {/* Detail dialog */}
       <SubmissionDetailDialog
         open={!!selectedSubmission}
         onOpenChange={(open) => { if (!open) setSelectedSubmission(null); }}

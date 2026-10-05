@@ -24,11 +24,9 @@ export interface WorkspaceMember {
   };
 }
 
-// Composite types matching API responses
 export type WorkspaceWithRole = Workspace & { role: WorkspaceRole };
 export type WorkspaceWithMembers = Workspace & { members: WorkspaceMember[] };
 
-// Service input types (Keys)
 export interface CreateWorkspaceKeys {
   name: string;
 }

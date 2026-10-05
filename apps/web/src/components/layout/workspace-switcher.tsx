@@ -141,7 +141,6 @@ function WorkspaceItem({
 
   return (
     <div>
-      {/* Workspace row */}
       <div
         className={cn(
           'group flex items-center gap-1 rounded-md px-2 py-1.5 text-[13px] transition-colors',
@@ -167,7 +166,6 @@ function WorkspaceItem({
           {workspace.name}
         </Link>
 
-        {/* Actions: + for new form */}
         <div className="hidden group-hover:flex items-center gap-0.5 shrink-0">
           <Link
             href={newFormHref}
@@ -180,7 +178,6 @@ function WorkspaceItem({
         </div>
       </div>
 
-      {/* Forms list (expanded) */}
       {expanded && (
         <div className="ml-3 border-l border-sidebar-border pl-2 mt-0.5 space-y-0.5">
           {forms && forms.length > 0 ? (
@@ -230,7 +227,6 @@ export function WorkspaceSwitcher({ onNavigate }: WorkspaceSwitcherProps) {
   const pathname = usePathname();
   const { data: workspaces } = useWorkspaces();
 
-  // Extract current workspaceId from pathname
   const segments = pathname.split('/').filter(Boolean);
   const currentWorkspaceId = segments[0] !== 'workspaces' ? segments[0] : null;
 

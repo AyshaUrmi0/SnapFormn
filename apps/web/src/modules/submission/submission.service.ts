@@ -11,8 +11,6 @@ import type {
 
 const { GET, POST, DELETE } = methodsEnums;
 
-// ─── Public ──────────────────────────────────────────────────
-
 function submitFormRequest({ slug, data }: SubmitFormKeys) {
   return { url: `/submissions/${slug}`, method: POST, data };
 }
@@ -20,8 +18,6 @@ function submitFormRequest({ slug, data }: SubmitFormKeys) {
 export const submitForm = createApi<SubmitFormKeys, Submission>({
   request: submitFormRequest,
 });
-
-// ─── Workspace-scoped ────────────────────────────────────────
 
 function listSubmissionsRequest({ workspaceId, formId, params }: ListSubmissionsKeys) {
   return {
@@ -56,8 +52,6 @@ function deleteSubmissionRequest({ workspaceId, formId, submissionId }: DeleteSu
 export const deleteSubmission = createApi<DeleteSubmissionKeys, void>({
   request: deleteSubmissionRequest,
 });
-
-// ─── Analytics ──────────────────────────────────────────────
 
 function getAnalyticsRequest({ workspaceId, formId, days }: GetAnalyticsKeys) {
   return {

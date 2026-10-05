@@ -146,7 +146,6 @@ export function MyAccountTab() {
 
   return (
     <div className="space-y-8 py-6">
-      {/* Photo */}
       <div className="space-y-2">
         <Label>Photo</Label>
         <div className="flex items-center gap-4">
@@ -165,7 +164,6 @@ export function MyAccountTab() {
 
       <Separator />
 
-      {/* Name */}
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
@@ -180,7 +178,6 @@ export function MyAccountTab() {
 
         <Separator />
 
-        {/* Email */}
         <div className="space-y-1.5">
           <div className="flex items-center justify-between">
             <Label htmlFor="email">Email</Label>
@@ -282,7 +279,6 @@ export function MyAccountTab() {
 
       <Separator />
 
-      {/* Password */}
       <div className="space-y-3">
         <Label>Password</Label>
         <Card>
@@ -379,7 +375,6 @@ export function MyAccountTab() {
 
       <Separator />
 
-      {/* Two-factor authentication */}
       <Card>
         <CardContent className="flex items-center gap-4 py-4">
           <div className="rounded-lg bg-muted p-2.5">
@@ -400,7 +395,6 @@ export function MyAccountTab() {
         </CardContent>
       </Card>
 
-      {/* Unknown device verification */}
       <Card>
         <CardContent className="flex items-center gap-4 py-4">
           <div className="rounded-lg bg-green-100 dark:bg-green-900/30 p-2.5">
@@ -423,7 +417,6 @@ export function MyAccountTab() {
 
       <Separator />
 
-      {/* Connected accounts */}
       <div className="space-y-3">
         <Label>Connected accounts</Label>
         <Card>
@@ -453,7 +446,6 @@ export function MyAccountTab() {
 
       <Separator />
 
-      {/* Danger zone */}
       <Card className="border-destructive/50">
         <CardContent className="flex items-center gap-4 py-4">
           <div className="rounded-lg bg-destructive/10 p-2.5">

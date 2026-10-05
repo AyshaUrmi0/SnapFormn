@@ -8,7 +8,6 @@ import { extractSchedule, getScheduleStatus } from '../forms/schedule';
 import { detectCountryFromIp } from './detect-country';
 import type { SubmitFormInput, FormAnalytics } from './submission.types';
 
-// Media field value shape stored in SubmissionField.value
 interface MediaValue {
   url?: string;
   publicId?: string;
@@ -36,7 +35,6 @@ export const submissionService = {
     const form = await formRepository.findPublicBySlug(slug);
     if (!form) throw AppError.notFound('Form not found or not published');
 
-    // Enforce form schedule (start/end date + max submissions cap)
     const schedule = extractSchedule(form.settings);
     if (schedule) {
       const totalCount = await prisma.submission.count({ where: { formId: form.id } });
@@ -58,7 +56,6 @@ export const submissionService = {
       }
     }
 
-    // Enforce monthly submission limit based on workspace plan
     const workspace = await prisma.workspace.findUnique({
       where: { id: form.workspaceId },
       select: { plan: true },
@@ -75,10 +72,6 @@ export const submissionService = {
       }
     }
 
-    // If the form contains a RECAPTCHA block, require a non-empty confirmation
-    // token. Frontend sets this when the respondent ticks the checkbox.
-    // NOTE: This is UX-only — any non-empty value passes. Not real bot
-    // protection. Swap in real verification (Google/hCaptcha) when needed.
     const hasRecaptcha = form.fields.some((f) => f.type === 'RECAPTCHA');
     if (hasRecaptcha) {
       if (!input.recaptchaToken || input.recaptchaToken.trim().length === 0) {
@@ -88,9 +81,6 @@ export const submissionService = {
       }
     }
 
-    // Validate that all required fields are present. COUNTRY fields are
-    // populated server-side below; CALCULATED fields are driven by logic
-    // blocks; neither needs to come from the client as a "required" input.
     const requiredFieldIds = form.fields
       .filter((f) => f.required && f.type !== 'COUNTRY' && f.type !== 'CALCULATED')
       .map((f) => f.id);
@@ -104,16 +94,12 @@ export const submissionService = {
       throw AppError.badRequest(`Missing required fields: ${missingLabels.join(', ')}`);
     }
 
-    // Validate that all submitted field IDs belong to this form
     const validFieldIds = form.fields.map((f) => f.id);
     const invalidFields = submittedFieldIds.filter((id) => !validFieldIds.includes(id));
     if (invalidFields.length > 0) {
       throw AppError.badRequest('Submission contains invalid field IDs');
     }
 
-    // Resolve respondent's country from their IP for every COUNTRY field in
-    // this form. Done server-side so the client can't spoof the value. If
-    // the lookup fails the field is simply left out.
     const countryFieldIds = form.fields
       .filter((f) => f.type === 'COUNTRY')
       .map((f) => f.id);
@@ -153,7 +139,6 @@ export const submissionService = {
     const submission = await submissionRepository.findById(submissionId);
     if (!submission) throw AppError.notFound('Submission not found');
 
-    // Clean up any Cloudinary assets referenced by this submission's fields
     const mediaAssets = extractMediaValues(submission.fields ?? []);
     for (const asset of mediaAssets) {
       await uploadService.destroy(asset.publicId, asset.resourceType);

@@ -16,8 +16,6 @@ import type {
 
 const { GET, POST, PATCH, DELETE } = methodsEnums;
 
-// ─── Workspace CRUD ──────────────────────────────────────────
-
 function listWorkspacesRequest() {
   return { url: '/workspaces', method: GET };
 }
@@ -65,8 +63,6 @@ function deleteWorkspaceRequest({ id }: DeleteWorkspaceKeys) {
 export const deleteWorkspace = createApi<DeleteWorkspaceKeys, void>({
   request: deleteWorkspaceRequest,
 });
-
-// ─── Members ─────────────────────────────────────────────────
 
 function inviteMemberRequest({ workspaceId, data }: InviteMemberKeys) {
   return { url: `/workspaces/${workspaceId}/members`, method: POST, data };

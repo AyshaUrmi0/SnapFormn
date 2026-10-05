@@ -20,8 +20,6 @@ import type {
 
 const { GET, POST, PUT, PATCH, DELETE } = methodsEnums;
 
-// ─── Public ──────────────────────────────────────────────────
-
 function getFormBySlugRequest({ slug }: GetFormBySlugKeys) {
   return { url: `/forms/${slug}`, method: GET };
 }
@@ -29,8 +27,6 @@ function getFormBySlugRequest({ slug }: GetFormBySlugKeys) {
 export const getFormBySlug = createApi<GetFormBySlugKeys, Form & { fields: FormField[] }>({
   request: getFormBySlugRequest,
 });
-
-// ─── Workspace-scoped ────────────────────────────────────────
 
 function listFormsRequest({ workspaceId, params }: ListFormsKeys) {
   return {
@@ -121,8 +117,6 @@ function deleteFormRequest({ workspaceId, formId }: DeleteFormKeys) {
 export const deleteForm = createApi<DeleteFormKeys, void>({
   request: deleteFormRequest,
 });
-
-// ─── Trash ──────────────────────────────────────────────────
 
 function listTrashRequest({ workspaceId }: ListTrashKeys) {
   return { url: `/forms/workspace/${workspaceId}/trash`, method: GET };

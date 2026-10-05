@@ -1,7 +1,6 @@
 export type FormStatus = 'DRAFT' | 'PUBLISHED' | 'CLOSED';
 
 export type FieldType =
-  // Questions
   | 'SHORT_TEXT'
   | 'LONG_TEXT'
   | 'EMAIL'
@@ -20,7 +19,6 @@ export type FieldType =
   | 'RATING'
   | 'SCALE'
   | 'SIGNATURE'
-  // Layout
   | 'STATEMENT'
   | 'PAGE_BREAK'
   | 'THANK_YOU_PAGE'
@@ -30,12 +28,10 @@ export type FieldType =
   | 'DIVIDER'
   | 'TITLE'
   | 'LABEL'
-  // Embed
   | 'IMAGE'
   | 'VIDEO'
   | 'AUDIO'
   | 'EMBED'
-  // Advanced
   | 'CONDITIONAL_LOGIC'
   | 'CALCULATED'
   | 'HIDDEN'
@@ -78,7 +74,6 @@ export interface Form {
   };
 }
 
-// Service input types (Keys)
 export interface GetFormBySlugKeys {
   slug: string;
 }

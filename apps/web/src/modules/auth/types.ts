@@ -38,7 +38,6 @@ export interface ResetPasswordResponse {
 
 export type { OtpPurpose } from '@snapform/shared';
 
-// Service input types (Keys)
 export interface LoginKeys {
   email: string;
   password: string;

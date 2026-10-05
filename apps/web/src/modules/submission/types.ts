@@ -19,7 +19,6 @@ export interface Submission {
   fields?: SubmissionField[];
 }
 
-// Service input types (Keys)
 export interface SubmitFormKeys {
   slug: string;
   data: {

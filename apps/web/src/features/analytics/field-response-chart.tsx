@@ -21,7 +21,6 @@ function truncateLabel(label: string, maxLen = 15): string {
 }
 
 export function FieldResponseChart({ data }: FieldResponseChartProps) {
-  // Filter out layout fields (STATEMENT, PAGE_BREAK)
   const fields = data.filter((f) => f.type !== 'STATEMENT' && f.type !== 'PAGE_BREAK');
 
   if (fields.length === 0) {

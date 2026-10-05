@@ -112,11 +112,9 @@ export const authService = {
     const existing = await authRepository.findUserByEmail(newEmail);
     if (existing) throw AppError.conflict('This email is already being used by another account.');
 
-    // Send OTP to the new email for verification
     const code = await otpService.generate(user.id, 'EMAIL_VERIFICATION');
     await otpService.sendViaEmail(newEmail, code, 'EMAIL_VERIFICATION');
 
-    // Create a short-lived token encoding the new email
     const changeToken = jwt.sign(
       { sub: user.id, newEmail },
       env.JWT_ACCESS_SECRET,
@@ -144,7 +142,6 @@ export const authService = {
     const validOtp = await otpService.verify(user.id, code, 'EMAIL_VERIFICATION');
     if (!validOtp) throw new AppError(400, ErrorCode.OTP_INVALID, 'The code you entered is incorrect or has expired. Please try again.');
 
-    // Check again that new email isn't taken
     const existing = await authRepository.findUserByEmail(payload.newEmail);
     if (existing) throw AppError.conflict('This email is already being used by another account.');
 

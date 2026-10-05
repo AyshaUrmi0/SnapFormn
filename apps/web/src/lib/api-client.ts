@@ -67,7 +67,6 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     body: body ? JSON.stringify(body) : undefined,
   });
 
-  // Auto-refresh on 401
   if (res.status === 401 && accessToken) {
     if (!refreshPromise) {
       refreshPromise = refreshAccessToken();
@@ -96,7 +95,6 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     );
   }
 
-  // 204 No Content
   if (res.status === 204) {
     return undefined as T;
   }

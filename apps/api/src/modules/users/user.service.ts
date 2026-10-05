@@ -13,7 +13,6 @@ export const userService = {
     const user = await userRepository.findById(userId);
     if (!user) throw AppError.notFound('User not found');
 
-    // Treat empty avatarUrl as null (delete photo)
     const updateData = {
       ...data,
       ...(data.avatarUrl !== undefined && { avatarUrl: data.avatarUrl || null }),

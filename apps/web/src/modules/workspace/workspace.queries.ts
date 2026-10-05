@@ -29,8 +29,6 @@ import type {
   RemoveMemberKeys,
 } from './types';
 
-// ─── Queries ─────────────────────────────────────────────────
-
 export const useWorkspaces = () => {
   return useQuery<WorkspaceWithRole[], Error>({
     queryKey: queryKeys.workspaces.all(),
@@ -53,8 +51,6 @@ export const useWorkspaceUsage = (workspaceId: string) => {
     enabled: !!workspaceId,
   });
 };
-
-// ─── Mutations ───────────────────────────────────────────────
 
 export const useCreateWorkspace = () => {
   const queryClient = useQueryClient();

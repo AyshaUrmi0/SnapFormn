@@ -27,13 +27,10 @@ export default function LandingPage() {
 
   return (
     <div className="flex flex-col">
-      {/* ─── HERO SECTION ─── */}
       <section className="relative overflow-hidden pt-16 pb-20 md:pt-24 md:pb-28">
-        {/* Glow ambient background */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[350px] bg-primary/10 blur-[130px] rounded-full pointer-events-none -z-10" />
 
         <div className="mx-auto max-w-6xl px-4 sm:px-6 text-center">
-          {/* Badge */}
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-medium mb-6 animate-in fade-in slide-in-from-bottom-2">
             <Sparkles className="h-3.5 w-3.5" />
             <span>The Notion-style form builder</span>
@@ -41,17 +38,14 @@ export default function LandingPage() {
             <span className="text-foreground/80">36 Field Types</span>
           </div>
 
-          {/* Heading */}
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-foreground max-w-4xl mx-auto leading-[1.1] mb-6">
             Build forms as simply as <span className="bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">writing a document</span>.
           </h1>
 
-          {/* Subheading */}
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
             Forget clunky drag-and-drop grids. Press <kbd className="px-1.5 py-0.5 rounded border border-border bg-muted text-foreground text-xs font-mono">/</kbd> to insert questions, multi-step pages, signatures, or conditional logic. Try without signing up.
           </p>
 
-          {/* CTAs */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
             <Link
               href={ROUTES.SANDBOX}
@@ -74,7 +68,6 @@ export default function LandingPage() {
             </Link>
           </div>
 
-          {/* Key Value bullets */}
           <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs sm:text-sm text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <CheckCircle2 className="h-4 w-4 text-primary" />
@@ -91,10 +84,8 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* ─── LIVE EDITOR PREVIEW MOCKUP ─── */}
         <div className="mt-14 mx-auto max-w-5xl px-4 sm:px-6">
           <div className="relative rounded-2xl border border-border/80 bg-card p-2 sm:p-4 shadow-2xl shadow-primary/5">
-            {/* Window chrome header */}
             <div className="flex items-center justify-between border-b border-border/40 pb-3 px-3">
               <div className="flex items-center gap-2">
                 <div className="h-3 w-3 rounded-full bg-red-500/80" />
@@ -113,14 +104,12 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Interactive Demo Body */}
             <div className="p-6 sm:p-10 max-w-2xl mx-auto space-y-8 text-left">
               <div>
                 <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Customer Satisfaction Survey</h2>
                 <p className="text-sm text-muted-foreground mt-1">Help us improve your experience with quick 2-minute feedback.</p>
               </div>
 
-              {/* Sample Question 1: Rating */}
               <div className="space-y-3 p-4 rounded-xl border border-border/40 bg-accent/20">
                 <label className="text-sm font-semibold flex items-center justify-between">
                   <span>1. How likely are you to recommend Snapform?</span>
@@ -139,7 +128,6 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Sample Question 2: Slash command hint */}
               <div className="space-y-3 p-4 rounded-xl border border-dashed border-border/80 bg-background/50">
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span className="flex items-center gap-1.5 font-mono">
@@ -167,7 +155,6 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Button */}
               <div className="pt-2">
                 <Button className="w-full sm:w-auto px-6" disabled>
                   Submit Response
@@ -178,7 +165,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── FEATURES GRID ─── */}
       <section className="py-20 border-t border-border/40 bg-muted/10">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="text-center max-w-2xl mx-auto mb-16">
@@ -266,7 +252,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── FEATURED TEMPLATES ─── */}
       <section className="py-20">
         <div className="mx-auto max-w-6xl px-4 sm:px-6">
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-12 gap-4">
@@ -308,7 +293,6 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── CALL TO ACTION ─── */}
       <section className="py-20 border-t border-border/40 bg-gradient-to-b from-background to-muted/20 text-center">
         <div className="mx-auto max-w-4xl px-4 sm:px-6 space-y-6">
           <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight">

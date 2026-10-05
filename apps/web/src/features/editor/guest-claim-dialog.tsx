@@ -65,7 +65,6 @@ export function GuestClaimDialog({
       try {
         setIsSubmitting(true);
         const res = await googleLogin.mutateAsync(response.access_token);
-        // Once session is restored, save the form
         await saveDraftToCloud();
       } catch (e) {
         toast.error(getErrorMessage(e));
@@ -79,7 +78,6 @@ export function GuestClaimDialog({
   });
 
   async function saveDraftToCloud(targetWorkspaceId?: string) {
-    // Determine workspace
     let wsId = targetWorkspaceId || selectedWorkspaceId;
     if (!wsId && workspaces && workspaces.length > 0) {
       wsId = workspaces[0].id;
@@ -90,10 +88,7 @@ export function GuestClaimDialog({
           queryKey: queryKeys.workspaces.all(),
           queryFn: () => listWorkspaces(),
         });
-        wsId = refreshedWorkspaces?.[0]?.id || '';
-      } catch {
-        // Fallback
-      }
+      } catch {}
     }
 
     if (!wsId) {
@@ -184,7 +179,6 @@ export function GuestClaimDialog({
         </DialogHeader>
 
         {isAuthenticated ? (
-          /* User already authenticated: simply choose workspace and save */
           <div className="space-y-4 pt-2">
             <div className="space-y-2">
               <Label className="text-xs">Destination Workspace</Label>
@@ -225,9 +219,7 @@ export function GuestClaimDialog({
             </Button>
           </div>
         ) : (
-          /* Visitor not authenticated: Show Google & Email signup/login */
           <div className="space-y-4 pt-1">
-            {/* Google Sign In */}
             <Button
               variant="outline"
               type="button"
@@ -271,7 +263,6 @@ export function GuestClaimDialog({
               </div>
             </div>
 
-            {/* Email Form */}
             <form onSubmit={handleEmailAuth} className="space-y-3">
               {mode === 'register' && (
                 <div className="space-y-1">
@@ -326,7 +317,6 @@ export function GuestClaimDialog({
               </Button>
             </form>
 
-            {/* Toggle Login / Register */}
             <div className="text-center pt-2">
               <button
                 type="button"

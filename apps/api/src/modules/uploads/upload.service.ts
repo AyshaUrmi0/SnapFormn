@@ -19,22 +19,14 @@ interface SignUploadParams {
 }
 
 export const uploadService = {
-  /**
-   * Generate a signed upload payload. The client then POSTs the file
-   * directly to Cloudinary with these params — the API secret never
-   * leaves the server.
-   */
   signUploadParams({ formId, fieldId, resourceType }: SignUploadParams) {
     if (!env.CLOUDINARY_API_SECRET || !env.CLOUDINARY_CLOUD_NAME) {
       throw AppError.internal('Cloudinary is not configured');
     }
 
-    // Folder is server-built so clients can't write anywhere they want
     const folder = `${env.CLOUDINARY_UPLOAD_FOLDER}/forms/${formId}/${fieldId}`;
     const timestamp = Math.round(Date.now() / 1000);
 
-    // Sign ONLY the params we care about — Cloudinary will reject requests
-    // where the actual POST params don't match what was signed.
     const paramsToSign: Record<string, string | number> = {
       folder,
       timestamp,
@@ -52,10 +44,6 @@ export const uploadService = {
     };
   },
 
-  /**
-   * Delete an asset from Cloudinary. Called when a submission with
-   * media fields is deleted.
-   */
   async destroy(publicId: string, resourceType: ResourceType = 'auto') {
     if (!env.CLOUDINARY_API_SECRET) return;
     try {

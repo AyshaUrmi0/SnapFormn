@@ -9,7 +9,6 @@ import { submitFormSchema, listSubmissionsSchema, analyticsSchema, submissionPar
 
 const router = Router();
 
-// Public route - submit a form
 /**
  * @swagger
  * /submissions/{slug}:
