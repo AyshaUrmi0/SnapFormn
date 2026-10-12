@@ -12,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { LogOut, ChevronDown, Settings } from 'lucide-react';
+import { LogOut, ChevronDown, Home, Settings } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 import { ROUTES } from '@/constants/routes';
 
@@ -79,6 +79,13 @@ export function UserMenu({ showName = false, sidebar = false }: UserMenuProps) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
+          <DropdownMenuItem
+            onClick={() => router.push(ROUTES.HOME)}
+            className="flex items-center gap-2.5 px-2.5 py-2 cursor-pointer text-xs font-medium"
+          >
+            <Home className="h-4 w-4 text-muted-foreground" />
+            <span>Main Home Page</span>
+          </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => router.push(ROUTES.SETTINGS)}
             className="flex items-center gap-2.5 px-2.5 py-2 cursor-pointer text-xs font-medium"

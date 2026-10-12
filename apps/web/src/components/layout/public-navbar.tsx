@@ -24,7 +24,7 @@ const NAV_LINKS = [
 
 export function PublicNavbar() {
   const pathname = usePathname();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, isLoading } = useAuth();
   const logout = useLogout();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -66,7 +66,9 @@ export function PublicNavbar() {
         <div className="hidden md:flex items-center gap-3">
           <ThemeToggle />
 
-          {isAuthenticated ? (
+          {isLoading ? (
+            <div className="h-8 w-28 rounded-lg bg-muted/40 animate-pulse" />
+          ) : isAuthenticated ? (
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground hidden lg:inline-block">
                 Signed in as <strong className="text-foreground">{user?.name || user?.email}</strong>
@@ -152,7 +154,9 @@ export function PublicNavbar() {
           </nav>
 
           <div className="pt-3 border-t border-border flex flex-col gap-2">
-            {isAuthenticated ? (
+            {isLoading ? (
+              <div className="h-10 w-full rounded-md bg-muted/40 animate-pulse" />
+            ) : isAuthenticated ? (
               <div className="flex flex-col gap-2">
                 <Link
                   href={ROUTES.WORKSPACES}

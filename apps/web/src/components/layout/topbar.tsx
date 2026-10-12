@@ -1,9 +1,11 @@
 'use client';
 
-import { Menu, LogOut } from 'lucide-react';
+import Link from 'next/link';
+import { Menu, Sparkles, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useLogout } from '@/hooks/use-logout';
 import { Spinner } from '@/components/ui/spinner';
+import { useLogout } from '@/hooks/use-logout';
+import { ROUTES } from '@/constants/routes';
 
 interface TopbarProps {
   onMobileMenuToggle: () => void;
@@ -14,7 +16,7 @@ export function Topbar({ onMobileMenuToggle }: TopbarProps) {
 
   return (
     <header className="flex h-12 items-center justify-between border-b border-border bg-background px-4 md:hidden">
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <Button
           variant="ghost"
           size="sm"
@@ -24,7 +26,16 @@ export function Topbar({ onMobileMenuToggle }: TopbarProps) {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <span className="ml-2 text-sm font-bold text-primary">Snapform</span>
+        <Link
+          href={ROUTES.HOME}
+          className="flex items-center gap-1.5 font-bold text-sm text-foreground hover:opacity-85 transition-opacity"
+          title="Snapform Home (http://localhost:3000/)"
+        >
+          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-xs">
+            <Sparkles className="h-3.5 w-3.5" />
+          </div>
+          <span>Snapform</span>
+        </Link>
       </div>
 
       <Button
@@ -40,7 +51,7 @@ export function Topbar({ onMobileMenuToggle }: TopbarProps) {
         ) : (
           <LogOut className="h-3.5 w-3.5" />
         )}
-        <span className="text-[11px] font-medium">Log out</span>
+        <span className="hidden sm:inline">Log out</span>
       </Button>
     </header>
   );

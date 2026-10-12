@@ -6,14 +6,34 @@ type RequestOptions = Omit<RequestInit, 'body'> & {
   params?: Record<string, string | number | undefined>;
 };
 
+const TOKEN_STORAGE_KEY = 'snapform_access_token';
+
 let accessToken: string | null = null;
 let refreshPromise: Promise<string | null> | null = null;
 
 export function setAccessToken(token: string | null) {
   accessToken = token;
+  if (typeof window !== 'undefined') {
+    try {
+      if (token) {
+        localStorage.setItem(TOKEN_STORAGE_KEY, token);
+      } else {
+        localStorage.removeItem(TOKEN_STORAGE_KEY);
+      }
+    } catch {
+      // Storage access may fail in private browsing
+    }
+  }
 }
 
 export function getAccessToken(): string | null {
+  if (!accessToken && typeof window !== 'undefined') {
+    try {
+      accessToken = localStorage.getItem(TOKEN_STORAGE_KEY);
+    } catch {
+      // Storage access may fail in private browsing
+    }
+  }
   return accessToken;
 }
 
@@ -54,8 +74,9 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     ...customHeaders as Record<string, string>,
   };
 
-  if (accessToken) {
-    headers['Authorization'] = `Bearer ${accessToken}`;
+  const currentToken = getAccessToken();
+  if (currentToken) {
+    headers['Authorization'] = `Bearer ${currentToken}`;
   }
 
   const url = buildUrl(path, params);

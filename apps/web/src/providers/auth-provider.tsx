@@ -8,7 +8,7 @@ import {
   useState,
 } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { setAccessToken, refreshAccessToken } from '@/lib/api-client';
+import { setAccessToken, getAccessToken, refreshAccessToken } from '@/lib/api-client';
 import { getMe } from '@/modules/auth/auth.service';
 import { queryKeys } from '@/constants/query-keys';
 import type { User } from '@/modules/auth/types';
@@ -46,9 +46,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [queryClient]);
 
   const setSession = useCallback(
-    (accessToken: string) => {
+    async (accessToken: string) => {
       setAccessToken(accessToken);
-      refreshUser();
+      await refreshUser();
     },
     [refreshUser],
   );
@@ -62,18 +62,35 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const restore = async () => {
       try {
+        const storedToken = getAccessToken();
+        if (storedToken) {
+          try {
+            const userData = await getMe();
+            setUser(userData);
+            queryClient.setQueryData(queryKeys.users.me(), userData);
+            setIsLoading(false);
+            return;
+          } catch {
+            // Token expired, attempt refresh token exchange below
+          }
+        }
+
         const token = await refreshAccessToken();
         if (token) {
           await refreshUser();
+        } else {
+          setAccessToken(null);
+          setUser(null);
         }
       } catch {
+        setAccessToken(null);
+        setUser(null);
       } finally {
         setIsLoading(false);
       }
     };
     restore();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [queryClient, refreshUser]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

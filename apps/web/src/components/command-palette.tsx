@@ -116,11 +116,19 @@ export function CommandPalette() {
 
     items.push(
       {
-        id: 'nav-home',
-        label: 'Go to home',
+        id: 'nav-main-home',
+        label: 'Go to Main Home Page',
         icon: Home,
         group: 'Navigation',
-        keywords: 'home dashboard',
+        keywords: 'home main website landing page snapform',
+        onExecute: () => router.push(ROUTES.HOME),
+      },
+      {
+        id: 'nav-dashboard',
+        label: 'Go to Workspaces Dashboard',
+        icon: Home,
+        group: 'Navigation',
+        keywords: 'dashboard workspaces home',
         onExecute: () => {
           if (workspaceId) router.push(ROUTES.workspace(workspaceId).ROOT);
           else router.push(ROUTES.WORKSPACES);

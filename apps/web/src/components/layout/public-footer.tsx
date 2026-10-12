@@ -1,8 +1,12 @@
+'use client';
+
 import Link from 'next/link';
 import { Sparkles } from 'lucide-react';
+import { useAuth } from '@/hooks/use-auth';
 import { ROUTES } from '@/constants/routes';
 
 export function PublicFooter() {
+  const { isAuthenticated } = useAuth();
   return (
     <footer className="border-t border-border/40 bg-muted/20 text-muted-foreground transition-colors">
       <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
@@ -71,16 +75,33 @@ export function PublicFooter() {
                   Help Center & FAQ
                 </Link>
               </li>
-              <li>
-                <Link href={ROUTES.LOGIN} className="hover:text-foreground transition-colors">
-                  Creator Login
-                </Link>
-              </li>
-              <li>
-                <Link href={ROUTES.REGISTER} className="hover:text-foreground transition-colors">
-                  Create Account
-                </Link>
-              </li>
+              {isAuthenticated ? (
+                <>
+                  <li>
+                    <Link href={ROUTES.WORKSPACES} className="hover:text-foreground transition-colors font-medium text-foreground">
+                      Go to Dashboard
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={ROUTES.SETTINGS} className="hover:text-foreground transition-colors">
+                      Account Settings
+                    </Link>
+                  </li>
+                </>
+              ) : (
+                <>
+                  <li>
+                    <Link href={ROUTES.LOGIN} className="hover:text-foreground transition-colors">
+                      Creator Login
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href={ROUTES.REGISTER} className="hover:text-foreground transition-colors">
+                      Create Account
+                    </Link>
+                  </li>
+                </>
+              )}
             </ul>
           </div>
 

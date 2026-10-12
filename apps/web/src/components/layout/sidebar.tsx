@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   Home,
+  LayoutDashboard,
   Search,
   Users,
   Globe,
@@ -67,7 +68,8 @@ function getNavSections(workspaceId: string | null, options?: { onSearchClick?: 
   const ws = workspaceId ? ROUTES.workspace(workspaceId) : null;
 
   const mainNav: NavItemDef[] = [
-    { label: 'Home', href: ROUTES.WORKSPACES, icon: Home, exact: true },
+    { label: 'Dashboard', href: ROUTES.WORKSPACES, icon: LayoutDashboard, exact: true },
+    { label: 'Main Home', href: ROUTES.HOME, icon: Home, exact: true },
     { label: 'Search', href: '#', icon: Search, action: options?.onSearchClick },
     { label: 'Members', href: ws?.MEMBERS ?? ROUTES.MEMBERS, icon: Users },
     { label: 'Domains', href: ROUTES.DOMAINS, icon: Globe },
@@ -156,7 +158,30 @@ export function Sidebar() {
 
   return (
     <aside className="flex flex-col w-56 border-r border-sidebar-border bg-sidebar text-sidebar-foreground h-screen shrink-0">
-      <div className="p-3">
+      <div className="p-3 pb-2 flex items-center justify-between border-b border-sidebar-border/60">
+        <Link
+          href={ROUTES.HOME}
+          className="flex items-center gap-2 font-bold text-sm tracking-tight text-sidebar-foreground hover:opacity-85 transition-opacity group"
+          title="Snapform Home (http://localhost:3000/)"
+        >
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/25 group-hover:scale-105 transition-transform">
+            <Sparkles className="h-4 w-4" />
+          </div>
+          <span className="bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text">
+            Snapform
+          </span>
+        </Link>
+        <Link
+          href={ROUTES.HOME}
+          className="text-[11px] font-medium text-muted-foreground hover:text-foreground px-2 py-0.5 rounded border border-sidebar-border hover:bg-sidebar-accent transition-colors flex items-center gap-1"
+          title="Visit main home page"
+        >
+          <Globe className="h-3 w-3" />
+          <span>Home</span>
+        </Link>
+      </div>
+
+      <div className="p-2.5">
         <UserMenu showName sidebar />
       </div>
 
@@ -209,31 +234,32 @@ export function Sidebar() {
       <Separator />
 
       <div className="p-2 space-y-1">
-        <button
-          type="button"
-          onClick={() => logout.mutate()}
-          disabled={logout.isPending}
-          className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-sidebar-foreground/80 hover:text-destructive hover:bg-destructive/10 transition-colors w-full cursor-pointer text-left group"
-        >
-          {logout.isPending ? (
-            <Spinner size="xs" variant="muted" />
-          ) : (
-            <LogOut className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-destructive transition-colors" />
-          )}
-          <span>Log out</span>
-        </button>
-
-        <div className="flex items-center justify-between pt-0.5">
+        <div className="flex items-center justify-between">
           <Link
             href="#"
-            className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+            className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors flex-1"
           >
-            <Heart className="h-4 w-4 shrink-0" />
+            <Heart className="h-4 w-4 shrink-0 text-rose-500" />
             <span>Give Feedback</span>
             <span className="h-2 w-2 rounded-full bg-blue-500 ml-auto" />
           </Link>
           <ThemeToggle />
         </div>
+
+        <button
+          type="button"
+          onClick={() => logout.mutate()}
+          disabled={logout.isPending}
+          className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors w-full cursor-pointer disabled:opacity-50"
+          title="Log out of your account"
+        >
+          {logout.isPending ? (
+            <Spinner size="xs" variant="muted" />
+          ) : (
+            <LogOut className="h-4 w-4 shrink-0" />
+          )}
+          <span>Log out</span>
+        </button>
       </div>
     </aside>
   );
