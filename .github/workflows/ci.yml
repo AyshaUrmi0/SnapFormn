@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Typecheck & Build
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/snapform_ci"
+      JWT_SECRET: "ci-dummy-jwt-secret-for-build-validation-32chars"
+      JWT_REFRESH_SECRET: "ci-dummy-jwt-refresh-secret-validation-32chars"
+      NEXT_PUBLIC_API_URL: "http://localhost:4000/api/v1"
+      NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma Client
+        run: npm run db:generate
+
+      - name: Build @snapform/shared
+        run: npm -w packages/shared run build
+
+      - name: Monorepo Typecheck
+        run: npm run typecheck
+
+      - name: Build @snapform/api
+        run: npm -w apps/api run build
+
+      - name: Build @snapform/web
+        run: npm -w apps/web run build
