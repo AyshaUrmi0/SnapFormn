@@ -37,11 +37,11 @@ jobs:
       - name: Generate Prisma Client
         run: npm run db:generate
 
-      - name: Monorepo Typecheck
-        run: npm run typecheck
-
       - name: Build @snapform/shared
         run: npm -w packages/shared run build
+
+      - name: Monorepo Typecheck
+        run: npm run typecheck
 
       - name: Build @snapform/api
         run: npm -w apps/api run build

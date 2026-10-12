@@ -6,12 +6,9 @@ dist/
 build/
 
 # Environment
-.env
-.env.local
 .env.*.local
 
 # IDE
-.vscode/settings.json
 .idea/
 *.swp
 *.swo
@@ -42,3 +39,4 @@ out/
 
 .vercel
 .env*.local
+config.bat
