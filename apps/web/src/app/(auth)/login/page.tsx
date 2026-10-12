@@ -14,11 +14,11 @@ import {
   ArrowRight,
   ShieldCheck,
   Zap,
-  Loader2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Form,
   FormControl,
@@ -132,7 +132,7 @@ export default function LoginPage() {
           disabled={googleLogin.isPending}
         >
           {googleLogin.isPending ? (
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            <Spinner size="default" variant="muted" />
           ) : (
             <svg className="h-4 w-4" viewBox="0 0 24 24">
               <path
@@ -262,7 +262,7 @@ export default function LoginPage() {
             >
               {login.isPending ? (
                 <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <Spinner size="default" className="text-primary-foreground" />
                   <span>Signing in...</span>
                 </>
               ) : (
