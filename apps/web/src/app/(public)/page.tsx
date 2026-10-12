@@ -21,8 +21,10 @@ import { Card, CardContent } from '@/components/ui/card';
 import { FORM_TEMPLATES } from '@/constants/form-templates';
 import { ROUTES } from '@/constants/routes';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function LandingPage() {
+  const { isAuthenticated } = useAuth();
   const featuredTemplates = FORM_TEMPLATES.slice(0, 3);
 
   return (
@@ -47,16 +49,28 @@ export default function LandingPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-            <Link
-              href={ROUTES.SANDBOX}
-              className={cn(
-                buttonVariants({ size: 'lg' }),
-                'w-full sm:w-auto h-12 px-8 text-base shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 font-semibold',
-              )}
-            >
-              <Sparkles className="h-4 w-4" />
-              Try Live Sandbox (No Signup) <ArrowRight className="h-4 w-4" />
-            </Link>
+            {isAuthenticated ? (
+              <Link
+                href={ROUTES.WORKSPACES}
+                className={cn(
+                  buttonVariants({ size: 'lg' }),
+                  'w-full sm:w-auto h-12 px-8 text-base shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 font-semibold',
+                )}
+              >
+                Go to Dashboard <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <Link
+                href={ROUTES.SANDBOX}
+                className={cn(
+                  buttonVariants({ size: 'lg' }),
+                  'w-full sm:w-auto h-12 px-8 text-base shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all flex items-center justify-center gap-2 font-semibold',
+                )}
+              >
+                <Sparkles className="h-4 w-4" />
+                Try Live Sandbox (No Signup) <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
             <Link
               href={ROUTES.TEMPLATES}
               className={cn(
@@ -308,12 +322,21 @@ export default function LandingPage() {
             >
               Explore Templates <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link
-              href={ROUTES.REGISTER}
-              className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-12 px-8 text-base flex items-center justify-center')}
-            >
-              Sign Up with Google or Email
-            </Link>
+            {isAuthenticated ? (
+              <Link
+                href={ROUTES.WORKSPACES}
+                className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-12 px-8 text-base flex items-center justify-center gap-2')}
+              >
+                Go to Dashboard <ArrowRight className="h-4 w-4" />
+              </Link>
+            ) : (
+              <Link
+                href={ROUTES.REGISTER}
+                className={cn(buttonVariants({ variant: 'outline', size: 'lg' }), 'h-12 px-8 text-base flex items-center justify-center')}
+              >
+                Sign Up with Google or Email
+              </Link>
+            )}
           </div>
         </div>
       </section>

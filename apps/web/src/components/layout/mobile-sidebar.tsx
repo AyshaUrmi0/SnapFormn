@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Heart, Plus } from 'lucide-react';
+import { Heart, Plus, Sparkles, Globe, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
@@ -12,6 +12,8 @@ import { WorkspaceSwitcher } from './workspace-switcher';
 import { getNavSections, getWorkspaceIdFromPath } from './sidebar';
 import { useCommandPalette } from '@/providers/command-palette-provider';
 import { useCreateWorkspaceHref } from '@/hooks/use-creation-hrefs';
+import { useLogout } from '@/hooks/use-logout';
+import { Spinner } from '@/components/ui/spinner';
 import { ROUTES } from '@/constants/routes';
 
 interface MobileSidebarProps {
@@ -21,6 +23,7 @@ interface MobileSidebarProps {
 
 export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
   const pathname = usePathname();
+  const logout = useLogout();
   const { open: openSearch } = useCommandPalette();
   const workspaceId = getWorkspaceIdFromPath(pathname);
   const sections = getNavSections(workspaceId, {
@@ -33,7 +36,32 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
       <SheetContent side="left" className="w-56 p-0 flex flex-col bg-sidebar text-sidebar-foreground">
         <SheetTitle className="sr-only">Navigation</SheetTitle>
 
-        <div className="p-3">
+        <div className="p-3 pb-2 flex items-center justify-between border-b border-sidebar-border/60">
+          <Link
+            href={ROUTES.HOME}
+            onClick={() => onOpenChange(false)}
+            className="flex items-center gap-2 font-bold text-sm tracking-tight text-sidebar-foreground hover:opacity-85 transition-opacity"
+            title="Snapform Home (http://localhost:3000/)"
+          >
+            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/25">
+              <Sparkles className="h-4 w-4" />
+            </div>
+            <span className="bg-gradient-to-r from-foreground via-foreground to-muted-foreground bg-clip-text">
+              Snapform
+            </span>
+          </Link>
+          <Link
+            href={ROUTES.HOME}
+            onClick={() => onOpenChange(false)}
+            className="text-[11px] font-medium text-muted-foreground hover:text-foreground px-2 py-0.5 rounded border border-sidebar-border hover:bg-sidebar-accent transition-colors flex items-center gap-1"
+            title="Visit main home page"
+          >
+            <Globe className="h-3 w-3" />
+            <span>Home</span>
+          </Link>
+        </div>
+
+        <div className="p-2.5">
           <UserMenu showName sidebar />
         </div>
 
@@ -111,16 +139,36 @@ export function MobileSidebar({ open, onOpenChange }: MobileSidebarProps) {
 
         <Separator />
 
-        <div className="p-2 flex items-center justify-between">
-          <Link
-            href="#"
-            className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+        <div className="p-2 space-y-1">
+          <div className="flex items-center justify-between">
+            <Link
+              href="#"
+              className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors flex-1"
+            >
+              <Heart className="h-4 w-4 shrink-0 text-rose-500" />
+              <span>Give Feedback</span>
+              <span className="h-2 w-2 rounded-full bg-blue-500 ml-auto" />
+            </Link>
+            <ThemeToggle />
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              onOpenChange(false);
+              logout.mutate();
+            }}
+            disabled={logout.isPending}
+            className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors w-full cursor-pointer disabled:opacity-50"
+            title="Log out of your account"
           >
-            <Heart className="h-4 w-4 shrink-0" />
-            <span>Give Feedback</span>
-            <span className="h-2 w-2 rounded-full bg-blue-500 ml-auto" />
-          </Link>
-          <ThemeToggle />
+            {logout.isPending ? (
+              <Spinner size="xs" variant="muted" />
+            ) : (
+              <LogOut className="h-4 w-4 shrink-0" />
+            )}
+            <span>Log out</span>
+          </button>
         </div>
       </SheetContent>
     </Sheet>

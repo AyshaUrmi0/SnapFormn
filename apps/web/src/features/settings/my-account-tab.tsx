@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Lock, Shield, AlertTriangle } from 'lucide-react';
+import { Lock, Shield, AlertTriangle, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -14,6 +14,8 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
+import { useLogout } from '@/hooks/use-logout';
+import { Spinner } from '@/components/ui/spinner';
 import { useModal } from '@/providers/modal-provider';
 import { useUpdateProfile, useDeleteAccount, useChangePassword, useRequestEmailChange, useVerifyEmailChange } from '@/modules/user/user.queries';
 import {
@@ -38,6 +40,7 @@ interface ProfileFormValues {
 export function MyAccountTab() {
   const router = useRouter();
   const { user, clearSession, refreshUser } = useAuth();
+  const logout = useLogout();
   const { confirm } = useModal();
   const updateProfile = useUpdateProfile();
   const deleteAccount = useDeleteAccount();
@@ -440,6 +443,41 @@ export function MyAccountTab() {
                 Connect
               </button>
             </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Separator />
+
+      <div className="space-y-3">
+        <Label>Session</Label>
+        <Card>
+          <CardContent className="flex items-center justify-between py-4">
+            <div className="flex items-center gap-3">
+              <div className="rounded-lg bg-muted p-2.5 text-muted-foreground">
+                <LogOut className="h-5 w-5" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-medium">Log out of this device</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Signed in as {user?.email}. End your active session safely.
+                </p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => logout.mutate()}
+              disabled={logout.isPending}
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/30 gap-1.5 cursor-pointer shrink-0"
+            >
+              {logout.isPending ? (
+                <Spinner size="xs" variant="muted" />
+              ) : (
+                <LogOut className="h-3.5 w-3.5" />
+              )}
+              <span>Log out</span>
+            </Button>
           </CardContent>
         </Card>
       </div>

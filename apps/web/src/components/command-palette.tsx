@@ -4,10 +4,11 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import {
   Home, Search, Users, Settings, LayoutTemplate, HelpCircle,
-  Plus, FilePlus, FileText, Briefcase, Loader2, X,
+  Plus, FilePlus, FileText, Briefcase, Loader2, X, LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useCommandPalette } from '@/providers/command-palette-provider';
+import { useLogout } from '@/hooks/use-logout';
 import { useWorkspaces } from '@/modules/workspace/workspace.queries';
 import { useForms } from '@/modules/form/form.queries';
 import { getWorkspaceIdFromPath } from '@/components/layout/sidebar';
@@ -34,6 +35,7 @@ function matchesQuery(label: string, keywords: string, query: string): boolean {
 export function CommandPalette() {
   const { isOpen, close } = useCommandPalette();
   const router = useRouter();
+  const logout = useLogout();
   const pathname = usePathname();
   const workspaceId = getWorkspaceIdFromPath(pathname);
 
@@ -71,6 +73,18 @@ export function CommandPalette() {
       keywords: 'create add workspace',
       onExecute: () => router.push(newWorkspaceHref),
     });
+    items.push({
+      id: 'action-logout',
+      label: 'Log out',
+      description: 'Sign out of your account',
+      icon: LogOut,
+      group: 'Actions',
+      keywords: 'logout sign out exit quit leave',
+      onExecute: () => {
+        close();
+        logout.mutate();
+      },
+    });
 
     if (forms && workspaceId) {
       for (const form of forms) {
@@ -102,11 +116,19 @@ export function CommandPalette() {
 
     items.push(
       {
-        id: 'nav-home',
-        label: 'Go to home',
+        id: 'nav-main-home',
+        label: 'Go to Main Home Page',
         icon: Home,
         group: 'Navigation',
-        keywords: 'home dashboard',
+        keywords: 'home main website landing page snapform',
+        onExecute: () => router.push(ROUTES.HOME),
+      },
+      {
+        id: 'nav-dashboard',
+        label: 'Go to Workspaces Dashboard',
+        icon: Home,
+        group: 'Navigation',
+        keywords: 'dashboard workspaces home',
         onExecute: () => {
           if (workspaceId) router.push(ROUTES.workspace(workspaceId).ROOT);
           else router.push(ROUTES.WORKSPACES);
