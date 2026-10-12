@@ -2,11 +2,13 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Sparkles, ArrowRight, Menu, X, LayoutTemplate, BookOpen, HelpCircle, Map, Newspaper } from 'lucide-react';
+import { Sparkles, ArrowRight, Menu, X, LayoutTemplate, BookOpen, HelpCircle, Map, Newspaper, LogOut } from 'lucide-react';
 import { useState } from 'react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/layout/theme-toggle';
 import { useAuth } from '@/hooks/use-auth';
+import { useLogout } from '@/hooks/use-logout';
+import { Spinner } from '@/components/ui/spinner';
 import { ROUTES } from '@/constants/routes';
 import { cn } from '@/lib/utils';
 
@@ -23,6 +25,7 @@ const NAV_LINKS = [
 export function PublicNavbar() {
   const pathname = usePathname();
   const { isAuthenticated, user } = useAuth();
+  const logout = useLogout();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
@@ -75,6 +78,21 @@ export function PublicNavbar() {
                 Go to Dashboard
                 <ArrowRight className="h-4 w-4" />
               </Link>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => logout.mutate()}
+                disabled={logout.isPending}
+                className="text-xs text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5 cursor-pointer"
+                title="Log out"
+              >
+                {logout.isPending ? (
+                  <Spinner size="xs" variant="muted" />
+                ) : (
+                  <LogOut className="h-3.5 w-3.5" />
+                )}
+                <span>Log out</span>
+              </Button>
             </div>
           ) : (
             <div className="flex items-center gap-2">
@@ -135,13 +153,31 @@ export function PublicNavbar() {
 
           <div className="pt-3 border-t border-border flex flex-col gap-2">
             {isAuthenticated ? (
-              <Link
-                href={ROUTES.WORKSPACES}
-                onClick={() => setMobileMenuOpen(false)}
-                className={cn(buttonVariants(), 'w-full justify-center')}
-              >
-                Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
+              <div className="flex flex-col gap-2">
+                <Link
+                  href={ROUTES.WORKSPACES}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={cn(buttonVariants(), 'w-full justify-center')}
+                >
+                  Go to Dashboard <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    logout.mutate();
+                  }}
+                  disabled={logout.isPending}
+                  className="w-full text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive justify-center gap-1.5 cursor-pointer"
+                >
+                  {logout.isPending ? (
+                    <Spinner size="xs" variant="muted" />
+                  ) : (
+                    <LogOut className="h-4 w-4" />
+                  )}
+                  <span>Log out</span>
+                </Button>
+              </div>
             ) : (
               <>
                 <Link

@@ -21,7 +21,10 @@ import {
   MessageCircle,
   Heart,
   Plus,
+  LogOut,
 } from 'lucide-react';
+import { useLogout } from '@/hooks/use-logout';
+import { Spinner } from '@/components/ui/spinner';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { ThemeToggle } from './theme-toggle';
@@ -145,6 +148,7 @@ function SectionLabel({ label, action }: { label: string; action?: React.ReactNo
 
 export function Sidebar() {
   const pathname = usePathname();
+  const logout = useLogout();
   const { open: openSearch } = useCommandPalette();
   const workspaceId = getWorkspaceIdFromPath(pathname);
   const sections = getNavSections(workspaceId, { onSearchClick: openSearch });
@@ -204,16 +208,32 @@ export function Sidebar() {
 
       <Separator />
 
-      <div className="p-2 flex items-center justify-between">
-        <Link
-          href="#"
-          className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+      <div className="p-2 space-y-1">
+        <button
+          type="button"
+          onClick={() => logout.mutate()}
+          disabled={logout.isPending}
+          className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-sidebar-foreground/80 hover:text-destructive hover:bg-destructive/10 transition-colors w-full cursor-pointer text-left group"
         >
-          <Heart className="h-4 w-4 shrink-0" />
-          <span>Give Feedback</span>
-          <span className="h-2 w-2 rounded-full bg-blue-500 ml-auto" />
-        </Link>
-        <ThemeToggle />
+          {logout.isPending ? (
+            <Spinner size="xs" variant="muted" />
+          ) : (
+            <LogOut className="h-4 w-4 shrink-0 text-muted-foreground group-hover:text-destructive transition-colors" />
+          )}
+          <span>Log out</span>
+        </button>
+
+        <div className="flex items-center justify-between pt-0.5">
+          <Link
+            href="#"
+            className="flex items-center gap-2.5 rounded-md px-3 py-1.5 text-[13px] text-sidebar-foreground hover:bg-sidebar-accent/50 transition-colors"
+          >
+            <Heart className="h-4 w-4 shrink-0" />
+            <span>Give Feedback</span>
+            <span className="h-2 w-2 rounded-full bg-blue-500 ml-auto" />
+          </Link>
+          <ThemeToggle />
+        </div>
       </div>
     </aside>
   );
